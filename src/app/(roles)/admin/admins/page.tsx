@@ -20,11 +20,17 @@ const admins = [
         status: "Active",
     },
     {
+        name: "Michael Johnson",
+        email: "michael.j@northwood.edu",
+        role: "Admin",
+        status: "Active",
+    },
+    ...Array.from({ length: 7 }, (_, i) => ({
         name: "Unassigned Seat",
         email: "---",
         role: "Admin",
         status: "Invite Pending",
-    },
+    })),
 ];
 
 const roleVariantMap: Record<string, "default" | "secondary"> = {
