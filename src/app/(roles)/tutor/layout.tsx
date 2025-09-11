@@ -24,7 +24,6 @@ import {
   Settings,
   LogOut,
   Plus,
-  MessageCircle,
   Video,
   Copy,
   Star,
@@ -89,7 +88,7 @@ function TutorSidebar() {
              <SidebarMenu>
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
-                        <Button variant="ghost" size="icon"><Copy /></Button>
+                        <Button variant="ghost" size="icon"><Star /></Button>
                         <Button variant="ghost" size="icon"><Bell /></Button>
                         <Button variant="ghost" size="icon"><Settings /></Button>
                         <Button variant="ghost" size="icon"><LogOut /></Button>
