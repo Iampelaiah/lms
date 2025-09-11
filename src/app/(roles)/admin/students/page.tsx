@@ -3,57 +3,26 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
 import * as React from "react";
 
-const students = [
-    {
-        name: "Alex Johnson",
-        email: "alex.j@example.com",
-        avatarUrl: "https://picsum.photos/seed/101/100/100",
+const students = Array.from({ length: 450 }, (_, i) => {
+    const seed = 101 + i;
+    const firstNames = ["Alex", "Brenda", "Charlie", "Diana", "Ethan", "Fiona", "George", "Hannah", "Ian", "Julia"];
+    const lastNames = ["Johnson", "Smith", "Brown", "Prince", "Hunt", "Gallagher", "Harrison", "Ivers", "Jones", "King"];
+    const status = ["Active", "Inactive", "Suspended"];
+    return {
+        name: `${firstNames[i % firstNames.length]} ${lastNames[i % lastNames.length]}`,
+        email: `user${i+1}@example.com`,
+        avatarUrl: `https://picsum.photos/seed/${seed}/100/100`,
         avatarHint: "student portrait",
-        coursesEnrolled: 5,
-        lastActive: "2 hours ago",
-        status: "Active"
-    },
-    {
-        name: "Brenda Smith",
-        email: "brenda.s@example.com",
-        avatarUrl: "https://picsum.photos/seed/116/100/100",
-        avatarHint: "student portrait",
-        coursesEnrolled: 3,
-        lastActive: "5 hours ago",
-        status: "Active"
-    },
-    {
-        name: "Charlie Brown",
-        email: "charlie.b@example.com",
-        avatarUrl: "https://picsum.photos/seed/117/100/100",
-        avatarHint: "student portrait",
-        coursesEnrolled: 8,
-        lastActive: "1 day ago",
-        status: "Suspended"
-    },
-    {
-        name: "Diana Prince",
-        email: "diana.p@example.com",
-        avatarUrl: "https://picsum.photos/seed/118/100/100",
-        avatarHint: "student portrait",
-        coursesEnrolled: 4,
-        lastActive: "3 days ago",
-        status: "Active"
-    },
-    {
-        name: "Ethan Hunt",
-        email: "ethan.h@example.com",
-        avatarUrl: "https://picsum.photos/seed/119/100/100",
-        avatarHint: "student portrait",
-        coursesEnrolled: 2,
-        lastActive: "1 week ago",
-        status: "Inactive"
+        coursesEnrolled: Math.floor(Math.random() * 8) + 1,
+        lastActive: `${Math.floor(Math.random() * 24)} hours ago`,
+        status: status[i % status.length]
     }
-]
+});
 
 const statusVariantMap: Record<string, "default" | "secondary" | "destructive"> = {
     "Active": "default",
@@ -62,6 +31,15 @@ const statusVariantMap: Record<string, "default" | "secondary" | "destructive"> 
 }
 
 function StudentList() {
+    const [currentPage, setCurrentPage] = React.useState(1);
+    const studentsPerPage = 10;
+    const totalPages = Math.ceil(students.length / studentsPerPage);
+
+    const paginatedStudents = students.slice(
+        (currentPage - 1) * studentsPerPage,
+        currentPage * studentsPerPage
+    );
+
     return (
         <Card>
             <CardHeader>
@@ -88,7 +66,7 @@ function StudentList() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {students.map((student) => (
+                        {paginatedStudents.map((student) => (
                             <TableRow key={student.email}>
                                 <TableCell>
                                     <div className="flex items-center gap-4">
@@ -119,6 +97,47 @@ function StudentList() {
                         ))}
                     </TableBody>
                 </Table>
+            </CardContent>
+            <CardContent>
+                 <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                        <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(Math.max(1, currentPage - 1));
+                            }}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                        />
+                        </PaginationItem>
+                        {[...Array(totalPages)].map((_, i) => (
+                            <PaginationItem key={i}>
+                                <PaginationLink
+                                href="#"
+                                isActive={currentPage === i + 1}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage(i + 1);
+                                }}
+                                >
+                                {i + 1}
+                                </PaginationLink>
+                            </PaginationItem>
+                        )).slice(0, 5)}
+                        {totalPages > 5 && <PaginationEllipsis />}
+                        <PaginationItem>
+                        <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(Math.min(totalPages, currentPage + 1));
+                            }}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                        />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
             </CardContent>
         </Card>
     )
