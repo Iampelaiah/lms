@@ -23,7 +23,7 @@ function Footer() {
         <div className="space-y-2">
           <h4 className="font-semibold">Platform</h4>
           <nav className="flex flex-col gap-1">
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
+            <Link href="#features" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
               Features
             </Link>
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
@@ -101,21 +101,21 @@ export default function LandingPage() {
           </Link>
           <nav className="ml-auto hidden items-center gap-4 sm:flex">
             <Link
-              href="#"
+              href="#features"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               prefetch={false}
             >
               Features
             </Link>
             <Link
-              href="#"
+              href="#statistics"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               prefetch={false}
             >
               Statistics
             </Link>
             <Link
-              href="#"
+              href="#testimonials"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               prefetch={false}
             >
@@ -163,17 +163,17 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-        <section className="w-full bg-secondary py-12 md:py-24 lg:py-32">
+        <section id="features" className="w-full bg-secondary py-12 md:py-24 lg:py-32 scroll-mt-14">
           <div className="container px-4 md:px-6">
              <FeaturesCarousel />
           </div>
         </section>
-        <section className="w-full py-12 md:py-24 lg:py-32">
+        <section id="statistics" className="w-full py-12 md:py-24 lg:py-32 scroll-mt-14">
           <div className="container px-4 md:px-6">
             <StatisticsSection />
           </div>
         </section>
-        <section className="w-full bg-secondary py-12 md:py-24 lg:py-32">
+        <section id="testimonials" className="w-full bg-secondary py-12 md:py-24 lg:py-32 scroll-mt-14">
           <div className="container px-4 md:px-6">
             <TestimonialsSection />
           </div>
