@@ -259,6 +259,31 @@ const Sidebar = React.forwardRef<
 )
 Sidebar.displayName = "Sidebar"
 
+function SidebarToggleIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M10 20H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h6" className="text-sidebar-foreground/50 group-data-[state=expanded]/sidebar-wrapper:text-sidebar-border" />
+      <path d="M10 20c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2" className="text-sidebar-border group-data-[state=expanded]/sidebar-wrapper:hidden" />
+      <path d="M14 4h6c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2h-6" className="text-sidebar-border group-data-[state=collapsed]/sidebar-wrapper:hidden" />
+      <path d="M10.2 16.2 14 12l-3.8-4.2" className="text-sidebar-foreground group-data-[state=expanded]/sidebar-wrapper:hidden" />
+      <path d="M13.8 7.8 10 12l3.8 4.2" className="text-sidebar-foreground group-data-[state=collapsed]/sidebar-wrapper:hidden" />
+      <circle cx="6" cy="9" r="0.5" fill="currentColor" className="text-sidebar-foreground/50 group-data-[state=expanded]/sidebar-wrapper:text-sidebar-border" />
+      <circle cx="6" cy="15" r="0.5" fill="currentColor" className="text-sidebar-foreground/50 group-data-[state=expanded]/sidebar-wrapper:text-sidebar-border" />
+    </svg>
+  );
+}
+
 const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
@@ -278,7 +303,7 @@ const SidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      <PanelLeft />
+      <SidebarToggleIcon className="h-5 w-5" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
