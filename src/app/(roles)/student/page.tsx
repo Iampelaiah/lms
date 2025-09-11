@@ -1,3 +1,5 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,65 +8,73 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { studentData } from '@/lib/data';
-import { Progress } from '@/components/ui/progress';
-import { ProgressOverview } from '@/components/app/student/dashboard/progress-overview';
-import { QuickSubjects } from '@/components/app/student/dashboard/quick-subjects';
-import { AiTutor } from '@/components/app/student/dashboard/ai-tutor';
-import { AiRecommendations } from '@/components/app/student/dashboard/ai-recommendations';
-import { Suspense } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { BrainCircuit } from 'lucide-react';
+import Link from 'next/link';
+import { SubjectProgressCard } from "@/components/app/student/dashboard/subject-progress-card";
 
-function AiRecommendationsSkeleton() {
-    return (
-        <Card className="h-full">
-            <CardHeader>
-                <CardTitle><Skeleton className="h-6 w-48" /></CardTitle>
-                <CardDescription><Skeleton className="h-4 w-full" /></CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-            </CardContent>
-        </Card>
-    );
+function SchoolHeader() {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-6 p-6">
+        <Avatar className="h-24 w-24 border">
+          <AvatarImage src="https://picsum.photos/seed/school-logo/100/100" alt="School Logo" data-ai-hint="school logo" />
+          <AvatarFallback>SH</AvatarFallback>
+        </Avatar>
+        <div>
+          <h2 className="text-2xl font-bold">Northwood High School</h2>
+          <p className="text-muted-foreground italic">"Our mission is to foster a community of lifelong learners and critical thinkers."</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
+function AiStudyPanel() {
+  return (
+    <Card className="bg-secondary/50">
+        <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-6">
+            <div className="bg-primary/10 p-3 rounded-full">
+                <BrainCircuit className="w-8 h-8 text-primary" />
+            </div>
+            <div className="flex-grow">
+                <h3 className="text-xl font-bold">AI-Powered Study Panel</h3>
+                <p className="text-muted-foreground">Choose a subject to get key concepts, resources, and answers from your AI Study Buddy.</p>
+            </div>
+            <Button asChild size="lg">
+                <Link href="#">Go to Study Panel</Link>
+            </Button>
+        </CardContent>
+    </Card>
+  )
+}
+
+
 export default function StudentDashboardPage() {
+  const subjectsWithProgress = [
+    { name: 'Mathematics', overallProgress: 75, icon: 'BookOpen', topics: [{ name: 'Algebra', progress: 90 }] },
+    { name: 'Physics', overallProgress: 60, icon: 'BookOpen', topics: [{ name: 'Mechanics', progress: 70 }] },
+    { name: 'History', overallProgress: 88, icon: 'BookOpen', topics: [{ name: 'World War II', progress: 80 }] },
+  ]
   return (
     <div className="space-y-6">
+        <SchoolHeader />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
           Welcome back, {studentData.name}!
         </h1>
         <p className="text-muted-foreground">
-          Here's a snapshot of your learning journey today.
+          Here's your learning snapshot for today. Keep up the great work!
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Overall Progress</CardTitle>
-          <CardDescription>
-            You have completed {studentData.overallProgress}% of your assigned coursework. Keep it up!
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Progress value={studentData.overallProgress} className="h-3" />
-        </CardContent>
-      </Card>
+     <AiStudyPanel />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ProgressOverview />
-        <QuickSubjects />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {subjectsWithProgress.map(subject => (
+            <SubjectProgressCard key={subject.name} subject={subject} />
+        ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <AiTutor />
-        <Suspense fallback={<AiRecommendationsSkeleton />}>
-            <AiRecommendations />
-        </Suspense>
-      </div>
     </div>
   );
 }
