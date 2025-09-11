@@ -27,8 +27,20 @@ import {
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { usePathname } from 'next/navigation';
+
 
 function TutorSidebar() {
+  const pathname = usePathname();
+  const navItems = [
+    { href: '/tutor', icon: LayoutDashboard, label: 'Dashboard' },
+    { href: '/tutor/courses', icon: BookOpenCheck, label: 'My Courses' },
+    { href: '/tutor/students', icon: Users, label: 'My Students' },
+    { href: '/tutor/assignments', icon: FileText, label: 'Assignments' },
+    { href: '/tutor/schedule', icon: Calendar, label: 'Schedule' },
+    { href: '/tutor/messages', icon: MessageCircle, label: 'Messages' },
+  ];
+
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader>
@@ -52,44 +64,16 @@ function TutorSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <Link href="/tutor">
-                <SidebarMenuButton tooltip="Dashboard" isActive>
-                  <LayoutDashboard />
-                  <span>Dashboard</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="My Courses">
-                <BookOpenCheck />
-                <span>My Courses</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="My Students">
-                <Users />
-                <span>My Students</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Assignments">
-                <FileText />
-                <span>Assignments</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Schedule">
-                <Calendar />
-                <span>Schedule</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Messages">
-                <MessageCircle />
-                <span>Messages</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {navItems.map((item) => (
+                <SidebarMenuItem key={item.label}>
+                <Link href={item.href}>
+                    <SidebarMenuButton tooltip={item.label} isActive={pathname === item.href}>
+                    <item.icon />
+                    <span>{item.label}</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+            ))}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
