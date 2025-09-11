@@ -132,8 +132,8 @@ export default function SignupPage() {
   const handleNext = () => setStep(2);
 
   const handleComplete = () => {
-    // For now, we'll just redirect to the login page.
-    router.push('/login');
+    // For now, we'll just redirect to the admin dashboard.
+    router.push('/admin');
   };
 
   return (
