@@ -1,3 +1,4 @@
+import { FeaturesCarousel } from '@/components/app/landing/features-carousel';
 import { Button } from '@/components/ui/button';
 import { GraduationCap } from 'lucide-react';
 import Image from 'next/image';
@@ -74,6 +75,11 @@ export default function LandingPage() {
                 data-ai-hint="online learning student"
               />
             </div>
+          </div>
+        </section>
+        <section className="w-full bg-secondary py-12 md:py-24 lg:py-32">
+          <div className="container px-4 md:px-6">
+             <FeaturesCarousel />
           </div>
         </section>
       </main>
