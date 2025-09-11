@@ -130,7 +130,7 @@ export default function LandingPage() {
         </div>
       </header>
       <main className="flex-1">
-        <section className="w-full pt-6 pb-12 md:pb-24 lg:pb-32">
+        <section className="w-full pt-6 md:pt-12 lg:pt-20 pb-12 md:pb-24 lg:pb-32">
           <div className="container px-4 md:px-6">
             <div className="grid gap-6 lg:grid-cols-[1fr_550px] lg:gap-12 xl:grid-cols-[1fr_650px]">
               <div className="flex flex-col justify-center space-y-4 text-center lg:text-left">
@@ -163,7 +163,7 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-        <section id="features" className="w-full bg-secondary py-12 md:py-24 lg:py-32 scroll-mt-14">
+        <section id="features" className="w-full bg-secondary py-12 md:py-24 lg:py-20 scroll-mt-14">
           <FeaturesCarousel />
         </section>
         <section id="statistics" className="w-full py-12 md:py-24 lg:py-32 scroll-mt-14">
