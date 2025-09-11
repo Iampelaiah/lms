@@ -6,12 +6,9 @@ function AdminSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <UserCog className="w-6 h-6 text-primary" />
-                <h2 className="text-lg font-semibold tracking-tight">Admin Panel</h2>
-            </div>
-            <SidebarTrigger className="hidden sm:flex" />
+        <div className="flex items-center gap-2">
+            <UserCog className="w-6 h-6 text-primary" />
+            <h2 className="text-lg font-semibold tracking-tight">Admin Panel</h2>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -35,6 +32,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <SidebarInset>
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
             <SidebarTrigger className="sm:hidden" />
+            <div className="hidden sm:flex items-center gap-2 ml-auto">
+                <SidebarTrigger />
+            </div>
         </header>
         {children}
       </SidebarInset>
