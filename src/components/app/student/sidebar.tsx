@@ -28,6 +28,8 @@ import {
   Star,
   Bell,
   Plus,
+  BrainCircuit,
+  Video,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -35,9 +37,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
-  { href: '/student', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/student/courses', icon: BookOpen, label: 'Courses' },
-  { href: '/student/community', icon: MessageSquare, label: 'Community' },
+  { href: '/student/study-panel', icon: BrainCircuit, label: 'Study Panel' },
+  { href: '/student/live-classes', icon: Video, label: 'Live Classes' },
+  { href: '/student/community', icon: MessageSquare, label: 'Forums' },
   { href: '/student/resources', icon: Library, label: 'Resources' },
   { href: '/student/progress', icon: BarChart, label: 'Progress' },
 ];
