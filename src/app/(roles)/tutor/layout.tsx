@@ -91,7 +91,7 @@ function TutorSidebar() {
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
                         <Button variant="ghost" size="icon"><Copy /></Button>
-                        <Button variant="ghost" size="icon"><Star /></Button>
+                        <Button variant="ghost" size="icon"><MessageCircle /></Button>
                         <Button variant="ghost" size="icon"><Bell /></Button>
                         <Button variant="ghost" size="icon"><Settings /></Button>
                         <Button variant="ghost" size="icon"><LogOut /></Button>
