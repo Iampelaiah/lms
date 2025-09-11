@@ -1,64 +1,88 @@
 'use client';
-
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { BookOpen } from "lucide-react";
-import React from "react";
-import useEmblaCarousel from 'embla-carousel-react'
-import Autoplay from 'embla-carousel-autoplay'
-
+import * as React from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from '@/components/ui/carousel';
+import Autoplay from 'embla-carousel-autoplay';
+import { Badge } from '../../../ui/badge';
+import { BookOpen } from 'lucide-react';
 
 type Topic = {
-    name: string;
-    progress: number;
-}
-
-type SubjectProgressCardProps = {
-  subject: {
-    name: string;
-    overallProgress: number;
-    icon: string; // We'll just use BookOpen for now as per the image
-    topics: Topic[];
-  };
+  name: string;
+  progress: number;
 };
 
-function TopicCarousel({ topics }: { topics: Topic[] }) {
-    const [emblaRef] = useEmblaCarousel({ direction: 'y', loop: true, align: 'start' }, [Autoplay({ delay: 2000, stopOnInteraction: false, playOnInit: true })])
+type DetailedProgressCardProps = {
+  subject: string;
+  overallProgress: number;
+  topics: Topic[];
+  autoplayDelay?: number;
+};
 
-    return (
-        <div className="overflow-hidden h-16" ref={emblaRef}>
-             <div className="flex flex-col h-full">
-                {topics.map((topic, index) => (
-                    <div key={`${topic.name}-${index}`} className="bg-secondary/50 rounded-md p-3 flex-[0_0_100%] min-h-0">
-                        <div className="flex justify-between items-center text-sm">
-                            <span className="font-medium">{topic.name}</span>
-                            <span className="font-semibold">{topic.progress}%</span>
-                        </div>
-                        <Progress value={topic.progress} className="h-1.5 mt-1" />
-                    </div>
-                ))}
-            </div>
-        </div>
-    )
-}
+export function DetailedProgressCard({
+  subject,
+  overallProgress,
+  topics,
+  autoplayDelay = 2000,
+}: DetailedProgressCardProps) {
+    const plugin = React.useRef(
+        Autoplay({ delay: autoplayDelay, stopOnInteraction: true })
+      );
 
-
-export function SubjectProgressCard({ subject }: SubjectProgressCardProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-start">
-            <CardTitle className="text-xl">{subject.name}</CardTitle>
-            <div className="flex items-center gap-2">
-                <span className="text-xl font-bold">{subject.overallProgress}%</span>
-                <BookOpen className="h-5 w-5 text-muted-foreground" />
-            </div>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="font-headline text-xl">{subject}</CardTitle>
+            <CardDescription>Overall Progress</CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-primary">{overallProgress}%</span>
+            <BookOpen className="h-6 w-6 text-accent" />
+          </div>
         </div>
-        <p className="text-sm text-muted-foreground">Overall Progress</p>
+        <Progress value={overallProgress} className="mt-2 h-2" />
       </CardHeader>
-      <CardContent className="space-y-4">
-        <Progress value={subject.overallProgress} className="h-2" />
-        <TopicCarousel topics={subject.topics} />
+      <CardContent>
+        <Carousel
+          plugins={[plugin.current]}
+          onMouseEnter={plugin.current.stop}
+          onMouseLeave={plugin.current.reset}
+          opts={{
+            align: 'start',
+            loop: true,
+          }}
+          orientation="vertical"
+          className="w-full"
+        >
+          <CarouselContent className="-mt-1 h-20">
+            {topics.map((topic, index) => (
+              <CarouselItem key={index} className="pt-1">
+                <div className="p-1">
+                  <Card className="bg-muted/50">
+                    <CardContent className="flex items-center justify-between p-3">
+                      <p className="text-sm font-medium truncate">{topic.name}</p>
+                      <Badge variant={topic.progress > 70 ? 'default' : 'secondary'}>
+                        {topic.progress}%
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
       </CardContent>
     </Card>
   );

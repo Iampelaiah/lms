@@ -5,14 +5,11 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { studentData } from '@/lib/data';
 import { BrainCircuit } from 'lucide-react';
 import Link from 'next/link';
-import { SubjectProgressCard } from "@/components/app/student/dashboard/subject-progress-card";
+import { DetailedProgressCard } from "@/components/app/student/dashboard/subject-progress-card";
 
 function SchoolHeader() {
   return (
@@ -90,8 +87,14 @@ export default function StudentDashboardPage() {
      <AiStudyPanel />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {subjectsWithProgress.map(subject => (
-            <SubjectProgressCard key={subject.name} subject={subject} />
+        {subjectsWithProgress.map((subject, index) => (
+            <DetailedProgressCard 
+                key={subject.name} 
+                subject={subject.name}
+                overallProgress={subject.overallProgress}
+                topics={subject.topics}
+                autoplayDelay={2000 + index * 500}
+            />
         ))}
       </div>
 
