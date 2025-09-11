@@ -107,7 +107,7 @@ function AdminSidebar() {
                     </div>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <Button className="w-full h-12 mt-2" asChild>
+                    <Button className="w-full h-12 mt-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0" asChild>
                         <Link href="#">
                             <Plus className="group-data-[collapsible=icon]:w-6 group-data-[collapsible=icon]:h-6" />
                             <span className="group-data-[collapsible=icon]:hidden">Create new task</span>
