@@ -51,6 +51,87 @@ const tutors = [
         coursesAssigned: 3,
         totalStudents: 105,
         status: "Inactive"
+    },
+    {
+        name: "Dr. Kenji Tanaka",
+        email: "k.tanaka@example.com",
+        avatarUrl: "https://picsum.photos/seed/107/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 5,
+        totalStudents: 150,
+        status: "Active"
+    },
+    {
+        name: "Mrs. Sofia Rossi",
+        email: "s.rossi@example.com",
+        avatarUrl: "https://picsum.photos/seed/108/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 3,
+        totalStudents: 90,
+        status: "Active"
+    },
+    {
+        name: "Mr. David Chen",
+        email: "d.chen@example.com",
+        avatarUrl: "https://picsum.photos/seed/109/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 4,
+        totalStudents: 110,
+        status: "Active"
+    },
+    {
+        name: "Dr. Isabella Vance",
+        email: "i.vance@example.com",
+        avatarUrl: "https://picsum.photos/seed/110/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 1,
+        totalStudents: 30,
+        status: "Inactive"
+    },
+    {
+        name: "Prof. Omar Badawi",
+        email: "o.badawi@example.com",
+        avatarUrl: "https://picsum.photos/seed/111/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 3,
+        totalStudents: 95,
+        status: "Active"
+    },
+    {
+        name: "Ms. Chloe Dubois",
+        email: "c.dubois@example.com",
+        avatarUrl: "https://picsum.photos/seed/112/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 2,
+        totalStudents: 60,
+        status: "Active"
+    },
+    {
+        name: "Dr. Arthur Pendelton",
+        email: "a.pendelton@example.com",
+        avatarUrl: "https://picsum.photos/seed/113/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 4,
+        totalStudents: 130,
+        status: "Active"
+    },
+    {
+        name: "Prof. Nina Simone",
+        email: "n.simone@example.com",
+        avatarUrl: "https://picsum.photos/seed/114/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 2,
+        totalStudents: 70,
+        status: "Active"
+    },
+    {
+        name: "Mr. Leo Maxwell",
+        email: "l.maxwell@example.com",
+        avatarUrl: "https://picsum.photos/seed/115/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 3,
+        totalStudents: 100,
+        status: "Active"
     }
 ]
 
