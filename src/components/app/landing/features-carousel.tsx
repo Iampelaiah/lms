@@ -86,7 +86,7 @@ export function FeaturesCarousel() {
                 <div className="p-1">
                   <Card className="bg-background text-foreground overflow-hidden border-border">
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-0 p-0">
-                      <div className="relative min-h-[300px] md:min-h-[500px]">
+                      <div className="relative min-h-[300px] md:min-h-[450px]">
                         <Image
                           src={feature.image}
                           alt={feature.title}
