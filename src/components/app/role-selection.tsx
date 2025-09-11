@@ -10,7 +10,6 @@ import {
 import { Briefcase, GraduationCap, Shield, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import type { UserRole } from '@/lib/types';
-import { Button } from '../ui/button';
 
 type Role = {
   name: UserRole;
@@ -24,25 +23,25 @@ const roles: Role[] = [
     name: 'Student',
     description: 'Access your courses, track progress, and get AI help.',
     icon: GraduationCap,
-    href: '/student',
+    href: '/login/student',
   },
   {
     name: 'Tutor',
     description: 'Manage your courses, schedule classes, and grade assignments.',
     icon: Briefcase,
-    href: '/tutor',
+    href: '/login/tutor',
   },
   {
     name: 'Parent',
     description: "View your child's progress, reports, and communicate with tutors.",
     icon: Shield,
-    href: '/parent',
+    href: '/login/parent',
   },
   {
     name: 'School Admin',
     description: 'Oversee school operations, manage users, and view analytics.',
     icon: UserCog,
-    href: '/admin',
+    href: '/login/admin',
   },
 ];
 
