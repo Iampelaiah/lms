@@ -44,7 +44,6 @@ function TutorSidebar() {
     { href: '/tutor/students', icon: Users, label: 'My Students' },
     { href: '/tutor/assignments', icon: FileText, label: 'Assignments' },
     { href: '/tutor/schedule', icon: Calendar, label: 'Schedule' },
-    { href: '/tutor/messages', icon: MessageCircle, label: 'Messages' },
     { href: '/tutor/live-classes', icon: Video, label: 'Live Classes' },
   ];
 
@@ -91,7 +90,6 @@ function TutorSidebar() {
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
                         <Button variant="ghost" size="icon"><Copy /></Button>
-                        <Button variant="ghost" size="icon"><MessageCircle /></Button>
                         <Button variant="ghost" size="icon"><Bell /></Button>
                         <Button variant="ghost" size="icon"><Settings /></Button>
                         <Button variant="ghost" size="icon"><LogOut /></Button>
