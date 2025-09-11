@@ -1,6 +1,6 @@
 'use client';
 
-import { aiTutorResourcePrompting } from '@/ai/flows/ai-tutor-resource-prompting';
+import { askTutorAction } from '@/app/actions/student';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,27 +13,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { BrainCircuit, Loader2, Send, Sparkles } from 'lucide-react';
 import React, { useState, useTransition } from 'react';
-
-type AiTutorResourcePromptingOutput = {
-  resources: string[];
-};
-
-async function askTutorAction(
-  query: string
-): Promise<AiTutorResourcePromptingOutput> {
-  'use server';
-  try {
-    const response = await aiTutorResourcePrompting({
-      query: query,
-      studentHistory: 'Completed Algebra I, currently studying Geometry.',
-    });
-    return response;
-  } catch (e) {
-    console.error(e);
-    // In a real app, you'd handle this error more gracefully
-    return { resources: ['Error: Could not get resources. Please try again.'] };
-  }
-}
 
 export function AiTutor() {
   const [isPending, startTransition] = useTransition();
