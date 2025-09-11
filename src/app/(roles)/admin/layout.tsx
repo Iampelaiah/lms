@@ -6,9 +6,12 @@ function AdminSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <UserCog className="w-6 h-6 text-primary" />
-          <h2 className="text-lg font-semibold tracking-tight">Admin Panel</h2>
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                <UserCog className="w-6 h-6 text-primary" />
+                <h2 className="text-lg font-semibold tracking-tight">Admin Panel</h2>
+            </div>
+            <SidebarTrigger className="hidden sm:flex" />
         </div>
       </SidebarHeader>
       <SidebarContent>
