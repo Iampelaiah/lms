@@ -14,7 +14,7 @@ function AdminSidebar() {
                 <AvatarImage src="https://picsum.photos/seed/admin-avatar/100/100" alt="Admin" data-ai-hint="person portrait" />
                 <AvatarFallback>AD</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
+            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                 <span className="text-xs text-muted-foreground">Good Day 👋</span>
                 <span className="text-base font-semibold">Vitaliy D.</span>
             </div>
