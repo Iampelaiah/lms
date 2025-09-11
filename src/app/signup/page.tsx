@@ -32,6 +32,15 @@ export default function SignupPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
+      <div className="text-center mb-12">
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-primary">
+          LearnetIQ
+        </h1>
+        <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+          The future of personalized learning, powered by AI. Create your
+          account to get started.
+        </p>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Create an Account</CardTitle>
@@ -58,7 +67,7 @@ export default function SignupPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" required />
             </div>
-             <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="role">I am a...</Label>
               <Select name="role" required>
                 <SelectTrigger id="role">
