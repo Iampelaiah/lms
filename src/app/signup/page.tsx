@@ -38,7 +38,7 @@ export default function SignupPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Create an Account</CardTitle>
           <CardDescription>
-            Join LearnetIQ to start your personalized learning journey.
+            Create your admin account
           </CardDescription>
         </CardHeader>
         <CardContent>
