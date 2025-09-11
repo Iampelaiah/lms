@@ -65,6 +65,14 @@ function StatCard({ title, value, icon: Icon }: StatCardProps) {
 }
 
 export default function AdminDashboardPage() {
+    // These values would typically come from a database based on the signup process.
+    const schoolStats = {
+        tutors: "12/50",
+        students: "450",
+        admins: "3/10",
+        subscription: "Pro"
+    };
+
     return (
         <div className="p-4 sm:p-6 space-y-6">
             <SchoolHeader />
@@ -76,10 +84,10 @@ export default function AdminDashboardPage() {
             <InvitationCard />
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatCard title="Total Tutors" value="8/25" icon={GraduationCap} />
-                <StatCard title="Total Students" value="150" icon={Users} />
-                <StatCard title="Total Admins" value="1/3" icon={Crown} />
-                <StatCard title="Subscription Plan" value="Pro" icon={Settings} />
+                <StatCard title="Total Tutors" value={schoolStats.tutors} icon={GraduationCap} />
+                <StatCard title="Total Students" value={schoolStats.students} icon={Users} />
+                <StatCard title="Total Admins" value={schoolStats.admins} icon={Crown} />
+                <StatCard title="Subscription Plan" value={schoolStats.subscription} icon={Settings} />
             </div>
         </div>
     );
