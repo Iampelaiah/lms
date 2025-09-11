@@ -96,7 +96,7 @@ function Step2({ onComplete }: { onComplete: () => void }) {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="school-website">School Website</Label>
-                        <Input id="school-website" type="url" placeholder="https://springfieldu.edu" required />
+                        <Input id="school-website" type="url" placeholder="https://springfieldu.edu" />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="school-country">Country</Label>
