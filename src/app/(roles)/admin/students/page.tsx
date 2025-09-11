@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search } from "lucide-react";
 import * as React from "react";
 
-const students = Array.from({ length: 450 }, (_, i) => {
+const generateStudents = () => Array.from({ length: 450 }, (_, i) => {
     const seed = 101 + i;
     const firstNames = ["Alex", "Brenda", "Charlie", "Diana", "Ethan", "Fiona", "George", "Hannah", "Ian", "Julia"];
     const lastNames = ["Johnson", "Smith", "Brown", "Prince", "Hunt", "Gallagher", "Harrison", "Ivers", "Jones", "King"];
@@ -26,6 +26,7 @@ const students = Array.from({ length: 450 }, (_, i) => {
     }
 });
 
+
 const statusVariantMap: Record<string, "default" | "secondary" | "destructive"> = {
     "Active": "default",
     "Inactive": "secondary",
@@ -33,14 +34,42 @@ const statusVariantMap: Record<string, "default" | "secondary" | "destructive"> 
 }
 
 function StudentList() {
+    const [students, setStudents] = React.useState<ReturnType<typeof generateStudents>>([]);
     const [currentPage, setCurrentPage] = React.useState(1);
     const studentsPerPage = 10;
+
+    React.useEffect(() => {
+        setStudents(generateStudents());
+    }, []);
+
     const totalPages = Math.ceil(students.length / studentsPerPage);
 
     const paginatedStudents = students.slice(
         (currentPage - 1) * studentsPerPage,
         currentPage * studentsPerPage
     );
+
+    if (students.length === 0) {
+        return (
+             <Card>
+                <CardHeader>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <CardTitle>All Students</CardTitle>
+                            <CardDescription>A list of all students registered at your institution.</CardDescription>
+                        </div>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Search students..." className="pl-9" />
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="!pt-0">
+                    <div className="text-center py-16 text-muted-foreground">Loading students...</div>
+                </CardContent>
+            </Card>
+        )
+    }
 
     return (
         <Card>
