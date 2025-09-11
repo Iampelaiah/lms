@@ -20,12 +20,10 @@ import {
   BookOpenCheck,
   Users,
   FileText,
-  Calendar,
   Settings,
   LogOut,
   Plus,
   Video,
-  Copy,
   Star,
   Bell,
 } from 'lucide-react';
@@ -42,7 +40,6 @@ function TutorSidebar() {
     { href: '/tutor/courses', icon: BookOpenCheck, label: 'My Courses' },
     { href: '/tutor/students', icon: Users, label: 'My Students' },
     { href: '/tutor/assignments', icon: FileText, label: 'Assignments' },
-    { href: '/tutor/schedule', icon: Calendar, label: 'Schedule' },
     { href: '/tutor/live-classes', icon: Video, label: 'Live Classes' },
   ];
 
