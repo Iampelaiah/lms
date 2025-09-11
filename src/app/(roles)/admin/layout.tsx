@@ -18,7 +18,7 @@ function AdminSidebar() {
                 <span className="text-xs text-muted-foreground">Good Day 👋</span>
                 <span className="text-base font-semibold">Vitaliy D.</span>
             </div>
-            <SidebarTrigger className="ml-auto" />
+            <SidebarTrigger className="ml-auto -translate-x-[5px]" />
         </div>
       </SidebarHeader>
       <SidebarContent>
