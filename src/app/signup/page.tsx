@@ -116,6 +116,34 @@ function Step2({ onComplete }: { onComplete: () => void }) {
                             </SelectContent>
                         </Select>
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="teacher-count">Number of Teachers</Label>
+                        <Select>
+                            <SelectTrigger id="teacher-count">
+                                <SelectValue placeholder="Select a range" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="1-50">1-50</SelectItem>
+                                <SelectItem value="51-200">51-200</SelectItem>
+                                <SelectItem value="201-500">201-500</SelectItem>
+                                <SelectItem value="501+">501+</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="admin-count">Number of Admins</Label>
+                        <Select>
+                            <SelectTrigger id="admin-count">
+                                <SelectValue placeholder="Select a range" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="1-10">1-10</SelectItem>
+                                <SelectItem value="11-50">11-50</SelectItem>
+                                <SelectItem value="51-100">51-100</SelectItem>
+                                <SelectItem value="101+">101+</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                     <Button type="submit" className="w-full">
                         Complete Setup
                     </Button>
