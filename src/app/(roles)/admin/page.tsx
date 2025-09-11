@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Copy, Crown, GraduationCap, Settings, Users } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
 
 function SchoolHeader() {
@@ -48,11 +49,12 @@ type StatCardProps = {
     title: string;
     value: string;
     icon: React.ElementType;
+    href?: string;
 }
 
-function StatCard({ title, value, icon: Icon }: StatCardProps) {
-    return (
-        <Card>
+function StatCard({ title, value, icon: Icon, href }: StatCardProps) {
+    const cardContent = (
+        <Card className="h-full transition-colors hover:border-primary">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">{title}</CardTitle>
                 <Icon className="h-4 w-4 text-muted-foreground" />
@@ -62,6 +64,12 @@ function StatCard({ title, value, icon: Icon }: StatCardProps) {
             </CardContent>
         </Card>
     )
+
+    if (href) {
+        return <Link href={href} className="block h-full">{cardContent}</Link>
+    }
+    
+    return cardContent;
 }
 
 export default function AdminDashboardPage() {
@@ -84,9 +92,9 @@ export default function AdminDashboardPage() {
             <InvitationCard />
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatCard title="Total Tutors" value={schoolStats.tutors} icon={GraduationCap} />
-                <StatCard title="Total Students" value={schoolStats.students} icon={Users} />
-                <StatCard title="Total Admins" value={schoolStats.admins} icon={Crown} />
+                <StatCard title="Total Tutors" value={schoolStats.tutors} icon={GraduationCap} href="/admin/tutors" />
+                <StatCard title="Total Students" value={schoolStats.students} icon={Users} href="/admin/students" />
+                <StatCard title="Total Admins" value={schoolStats.admins} icon={Crown} href="/admin/admins" />
                 <StatCard title="Subscription Plan" value={schoolStats.subscription} icon={Settings} />
             </div>
         </div>
