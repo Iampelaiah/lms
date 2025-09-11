@@ -48,7 +48,7 @@ export default function SignupPage() {
               <Input id="name" type="text" placeholder="John Doe" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Personal Email (backup mail)</Label>
               <Input
                 id="email"
                 type="email"
