@@ -25,6 +25,7 @@ import {
   LogOut,
   Plus,
   MessageCircle,
+  Video,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,7 @@ function TutorSidebar() {
     { href: '/tutor/assignments', icon: FileText, label: 'Assignments' },
     { href: '/tutor/schedule', icon: Calendar, label: 'Schedule' },
     { href: '/tutor/messages', icon: MessageCircle, label: 'Messages' },
+    { href: '/tutor/live-classes', icon: Video, label: 'Live Classes' },
   ];
 
   return (
