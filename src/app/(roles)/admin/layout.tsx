@@ -1,5 +1,5 @@
 import { Sidebar, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarProvider, SidebarInset, SidebarFooter, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
-import { UserCog, LayoutDashboard, Folder, Calendar, Mail, Bell, BarChart, Settings, Plus, Star, Copy, Slack, CircleHelp, LogOut } from 'lucide-react';
+import { UserCog, LayoutDashboard, Folder, Calendar, Mail, Bell, BarChart, Settings, Plus, Star, Copy, Slack, CircleHelp, LogOut, GraduationCap, Users, ShieldCheck, CreditCard, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,7 +23,7 @@ function AdminSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-            <SidebarGroupLabel>Menu: 6</SidebarGroupLabel>
+            <SidebarGroupLabel>Menu</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link href="/admin">
@@ -34,34 +34,44 @@ function AdminSidebar() {
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="My Project Task" isActive>
-                  <Folder />
-                  <span>My project task</span>
-                </SidebarMenuButton>
+                <Link href="/admin/tutors">
+                    <SidebarMenuButton tooltip="Tutors">
+                      <GraduationCap />
+                      <span>Tutors</span>
+                    </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Calendar">
-                  <Calendar />
-                  <span>Calendar</span>
-                </SidebarMenuButton>
+                <Link href="/admin/students">
+                    <SidebarMenuButton tooltip="Students">
+                      <Users />
+                      <span>Students</span>
+                    </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
                <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Mail">
-                  <Mail />
-                  <span>Mail</span>
-                </SidebarMenuButton>
+                <Link href="/admin/admins">
+                    <SidebarMenuButton tooltip="Admins">
+                      <UserCog />
+                      <span>Admins</span>
+                    </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
                <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Notification">
-                  <Bell />
-                  <span>Notification</span>
-                </SidebarMenuButton>
+                <Link href="/admin/validations">
+                    <SidebarMenuButton tooltip="Validations">
+                      <ShieldCheck />
+                      <span>Validations</span>
+                    </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
                <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Sales">
-                  <BarChart />
-                  <span>Sales</span>
-                </SidebarMenuButton>
+                <Link href="/admin/billing">
+                    <SidebarMenuButton tooltip="Billing">
+                      <CreditCard />
+                      <span>Billing</span>
+                    </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             </SidebarMenu>
         </SidebarGroup>
