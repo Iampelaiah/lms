@@ -26,6 +26,9 @@ import {
   Plus,
   MessageCircle,
   Video,
+  Copy,
+  Star,
+  Bell,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -82,22 +85,28 @@ function TutorSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <SidebarGroup>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Settings">
-                <Settings />
-                <span>Settings</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Logout">
-                <LogOut />
-                <span>Logout</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
+         <SidebarGroup>
+             <SidebarGroupLabel>Account</SidebarGroupLabel>
+             <SidebarMenu>
+                <SidebarMenuItem>
+                    <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
+                        <Button variant="ghost" size="icon"><Copy /></Button>
+                        <Button variant="ghost" size="icon"><Star /></Button>
+                        <Button variant="ghost" size="icon"><Bell /></Button>
+                        <Button variant="ghost" size="icon"><Settings /></Button>
+                        <Button variant="ghost" size="icon"><LogOut /></Button>
+                    </div>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Button className="w-full h-12 mt-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0" asChild>
+                        <Link href="#">
+                            <Plus className="group-data-[collapsible=icon]:w-6 group-data-[collapsible=icon]:h-6" />
+                            <span className="group-data-[collapsible=icon]:hidden">Create new task</span>
+                        </Link>
+                    </Button>
+                </SidebarMenuItem>
+             </SidebarMenu>
+         </SidebarGroup>
       </SidebarFooter>
     </Sidebar>
   );
