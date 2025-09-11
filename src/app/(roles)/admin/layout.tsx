@@ -1,5 +1,5 @@
 import { Sidebar, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarProvider, SidebarInset, SidebarFooter, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
-import { UserCog, LayoutDashboard, Folder, Calendar, Mail, Bell, BarChart, Settings, Plus, Star, Copy, Slack, CircleHelp, LogOut, GraduationCap, Users, ShieldCheck, CreditCard, UserCheck } from 'lucide-react';
+import { UserCog, LayoutDashboard, Folder, Calendar, Mail, Bell, BarChart, Settings, Plus, Star, Copy, Slack, CircleHelp, LogOut, GraduationCap, Users, ShieldCheck, CreditCard, UserCheck, SlidersHorizontal, Palette, Puzzle, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -76,30 +76,30 @@ function AdminSidebar() {
             </SidebarMenu>
         </SidebarGroup>
          <SidebarGroup>
-            <SidebarGroupLabel>Service: 3</SidebarGroupLabel>
+            <SidebarGroupLabel>Settings</SidebarGroupLabel>
             <SidebarMenu>
                  <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Jira Software">
-                        <Star />
-                        <span>Jira Software</span>
+                    <SidebarMenuButton tooltip="Preferences">
+                        <SlidersHorizontal />
+                        <span>Preferences</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Slack">
-                        <Slack />
-                        <span>Slack</span>
+                    <SidebarMenuButton tooltip="Appearance">
+                        <Palette />
+                        <span>Appearance</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Intercom">
-                        <CircleHelp />
-                        <span>Intercom</span>
+                    <SidebarMenuButton tooltip="Plugins">
+                        <Puzzle />
+                        <span>Plugins</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Add new plugin">
-                        <Plus />
-                        <span>Add new plugin</span>
+                    <SidebarMenuButton tooltip="Help">
+                        <HelpCircle />
+                        <span>Help</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
@@ -107,7 +107,7 @@ function AdminSidebar() {
       </SidebarContent>
       <SidebarFooter>
          <SidebarGroup>
-             <SidebarGroupLabel>Settings: 6</SidebarGroupLabel>
+             <SidebarGroupLabel>Account</SidebarGroupLabel>
              <SidebarMenu>
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
