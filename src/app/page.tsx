@@ -164,9 +164,7 @@ export default function LandingPage() {
           </div>
         </section>
         <section id="features" className="w-full bg-secondary py-12 md:py-24 lg:py-32 scroll-mt-14">
-          <div className="container px-4 md:px-6">
-             <FeaturesCarousel />
-          </div>
+          <FeaturesCarousel />
         </section>
         <section id="statistics" className="w-full py-12 md:py-24 lg:py-32 scroll-mt-14">
           <div className="container px-4 md:px-6">

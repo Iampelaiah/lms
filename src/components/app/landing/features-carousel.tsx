@@ -1,6 +1,6 @@
+'use client';
 import * as React from 'react';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Carousel,
   CarouselContent,
@@ -8,72 +8,111 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
-import { BrainCircuit, BookOpen, Users } from 'lucide-react';
+import Autoplay from 'embla-carousel-autoplay';
+import { Card, CardContent } from '@/components/ui/card';
+import { FileCheck, Bot, Video, BarChart, ShieldCheck, FileScan } from 'lucide-react';
 
 const features = [
   {
-    icon: BrainCircuit,
+    icon: FileCheck,
+    title: 'Course Management',
+    description:
+      'Easily create, organize, and manage your courses with our intuitive tools. Keep your curriculum structured and accessible.',
+    image: 'https://picsum.photos/seed/feature-course/1200/800',
+    aiHint: 'course management',
+  },
+  {
+    icon: BarChart,
+    title: 'Assessment System',
+    description:
+      'Design quizzes, tests, and assignments to track student progress. Get detailed analytics to understand performance.',
+    image: 'https://picsum.photos/seed/feature-assessment/1200/800',
+    aiHint: 'student assessment',
+  },
+  {
+    icon: Video,
+    title: 'Live Classroom',
+    description:
+      'Engage with students in real-time through our feature-rich virtual classrooms. Interactive whiteboards, chat, and more.',
+    image: 'https://picsum.photos/seed/feature-live/1200/800',
+    aiHint: 'online classroom',
+  },
+  {
+    icon: Bot,
     title: 'AI Enhancements',
     description:
       'Leverage the power of AI for personalized learning paths, resource recommendations, and automated feedback.',
-    image: {
-      src: 'https://picsum.photos/seed/feature-ai/1200/800',
-      hint: 'artificial intelligence',
-    },
+    image: 'https://picsum.photos/seed/feature-ai/1200/800',
+    aiHint: 'artificial intelligence',
   },
   {
-    icon: BookOpen,
-    title: 'Interactive Courses',
+    icon: FileScan,
+    title: 'Plagiarism Checker',
     description:
-      'Engage with our rich course content, including videos, quizzes, and hands-on projects designed by expert tutors.',
-    image: {
-      src: 'https://picsum.photos/seed/feature-courses/1200/800',
-      hint: 'online course',
-    },
+      'Ensure academic integrity with our built-in plagiarism detection tool. Compare submissions against a vast database of sources.',
+    image: 'https://picsum.photos/seed/feature-plagiarism/1200/800',
+    aiHint: 'document scan',
   },
   {
-    icon: Users,
-    title: 'Community Hub',
+    icon: ShieldCheck,
+    title: 'AI Checker',
     description:
-      'Connect with peers, join study groups, and learn together in our vibrant community forums.',
-    image: {
-      src: 'https://picsum.photos/seed/feature-community/1200/800',
-      hint: 'students collaborating',
-    },
-  },
+      'Detect AI-generated content in student submissions to maintain authenticity and uphold academic standards.',
+    image: 'https://picsum.photos/seed/feature-ai-check/1200/800',
+    aiHint: 'security check',
+  }
 ];
 
 export function FeaturesCarousel() {
+  const plugin = React.useRef(
+    Autoplay({ delay: 8000, stopOnInteraction: true })
+  );
+
   return (
-    <Carousel className="w-full">
-      <CarouselContent>
-        {features.map((feature, index) => (
-          <CarouselItem key={index}>
-            <Card className="overflow-hidden">
-              <CardContent className="grid md:grid-cols-2 gap-8 p-8 md:p-12">
-                <div className="relative aspect-[3/2] rounded-lg overflow-hidden">
-                    <Image
-                        src={feature.image.src}
-                        alt={feature.title}
-                        fill
-                        className="object-cover"
-                        data-ai-hint={feature.image.hint}
-                    />
+    <div className="container">
+        <h2 className="text-center text-3xl font-bold md:text-4xl mb-12">
+          We got Everything you need to succeed
+        </h2>
+        <Carousel
+          plugins={[plugin.current]}
+          className="w-full"
+          onMouseEnter={plugin.current.stop}
+          onMouseLeave={plugin.current.reset}
+          opts={{ loop: true }}
+        >
+          <CarouselContent>
+            {features.map((feature, index) => (
+              <CarouselItem key={index}>
+                <div className="p-1">
+                  <Card className="bg-background text-foreground overflow-hidden border-border">
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-0 p-0">
+                      <div className="relative min-h-[300px] md:min-h-[500px]">
+                        <Image
+                          src={feature.image}
+                          alt={feature.title}
+                          fill
+                          className="object-cover"
+                          data-ai-hint={feature.aiHint}
+                        />
+                      </div>
+                      <div className="flex flex-col justify-center p-8 md:p-12">
+                        <feature.icon className="h-12 w-12 text-accent mb-4" />
+                        <h3 className="text-2xl md:text-3xl font-bold mb-4">
+                          {feature.title}
+                        </h3>
+                        <p className="text-muted-foreground text-lg">
+                          {feature.description}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-                <div className="flex flex-col justify-center space-y-4">
-                  <feature.icon className="w-12 h-12 text-primary" />
-                  <h3 className="text-3xl font-bold">{feature.title}</h3>
-                  <p className="text-muted-foreground text-lg">
-                    {feature.description}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <CarouselPrevious className="absolute left-[-1.5rem] top-1/2 -translate-y-1/2 hidden lg:flex" />
-      <CarouselNext className="absolute right-[-1.5rem] top-1/2 -translate-y-1/2 hidden lg:flex" />
-    </Carousel>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-4 text-primary bg-background/80 hover:bg-background" />
+          <CarouselNext className="right-4 text-primary bg-background/80 hover:bg-background" />
+        </Carousel>
+      </div>
   );
 }
