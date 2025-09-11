@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, Globe } from "lucide-react";
+import { Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, Globe, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle, LanguagesIcon } from "lucide-react";
 import Link from 'next/link';
 
 function SchoolHeader() {
@@ -46,28 +46,118 @@ const studySubjects = [
         href: "#"
     },
     {
-        name: "Physics",
-        description: "Uncover the laws of motion and energy.",
-        icon: Atom,
-        href: "#"
-    },
-    {
-        name: "Chemistry",
-        description: "Study matter and its interactions.",
-        icon: Beaker,
-        href: "#"
+        name: "Science",
+        description: "Investigate the natural and physical world.",
+        icon: FlaskConical,
+        href: "/student/courses/science"
     },
     {
         name: "Biology",
-        description: "Explore the science of living organisms.",
+        description: "Study life and living organisms.",
         icon: Dna,
         href: "/student/courses/science"
     },
     {
-        name: "Languages",
-        description: "Learn to communicate in a new tongue.",
-        icon: Languages,
+        name: "Business studies",
+        description: "Learn the principles of business.",
+        icon: Building2,
+        href: "#"
+    },
+    {
+        name: "Physics",
+        description: "Explore matter, energy, and forces.",
+        icon: Atom,
+        href: "#"
+    },
+    {
+        name: "ICT",
+        description: "Dive into information and communication.",
+        icon: Network,
+        href: "#"
+    },
+    {
+        name: "Physical Education",
+        description: "Engage in physical activity and sport.",
+        icon: Dumbbell,
+        href: "#"
+    },
+    {
+        name: "Chemistry",
+        description: "Study substances and their properties.",
+        icon: Beaker,
+        href: "#"
+    },
+    {
+        name: "Economics",
+        description: "Analyze production, distribution, and consumption.",
+        icon: TrendingUp,
+        href: "#"
+    },
+    {
+        name: "English Literature",
+        description: "Explore classic and modern literary works.",
+        icon: BookOpenText,
         href: "/student/courses/english"
+    },
+    {
+        name: "Commerce",
+        description: "Learn about trade and business activities.",
+        icon: Store,
+        href: "#"
+    },
+    {
+        name: "Computer Science",
+        description: "Delve into computation and information.",
+        icon: Cpu,
+        href: "#"
+    },
+    {
+        name: "Performing arts",
+        description: "Express creativity through performance.",
+        icon: Theater,
+        href: "#"
+    },
+    {
+        name: "Religious studies",
+        description: "Examine different beliefs and religions.",
+        icon: ScrollText,
+        href: "#"
+    },
+    {
+        name: "Sociology",
+        description: "Study social behavior and society.",
+        icon: Users,
+        href: "#"
+    },
+    {
+        name: "Agriculture",
+        description: "Learn about farming and cultivation.",
+        icon: Tractor,
+        href: "#"
+    },
+    {
+        name: "Design and Technology",
+        description: "Create and innovate with technology.",
+        icon: DraftingCompass,
+        href: "#"
+    },
+    {
+        name: "Visual Arts",
+        description: "Express ideas through visual mediums.",
+        icon: Palette,
+        href: "#"
+    },
+    {
+        name: "Business English",
+        description: "Master English for the professional world.",
+        icon: MessageCircle,
+        href: "/student/courses/english"
+    },
+    {
+        name: "Shona",
+        description: "Learn the language and culture of the Shona people.",
+        icon: Languages,
+        href: "#"
     }
 ];
 
