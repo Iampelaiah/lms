@@ -26,10 +26,12 @@ function AdminSidebar() {
             <SidebarGroupLabel>Menu: 6</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Dashboard">
-                  <LayoutDashboard />
-                  <span>Dashboard</span>
-                </SidebarMenuButton>
+                <Link href="/admin">
+                    <SidebarMenuButton tooltip="Dashboard">
+                        <LayoutDashboard />
+                        <span>Dashboard</span>
+                    </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton tooltip="My Project Task" isActive>
