@@ -54,21 +54,25 @@ function AiStudyPanel() {
 export default function StudentDashboardPage() {
   const subjectsWithProgress = [
     { name: 'Mathematics', overallProgress: 75, icon: 'BookOpen', topics: [
-        { name: 'Algebra', progress: 90 },
-        { name: 'Geometry', progress: 60 },
-        { name: 'Calculus', progress: 75 },
-        { name: 'Trigonometry', progress: 80 },
-        { name: 'Statistics', progress: 85 }
+        { name: 'Algebra II', progress: 90 },
+        { name: 'Geometry Proofs', progress: 60 },
+        { name: 'Intro to Calculus', progress: 75 },
+        { name: 'Advanced Trigonometry', progress: 80 },
+        { name: 'Probability & Statistics', progress: 65 }
     ]},
     { name: 'Physics', overallProgress: 60, icon: 'BookOpen', topics: [
-        { name: 'Mechanics', progress: 70 },
+        { name: 'Kinematics', progress: 70 },
         { name: 'Thermodynamics', progress: 50 },
-        { name: 'Electromagnetism', progress: 65 }
+        { name: 'Electromagnetism', progress: 65 },
+        { name: 'Quantum Mechanics', progress: 45 },
+        { name: 'Optics', progress: 75 }
     ]},
     { name: 'History', overallProgress: 88, icon: 'BookOpen', topics: [
-        { name: 'World War II', progress: 80 },
-        { name: 'The Cold War', progress: 92 },
-        { name: 'The Renaissance', progress: 85 }
+        { name: 'The American Revolution', progress: 95 },
+        { name: 'The Roman Empire', progress: 88 },
+        { name: 'The Renaissance Period', progress: 85 },
+        { name: 'World War I', progress: 92 },
+        { name: 'The Cold War Era', progress: 80 }
     ]},
   ]
   return (

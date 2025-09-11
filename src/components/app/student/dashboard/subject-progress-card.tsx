@@ -25,13 +25,16 @@ type SubjectProgressCardProps = {
 function TopicCarousel({ topics }: { topics: Topic[] }) {
     const [emblaRef] = useEmblaCarousel({ direction: 'y', loop: true, align: 'start' }, [Autoplay({ delay: 2000, stopOnInteraction: false })])
 
-    const topicsToDisplay = [...topics, ...topics, ...topics];
+    // No need to triple the topics if loop is true, embla handles it.
+    // But we need enough slides for the loop to work well. Let's ensure at least a few.
+    const topicsToDisplay = topics.length > 1 ? topics : [...topics, ...topics, ...topics, ...topics, ...topics];
+
 
     return (
-        <div className="overflow-hidden h-48" ref={emblaRef}>
+        <div className="overflow-hidden h-16" ref={emblaRef}>
              <div className="flex flex-col h-full">
                 {topicsToDisplay.map((topic, index) => (
-                    <div key={`${topic.name}-${index}`} className="bg-secondary/50 rounded-md p-3 flex-[0_0_auto] min-h-0 mb-2">
+                    <div key={`${topic.name}-${index}`} className="bg-secondary/50 rounded-md p-3 flex-[0_0_100%] min-h-0">
                         <div className="flex justify-between items-center text-sm">
                             <span className="font-medium">{topic.name}</span>
                             <span className="font-semibold">{topic.progress}%</span>
@@ -46,13 +49,6 @@ function TopicCarousel({ topics }: { topics: Topic[] }) {
 
 
 export function SubjectProgressCard({ subject }: SubjectProgressCardProps) {
-    // Extend the topics to have at least 4 for the carousel
-    const extendedTopics = [...subject.topics];
-    while (extendedTopics.length < 4) {
-        extendedTopics.push({ name: 'More topics coming soon', progress: 0 });
-    }
-
-
   return (
     <Card>
       <CardHeader>
@@ -67,7 +63,7 @@ export function SubjectProgressCard({ subject }: SubjectProgressCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <Progress value={subject.overallProgress} className="h-2" />
-        <TopicCarousel topics={extendedTopics} />
+        <TopicCarousel topics={subject.topics} />
       </CardContent>
     </Card>
   );
