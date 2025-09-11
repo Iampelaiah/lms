@@ -1,3 +1,5 @@
+'use client'
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,9 +53,23 @@ function AiStudyPanel() {
 
 export default function StudentDashboardPage() {
   const subjectsWithProgress = [
-    { name: 'Mathematics', overallProgress: 75, icon: 'BookOpen', topics: [{ name: 'Algebra', progress: 90 }] },
-    { name: 'Physics', overallProgress: 60, icon: 'BookOpen', topics: [{ name: 'Mechanics', progress: 70 }] },
-    { name: 'History', overallProgress: 88, icon: 'BookOpen', topics: [{ name: 'World War II', progress: 80 }] },
+    { name: 'Mathematics', overallProgress: 75, icon: 'BookOpen', topics: [
+        { name: 'Algebra', progress: 90 },
+        { name: 'Geometry', progress: 60 },
+        { name: 'Calculus', progress: 75 },
+        { name: 'Trigonometry', progress: 80 },
+        { name: 'Statistics', progress: 85 }
+    ]},
+    { name: 'Physics', overallProgress: 60, icon: 'BookOpen', topics: [
+        { name: 'Mechanics', progress: 70 },
+        { name: 'Thermodynamics', progress: 50 },
+        { name: 'Electromagnetism', progress: 65 }
+    ]},
+    { name: 'History', overallProgress: 88, icon: 'BookOpen', topics: [
+        { name: 'World War II', progress: 80 },
+        { name: 'The Cold War', progress: 92 },
+        { name: 'The Renaissance', progress: 85 }
+    ]},
   ]
   return (
     <div className="space-y-6">
