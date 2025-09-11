@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,51 +10,61 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Star } from "lucide-react";
 import Image from "next/image";
+import * as React from "react";
 
 const courses = [
     {
-        title: "Algebra Basics",
-        description: "Master the fundamentals of algebraic expressions, equations, and functions. Perfect for beginners.",
-        rating: 4.2,
-        reviews: 412,
-        level: "Beginner",
-        image: "https://picsum.photos/seed/course-algebra/300/200",
-        imageHint: "algebra equation"
-    },
-    {
         title: "Geometry Foundations",
-        description: "Explore the world of shapes, angles, and spatial reasoning. Learn key concepts to build a strong foundation.",
-        rating: 4.5,
-        reviews: 358,
+        description: "Explore the world of shapes, angles, and spatial reasoning. Learn key theorems and proofs.",
+        rating: 4.8,
+        reviews: 580,
         level: "Beginner",
         image: "https://picsum.photos/seed/course-geometry/300/200",
         imageHint: "geometric shapes"
+    },
+    {
+        title: "Calculus I",
+        description: "An introduction to differential calculus, including limits, derivatives, and their applications.",
+        rating: 4.5,
+        reviews: 720,
+        level: "Intermediate",
+        image: "https://picsum.photos/seed/course-calculus/300/200",
+        imageHint: "calculus equation"
+    },
+    {
+        title: "Probability & Statistics",
+        description: "Learn to analyze data, understand probability distributions, and perform statistical tests.",
+        rating: 4.2,
+        reviews: 380,
+        level: "Intermediate",
+        image: "https://picsum.photos/seed/course-stats/300/200",
+        imageHint: "statistics graph"
     }
+];
+
+const onlineUsers = [
+    { name: "Maren Maureen", avatar: "https://picsum.photos/seed/user-1/40/40", hint: "person portrait" },
+    { name: "Jenniffer Jane", avatar: "https://picsum.photos/seed/user-2/40/40", hint: "person portrait" },
+    { name: "Ryan Herwinds", avatar: "https://picsum.photos/seed/user-3/40/40", hint: "person portrait" },
+    { name: "Kierra Culhane", avatar: "https://picsum.photos/seed/user-4/40/40", hint: "person portrait" },
 ]
 
-function SchoolHeader() {
-  return (
-    <Card>
-      <CardContent className="flex items-center gap-6 p-6">
-        <Avatar className="h-24 w-24 border">
-          <AvatarImage src="https://picsum.photos/seed/school-logo/100/100" alt="School Logo" data-ai-hint="school logo" />
-          <AvatarFallback>SH</AvatarFallback>
-        </Avatar>
-        <div>
-          <h2 className="text-2xl font-bold">Northwood High School</h2>
-          <p className="text-muted-foreground italic">"Our mission is to foster a community of lifelong learners and critical thinkers."</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+const calendarLegend = [
+    { subject: "Mathematics", color: "bg-blue-300" },
+    { subject: "Physics", color: "bg-green-300" },
+    { subject: "History", color: "bg-yellow-300" },
+    { subject: "Chemistry", color: "bg-purple-300" },
+    { subject: "Biology", color: "bg-pink-300" },
+    { subject: "English Literature", color: "bg-indigo-300" },
+    { subject: "Computer Science", color: "bg-red-300" },
+]
 
 function CourseCard({ course }: { course: (typeof courses)[0] }) {
     return (
         <Card className="overflow-hidden">
-            <CardContent className="p-0 flex flex-col sm:flex-row">
-                <div className="relative w-full sm:w-1/3 aspect-video sm:aspect-square">
-                     <Image src={course.image} alt={course.title} fill className="object-cover" data-ai-hint={course.imageHint} />
+            <CardContent className="p-0 flex">
+                <div className="relative w-1/3 aspect-square">
+                     <Image src={course.image} alt={course.title} width={300} height={200} className="object-cover h-full w-full" data-ai-hint={course.imageHint} />
                 </div>
                 <div className="p-6 flex flex-col justify-between flex-1">
                     <div>
@@ -75,17 +86,69 @@ function CourseCard({ course }: { course: (typeof courses)[0] }) {
     )
 }
 
-export default function MyCoursesPage() {
+function CalendarCard() {
     const [date, setDate] = React.useState<Date | undefined>(new Date());
+    return (
+         <Card>
+            <CardHeader>
+                <CardTitle>Study Schedule</CardTitle>
+            </CardHeader>
+            <CardContent>
+                    <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    className="p-0"
+                />
+            </CardContent>
+             <CardContent>
+                <h4 className="font-semibold mb-2 text-sm">Legend</h4>
+                <div className="grid grid-cols-2 gap-2">
+                    {calendarLegend.map(item => (
+                        <div key={item.subject} className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${item.color}`} />
+                            <span className="text-xs text-muted-foreground">{item.subject}</span>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
 
+function OnlineUsersCard() {
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Online Users</CardTitle>
+                <Button variant="link" size="sm">See all</Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {onlineUsers.map(user => (
+                    <div key={user.name} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                             <Avatar className="h-10 w-10">
+                                <AvatarImage src={user.avatar} alt={user.name} data-ai-hint={user.hint} />
+                                <AvatarFallback>{user.name.split(' ').map(n=>n[0]).join('')}</AvatarFallback>
+                            </Avatar>
+                            <p className="font-medium">{user.name}</p>
+                        </div>
+                        <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+    )
+}
+
+export default function MyCoursesPage() {
     return (
         <div className="space-y-6">
-            <SchoolHeader />
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">My Courses</h1>
-                        <p className="text-muted-foreground">Continue your learning journey in Mathematics.</p>
+                        <p className="text-muted-foreground">Continue your learning journey.</p>
                     </div>
 
                     <Tabs defaultValue="all">
@@ -108,19 +171,8 @@ export default function MyCoursesPage() {
                     </Tabs>
                 </div>
                 <div className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Study Schedule</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                             <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={setDate}
-                                className="p-0"
-                            />
-                        </CardContent>
-                    </Card>
+                    <CalendarCard />
+                    <OnlineUsersCard />
                 </div>
              </div>
         </div>
