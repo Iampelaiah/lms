@@ -1,8 +1,9 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpenCheck, PlusCircle, Users } from "lucide-react";
+import { BookOpenCheck, PlusCircle, Users, Eye, Settings } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -75,20 +76,32 @@ function CourseList() {
                     </CardHeader>
                     <CardContent className="p-4 flex-grow">
                         <h3 className="text-lg font-bold">{course.title}</h3>
+                        <div className="pt-2 text-sm text-muted-foreground flex items-center gap-4">
+                            {course.status === "Published" ? (
+                                <>
+                                    <div className="flex items-center gap-1.5">
+                                        <Users className="w-4 h-4" />
+                                        <span>{course.students} Students</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <BookOpenCheck className="w-4 h-4" />
+                                        <span>{course.lessons} Lessons</span>
+                                    </div>
+                                </>
+                            ) : (
+                                <p className="text-yellow-600">Pending admin approval</p>
+                            )}
+                        </div>
                     </CardContent>
-                    <CardFooter className="p-4 pt-0 text-sm text-muted-foreground flex items-center gap-4">
-                        {course.status === "Published" && (
-                            <>
-                                <div className="flex items-center gap-1.5">
-                                    <Users className="w-4 h-4" />
-                                    <span>{course.students} Students</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <BookOpenCheck className="w-4 h-4" />
-                                    <span>{course.lessons} Lessons</span>
-                                </div>
-                            </>
-                        )}
+                    <CardFooter className="p-4 pt-0 flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1">
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Course
+                        </Button>
+                        <Button variant="secondary" size="sm" className="flex-1">
+                            <Settings className="mr-2 h-4 w-4" />
+                            Manage
+                        </Button>
                     </CardFooter>
                 </Card>
             ))}
