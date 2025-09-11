@@ -1,9 +1,11 @@
 
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, FolderPlus, PlusCircle, FilePlus } from "lucide-react";
 import Link from "next/link";
+import { ClassPerformance } from "@/components/app/tutor/dashboard/class-performance";
 
 function SchoolHeader() {
   return (
@@ -82,6 +84,9 @@ export default function TutorPage() {
              <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">Tutor Dashboard</h1>
                 <p className="text-muted-foreground">Welcome back, Dr. Reed. Here's your overview for today.</p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ClassPerformance />
             </div>
             <TutorTools />
         </div>
