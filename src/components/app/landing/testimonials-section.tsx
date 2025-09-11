@@ -39,9 +39,9 @@ export function TestimonialsSection() {
     <div className="space-y-12">
       <div className="text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">What Our Community Says</h2>
-        <p className="mt-4 text-lg text-muted-foreground">Real stories from students, parents, and tutors who love LearnetIQ.</p>
+        <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">Real stories from students, parents, and tutors who love LearnetIQ.</p>
       </div>
-      <div className="grid gap-8 md:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {testimonials.map((testimonial, index) => (
           <Card key={index} className="flex flex-col justify-between">
             <CardContent className="pt-6">

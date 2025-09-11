@@ -10,8 +10,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 function Footer() {
   return (
     <footer className="w-full bg-secondary">
-      <div className="container grid grid-cols-2 gap-8 px-4 py-12 md:grid-cols-5 md:px-6">
-        <div className="col-span-2 flex flex-col gap-4 md:col-span-1">
+      <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 px-4 py-12 md:px-6">
+        <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex flex-col gap-4">
           <Link href="#" className="flex items-center gap-2" prefetch={false}>
             <GraduationCap className="h-6 w-6 text-primary" />
             <span className="text-lg font-bold">LearnetIQ</span>
@@ -62,7 +62,7 @@ function Footer() {
             </Link>
           </nav>
         </div>
-        <div className="space-y-2">
+        <div className="col-span-1 sm:col-span-2 lg:col-span-1 space-y-2">
           <h4 className="font-semibold">Join LearnetIQ</h4>
           <p className="text-sm text-muted-foreground">Start your learning journey today.</p>
           <Button asChild>
@@ -130,20 +130,20 @@ export default function LandingPage() {
         </div>
       </header>
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
+        <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
             <div className="grid gap-6 lg:grid-cols-[1fr_550px] lg:gap-12 xl:grid-cols-[1fr_650px]">
-              <div className="flex flex-col justify-center space-y-4">
+              <div className="flex flex-col justify-center space-y-4 text-center lg:text-left">
                 <div className="space-y-4">
                   <h1 className="text-4xl font-bold tracking-tighter text-primary sm:text-5xl xl:text-6xl/none">
                     Unlock Your Potential with LearnetIQ
                   </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                  <p className="max-w-[600px] text-muted-foreground md:text-xl mx-auto lg:mx-0">
                     The all-in-one learning platform designed for students, tutors, and parents. Personalized,
                     collaborative, and engaging education at your fingertips.
                   </p>
                 </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center lg:justify-start">
                   <Button asChild size="lg">
                     <Link href="/login">Get Started for Free</Link>
                   </Button>

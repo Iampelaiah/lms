@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart3, CheckCircle, GraduationCap, Users } from 'lucide-react';
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, Bar, BarChart as RechartsBarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 const stats = [
     { title: 'Active Students', value: '10,000+', icon: Users, color: 'text-orange-500' },
@@ -48,9 +48,9 @@ export function StatisticsSection() {
         <div className="space-y-12">
             <div className="text-center">
                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Trusted by Thousands of Learners</h2>
-                <p className="mt-4 text-lg text-muted-foreground">Our platform empowers students to achieve their academic goals.</p>
+                <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">Our platform empowers students to achieve their academic goals.</p>
             </div>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {stats.map((stat) => (
                     <Card key={stat.title}>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -71,7 +71,7 @@ export function StatisticsSection() {
                 <CardContent className="pt-0">
                     <ChartContainer config={areaChartConfig} className="min-h-[250px] w-full">
                          <ResponsiveContainer width="100%" height={300}>
-                            <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
@@ -95,7 +95,7 @@ export function StatisticsSection() {
                                 <ChartTooltip 
                                     cursor={{stroke: 'hsl(var(--border))', strokeWidth: 2, strokeDasharray: '3 3'}}
                                     content={<ChartTooltipContent 
-                                        formatter={(value, name) => [`${value.toLocaleString()}`, 'Students']}
+                                        formatter={(value) => [`${(value as number).toLocaleString()}`, 'Students']}
                                     />} 
                                 />
                                 <Area type="monotone" dataKey="students" stroke="hsl(var(--chart-1))" fill="url(#colorStudents)" strokeWidth={2} />
@@ -116,7 +116,7 @@ export function StatisticsSection() {
                 <CardContent>
                     <ChartContainer config={barChartConfig} className="min-h-[300px] w-full">
                         <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={passRateData} layout="vertical" margin={{ left: 10 }}>
+                            <RechartsBarChart data={passRateData} layout="vertical" margin={{ left: 10, right: 30 }}>
                                 <CartesianGrid horizontal={false} />
                                 <YAxis 
                                     dataKey="subject" 
@@ -124,6 +124,7 @@ export function StatisticsSection() {
                                     tickLine={false} 
                                     axisLine={false}
                                     tickMargin={10}
+                                    width={80}
                                 />
                                 <XAxis type="number" hide />
                                 <ChartTooltip 
@@ -134,7 +135,7 @@ export function StatisticsSection() {
                                     />} 
                                 />
                                 <Bar dataKey="passRate" fill="hsl(var(--chart-1))" radius={4} />
-                            </BarChart>
+                            </RechartsBarChart>
                         </ResponsiveContainer>
                     </ChartContainer>
                 </CardContent>
