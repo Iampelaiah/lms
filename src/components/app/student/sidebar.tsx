@@ -20,10 +20,19 @@ import {
   Library,
   Settings,
   LogOut,
+  SlidersHorizontal,
+  Palette,
+  Puzzle,
+  HelpCircle,
+  Copy,
+  Star,
+  Bell,
+  Plus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
   { href: '/student', icon: LayoutDashboard, label: 'Dashboard' },
@@ -70,23 +79,57 @@ export function StudentSidebar() {
             ))}
           </SidebarMenu>
         </SidebarGroup>
+         <SidebarGroup>
+            <SidebarGroupLabel>Settings</SidebarGroupLabel>
+            <SidebarMenu>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Preferences">
+                        <SlidersHorizontal />
+                        <span>Preferences</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Appearance">
+                        <Palette />
+                        <span>Appearance</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Plugins">
+                        <Puzzle />
+                        <span>Plugins</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton tooltip="Help">
+                        <HelpCircle />
+                        <span>Help</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <SidebarGroup>
           <SidebarGroupLabel>Account</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings">
-                  <Settings />
-                  <span>Settings</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Log out">
-                  <LogOut />
-                  <span>Log out</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                    <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
+                        <Button variant="ghost" size="icon"><Copy /></Button>
+                        <Button variant="ghost" size="icon"><Star /></Button>
+                        <Button variant="ghost" size="icon"><Bell /></Button>
+                        <Button variant="ghost" size="icon"><Settings /></Button>
+                        <Button variant="ghost" size="icon"><LogOut /></Button>
+                    </div>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Button className="w-full h-12 mt-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0" asChild>
+                        <Link href="#">
+                            <Plus className="group-data-[collapsible=icon]:w-6 group-data-[collapsible=icon]:h-6" />
+                            <span className="group-data-[collapsible=icon]:hidden">Create new task</span>
+                        </Link>
+                    </Button>
+                </SidebarMenuItem>
             </SidebarMenu>
         </SidebarGroup>
       </SidebarFooter>
