@@ -5,6 +5,90 @@ import { Button } from '@/components/ui/button';
 import { GraduationCap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+function Footer() {
+  return (
+    <footer className="w-full bg-secondary">
+      <div className="container grid grid-cols-2 gap-8 px-4 py-12 md:grid-cols-5 md:px-6">
+        <div className="col-span-2 flex flex-col gap-4 md:col-span-1">
+          <Link href="#" className="flex items-center gap-2" prefetch={false}>
+            <GraduationCap className="h-6 w-6 text-primary" />
+            <span className="text-lg font-bold">LearnetIQ</span>
+          </Link>
+          <p className="text-sm text-muted-foreground">
+            Empowering the next generation of learners.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <h4 className="font-semibold">Platform</h4>
+          <nav className="flex flex-col gap-1">
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
+              Features
+            </Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
+              Pricing
+            </Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
+              Tutors
+            </Link>
+          </nav>
+        </div>
+        <div className="space-y-2">
+          <h4 className="font-semibold">Company</h4>
+          <nav className="flex flex-col gap-1">
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
+              About Us
+            </Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
+              Careers
+            </Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
+              Press
+            </Link>
+          </nav>
+        </div>
+        <div className="space-y-2">
+          <h4 className="font-semibold">Resources</h4>
+          <nav className="flex flex-col gap-1">
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
+              Blog
+            </Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
+              Help Center
+            </Link>
+            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground" prefetch={false}>
+              Contact Us
+            </Link>
+          </nav>
+        </div>
+        <div className="space-y-2">
+          <h4 className="font-semibold">Join LearnetIQ</h4>
+          <p className="text-sm text-muted-foreground">Start your learning journey today.</p>
+          <Button asChild>
+            <Link href="/login">Go to App</Link>
+          </Button>
+        </div>
+      </div>
+      <div className="container flex flex-col items-center justify-between gap-4 border-t px-4 py-6 sm:flex-row md:px-6">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Avatar className="w-6 h-6">
+            <AvatarFallback className="text-xs bg-foreground text-background">N</AvatarFallback>
+          </Avatar>
+          <span>© 2025 LearnetIQ. All rights reserved.</span>
+        </div>
+        <nav className="flex items-center gap-4 text-sm">
+          <Link href="#" className="text-muted-foreground hover:text-foreground" prefetch={false}>
+            Privacy Policy
+          </Link>
+          <Link href="#" className="text-muted-foreground hover:text-foreground" prefetch={false}>
+            Terms of Service
+          </Link>
+        </nav>
+      </div>
+    </footer>
+  );
+}
 
 export default function LandingPage() {
   return (
@@ -95,6 +179,7 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }
