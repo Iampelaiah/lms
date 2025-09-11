@@ -70,7 +70,7 @@ export function FeaturesCarousel() {
 
   return (
     <div className="container">
-        <h2 className="text-center text-3xl font-bold md:text-4xl mb-12">
+        <h2 className="text-center text-3xl font-bold md:text-4xl mb-8">
           We got Everything you need to succeed
         </h2>
         <Carousel
