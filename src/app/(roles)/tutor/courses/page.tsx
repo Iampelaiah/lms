@@ -93,15 +93,17 @@ function CourseList() {
                             )}
                         </div>
                     </CardContent>
-                    <CardFooter className="p-4 pt-0 flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1">
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Course
-                        </Button>
-                        <Button variant="secondary" size="sm" className="flex-1">
-                            <Settings className="mr-2 h-4 w-4" />
-                            Manage
-                        </Button>
+                    <CardFooter className="p-4 pt-0">
+                        <div className="flex w-full gap-2">
+                            <Button variant="outline" size="sm" className="flex-1">
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Course
+                            </Button>
+                            <Button variant="secondary" size="sm" className="flex-1">
+                                <Settings className="mr-2 h-4 w-4" />
+                                Manage
+                            </Button>
+                        </div>
                     </CardFooter>
                 </Card>
             ))}
