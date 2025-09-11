@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 function Step1({ onNext }: { onNext: () => void }) {
   const handleSignup = (e: React.FormEvent) => {
@@ -84,6 +85,14 @@ function Step2({ onComplete }: { onComplete: () => void }) {
                     <div className="space-y-2">
                         <Label htmlFor="school-name">School Name</Label>
                         <Input id="school-name" type="text" placeholder="Springfield University" required />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="school-logo">School Logo</Label>
+                        <Input id="school-logo" type="file" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="school-mantra">School Mantra</Label>
+                        <Textarea id="school-mantra" placeholder="e.g., 'Excellence and Integrity'" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="school-website">School Website</Label>
