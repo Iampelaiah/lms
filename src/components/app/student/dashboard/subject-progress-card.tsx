@@ -23,17 +23,12 @@ type SubjectProgressCardProps = {
 };
 
 function TopicCarousel({ topics }: { topics: Topic[] }) {
-    const [emblaRef] = useEmblaCarousel({ direction: 'y', loop: true, align: 'start' }, [Autoplay({ delay: 2000, stopOnInteraction: false })])
-
-    // No need to triple the topics if loop is true, embla handles it.
-    // But we need enough slides for the loop to work well. Let's ensure at least a few.
-    const topicsToDisplay = topics.length > 1 ? topics : [...topics, ...topics, ...topics, ...topics, ...topics];
-
+    const [emblaRef] = useEmblaCarousel({ direction: 'y', loop: true, align: 'start' }, [Autoplay({ delay: 2000, stopOnInteraction: false, playOnInit: true })])
 
     return (
         <div className="overflow-hidden h-16" ref={emblaRef}>
              <div className="flex flex-col h-full">
-                {topicsToDisplay.map((topic, index) => (
+                {topics.map((topic, index) => (
                     <div key={`${topic.name}-${index}`} className="bg-secondary/50 rounded-md p-3 flex-[0_0_100%] min-h-0">
                         <div className="flex justify-between items-center text-sm">
                             <span className="font-medium">{topic.name}</span>
