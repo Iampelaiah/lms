@@ -211,15 +211,15 @@ export const resourceLibrary: ResourceSubject[] = [
         id: 'algebra',
         title: 'Algebra',
         resources: [
-          { id: 'alg-pdf-1', title: 'Algebra Cheat Sheet', type: 'pdf', url: '#' },
-          { id: 'alg-vid-1', title: 'Intro to Polynomials', type: 'video', url: '#' },
+          { id: 'alg-pdf-1', title: 'Algebra I Workbook', type: 'pdf', url: '#', size: '5.2 MB', image: 'https://picsum.photos/seed/resource-alg-1/600/400', imageHint: 'math workbook' },
+          { id: 'alg-vid-1', title: 'Introduction to Polynomials', type: 'video', url: '#', size: '120 MB', image: 'https://picsum.photos/seed/resource-alg-2/600/400', imageHint: 'math lecture' },
         ],
       },
       {
         id: 'geometry',
         title: 'Geometry',
         resources: [
-          { id: 'geo-ws-1', title: 'Triangle Properties Worksheet', type: 'worksheet', url: '#' },
+          { id: 'geo-ws-1', title: 'Triangle Properties Worksheet', type: 'worksheet', url: '#', size: '1.8 MB', image: 'https://picsum.photos/seed/resource-geo-1/600/400', imageHint: 'geometry diagrams' },
         ],
       },
     ],
@@ -248,8 +248,8 @@ export const resourceLibrary: ResourceSubject[] = [
         id: 'biology-topics',
         title: 'General Biology',
         resources: [
-          { id: 'bio-art-1', title: 'The Structure of a Cell', type: 'article', url: '#' },
-          { id: 'bio-vid-1', title: 'Photosynthesis Explained', type: 'video', url: '#' },
+          { id: 'bio-art-1', title: 'The Structure of a Cell', type: 'article', url: '#', size: '850 KB', image: 'https://picsum.photos/seed/resource-bio-1/600/400', imageHint: 'cell diagram' },
+          { id: 'bio-vid-1', title: 'Photosynthesis Explained', type: 'video', url: '#', size: '250 MB', image: 'https://picsum.photos/seed/resource-bio-2/600/400', imageHint: 'plant leaves' },
         ],
       },
     ],

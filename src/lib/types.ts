@@ -63,6 +63,9 @@ export type Resource = {
   title: string;
   type: 'pdf' | 'video' | 'article' | 'worksheet';
   url: string;
+  size: string;
+  image: string;
+  imageHint: string;
 };
 
 export type ResourceTopic = {

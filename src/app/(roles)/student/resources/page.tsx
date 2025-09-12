@@ -5,15 +5,18 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { resourceLibrary } from '@/lib/data';
-import { Download, FileText, PlayCircle, Sheet, Book, Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle } from 'lucide-react';
+import { Download, FileText, PlayCircle, Sheet, Book, Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle, File, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Resource, ResourceSubject } from '@/lib/types';
 import { SchoolHeader } from '@/components/app/school-header';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
 
 const resourceIcons: Record<Resource['type'], React.ElementType> = {
-  pdf: FileText,
-  video: PlayCircle,
+  pdf: File,
+  video: Video,
   article: Book,
   worksheet: Sheet,
 };
@@ -44,6 +47,35 @@ const subjectIcons: Record<string, React.ElementType> = {
     "Shona": Languages,
 }
 
+function ResourceCard({ resource }: { resource: Resource }) {
+    const Icon = resourceIcons[resource.type];
+    return (
+        <Card className="flex-shrink-0 w-[280px] overflow-hidden">
+             <CardHeader className="p-0">
+                <div className="relative aspect-[3/2] w-full">
+                    <Image src={resource.image} alt={resource.title} fill className="object-cover" data-ai-hint={resource.imageHint} />
+                     <Badge className="absolute top-2 right-2 capitalize">{resource.type}</Badge>
+                </div>
+            </CardHeader>
+            <CardContent className="p-4">
+                <h4 className="font-semibold">{resource.title}</h4>
+                <div className="flex items-center text-sm text-muted-foreground mt-2">
+                    <Icon className="h-4 w-4 mr-2" />
+                    <span>{resource.size}</span>
+                </div>
+            </CardContent>
+            <CardFooter className="p-4 pt-0">
+                <Button variant="outline" className="w-full" asChild>
+                    <Link href={resource.url}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download
+                    </Link>
+                </Button>
+            </CardFooter>
+        </Card>
+    );
+}
+
 function SubjectAccordionItem({ subject }: { subject: ResourceSubject }) {
     const Icon = subjectIcons[subject.title] || Book;
 
@@ -57,32 +89,22 @@ function SubjectAccordionItem({ subject }: { subject: ResourceSubject }) {
             </AccordionTrigger>
             <AccordionContent className="p-6 pt-0">
                 {subject.topics.length > 0 ? (
-                    <Accordion type="multiple" className="w-full space-y-2">
+                    <Accordion type="multiple" className="w-full space-y-4">
                         {subject.topics.map((topic) => (
-                        <AccordionItem value={topic.id} key={topic.id} className="border-none">
-                            <AccordionTrigger className="py-3 font-semibold text-base hover:no-underline">
+                        <AccordionItem value={topic.id} key={topic.id} className="border-none bg-muted/50 rounded-lg">
+                            <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
                             {topic.title}
                             </AccordionTrigger>
-                            <AccordionContent className="pb-0 pl-4">
-                            <ul className="space-y-3">
-                                {topic.resources.map((resource) => {
-                                const ResourceIcon = resourceIcons[resource.type];
-                                return (
-                                    <li key={resource.id} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <ResourceIcon className="h-5 w-5 text-muted-foreground" />
-                                        <span className="text-sm">{resource.title}</span>
+                            <AccordionContent className="p-4 pt-0">
+                                {topic.resources.length > 0 ? (
+                                     <div className="flex gap-4 overflow-x-auto pb-2">
+                                        {topic.resources.map((resource) => (
+                                            <ResourceCard key={resource.id} resource={resource} />
+                                        ))}
                                     </div>
-                                    <Button asChild variant="ghost" size="icon">
-                                        <Link href={resource.url}>
-                                            <Download className="h-4 w-4" />
-                                            <span className="sr-only">Download</span>
-                                        </Link>
-                                    </Button>
-                                    </li>
-                                );
-                                })}
-                            </ul>
+                                ) : (
+                                    <p className="text-muted-foreground text-sm">No resources available for this topic yet.</p>
+                                )}
                             </AccordionContent>
                         </AccordionItem>
                         ))}
