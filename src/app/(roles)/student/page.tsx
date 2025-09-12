@@ -174,15 +174,6 @@ export default function StudentDashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-            <AiTutorAssistant />
-        </div>
-        <div>
-            <UpcomingLiveClass />
-        </div>
-      </div>
-
      <AiStudyPanel />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -195,6 +186,15 @@ export default function StudentDashboardPage() {
                 autoplayDelay={2000 + index * 500}
             />
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+            <AiTutorAssistant />
+        </div>
+        <div>
+            <UpcomingLiveClass />
+        </div>
       </div>
 
     </div>
