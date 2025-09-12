@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -8,7 +9,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { resourceLibrary } from '@/lib/data';
-import { Download, FileText, PlayCircle, Sheet, Book, Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle, File, Video, FileSpreadsheet, FilePresentation, FileAudio } from 'lucide-react';
+import { Download, FileText, PlayCircle, Sheet, Book, Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle, File, Video, FileSpreadsheet, Presentation, FileAudio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Resource, ResourceSubject } from '@/lib/types';
@@ -25,7 +26,7 @@ const resourceIcons: Record<Resource['type'], React.ElementType> = {
   worksheet: Sheet,
   word: FileText,
   excel: FileSpreadsheet,
-  ppt: FilePresentation,
+  ppt: Presentation,
   mp3: FileAudio,
 };
 
