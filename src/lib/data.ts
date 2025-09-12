@@ -132,25 +132,34 @@ export const subjects: Subject[] = [
     imageHint: 'mathematics chalkboard',
     courses: [
       {
-        id: 'algebra-1',
-        name: 'Algebra I',
-        description: 'An introduction to algebraic concepts.',
+        id: 'math-forms-1-4',
+        name: 'Mathematics (Forms 1-4)',
+        description: 'A comprehensive study of mathematics covering the official Zimbabwean syllabus.',
         tutor: 'Dr. Evelyn Reed',
-        duration: '8 weeks',
+        duration: '4 years',
         curriculum: [
-          { id: 'l1', title: 'Introduction to Variables', type: 'video', duration: 15 },
-          { id: 'l2', title: 'Solving Linear Equations', type: 'reading', duration: 25 },
-          { id: 'l3', title: 'Understanding Quadratic Equations', type: 'video', duration: 20 },
-          { id: 'l4', title: 'Mid-term Quiz', type: 'quiz', duration: 45 },
+          { id: 'math-l1', title: 'Number Concepts and Operations', type: 'reading', duration: 30 },
+          { id: 'math-l2', title: 'Algebraic Manipulation', type: 'video', duration: 25 },
+          { id: 'math-l3', title: 'Mensuration', type: 'reading', duration: 20 },
+          { id: 'math-l4', title: 'Geometry and Trigonometry', type: 'video', duration: 35 },
+          { id: 'math-l5', title: 'Matrices and Transformations', type: 'quiz', duration: 45 },
+          { id: 'math-l6', title: 'Statistics and Probability', type: 'reading', duration: 20 },
         ],
       },
       {
-        id: 'geometry',
-        name: 'Geometry',
-        description: 'Learn about shapes, sizes, and the properties of space.',
+        id: 'additional-mathematics',
+        name: 'Additional Mathematics (Forms 3-4)',
+        description: 'For students seeking a deeper understanding of mathematical principles.',
         tutor: 'Dr. Evelyn Reed',
-        duration: '10 weeks',
-        curriculum: [],
+        duration: '2 years',
+        curriculum: [
+          { id: 'add-math-l1', title: 'Algebra (Quadratics, Polynomials)', type: 'reading', duration: 30 },
+          { id: 'add-math-l2', title: 'Calculus (Differentiation, Integration)', type: 'video', duration: 40 },
+          { id: 'add-math-l3', title: 'Matrices and Determinants', type: 'reading', duration: 25 },
+          { id: 'add-math-l4', title: 'Vectors in Geometry', type: 'video', duration: 30 },
+          { id: 'add-math-l5', title: 'Advanced Trigonometry', type: 'quiz', duration: 45 },
+          { id: 'add-math-l6', title: 'Advanced Statistics and Probability', type: 'reading', duration: 25 },
+        ],
       },
     ],
   },
@@ -186,6 +195,123 @@ export const subjects: Subject[] = [
     imageUrl: 'https://picsum.photos/seed/204/400/225',
     imageHint: 'books library',
     courses: [],
+  },
+   {
+    id: 'computer-science',
+    name: 'Computer Science',
+    description: 'Developing skills in computational thinking, problem-solving, and technology.',
+    imageUrl: 'https://picsum.photos/seed/cs-course/400/225',
+    imageHint: 'computer code',
+    courses: [
+      {
+        id: 'cs-forms-1-4',
+        name: 'Computer Science (Forms 1-4)',
+        description: 'Covering fundamentals, networking, data management, and programming.',
+        tutor: 'Mr. David Chen',
+        duration: '4 years',
+        curriculum: [
+          { id: 'cs-l1', title: 'Computer Systems and Fundamentals', type: 'reading', duration: 20 },
+          { id: 'cs-l2', title: 'Communication and Networking', type: 'video', duration: 25 },
+          { id: 'cs-l3', title: 'Data Management (Databases, Spreadsheets)', type: 'reading', duration: 30 },
+          { id: 'cs-l4', title: 'Programming and Algorithms', type: 'video', duration: 40 },
+          { id: 'cs-l5', title: 'Technology in Society', type: 'quiz', duration: 35 },
+        ],
+      }
+    ],
+  },
+  {
+    id: 'geography',
+    name: 'Geography',
+    description: 'Understand the physical, environmental, and human aspects of the world.',
+    imageUrl: 'https://picsum.photos/seed/geo-course/400/225',
+    imageHint: 'world map',
+    courses: [
+       {
+        id: 'geo-forms-1-4',
+        name: 'Geography (Forms 1-4)',
+        description: 'From map work to environmental issues.',
+        tutor: 'Ms. Helena Garcia',
+        duration: '4 years',
+        curriculum: [
+          { id: 'geo-l1', title: 'Map Work and GIS', type: 'video', duration: 30 },
+          { id: 'geo-l2', title: 'Physical Geography', type: 'reading', duration: 25 },
+          { id: 'geo-l3', title: 'Human and Economic Geography', type: 'video', duration: 28 },
+          { id: 'geo-l4', title: 'Environmental Issues', type: 'quiz', duration: 40 },
+        ],
+      }
+    ],
+  },
+  {
+    id: 'commerce',
+    name: 'Commerce',
+    description: 'Provides practical enterprise skills and business-related competencies.',
+    imageUrl: 'https://picsum.photos/seed/com-course/400/225',
+    imageHint: 'business chart',
+    courses: [
+       {
+        id: 'com-forms-1-4',
+        name: 'Commerce (Forms 1-4)',
+        description: 'Covering production, consumer protection, finance, and trade.',
+        tutor: 'Mrs. Sofia Rossi',
+        duration: '4 years',
+        curriculum: [
+          { id: 'com-l1', title: 'Business Fundamentals', type: 'reading', duration: 25 },
+          { id: 'com-l2', title: 'Trade and Aids to Trade', type: 'video', duration: 30 },
+          { id: 'com-l3', title: 'Financial Management', type: 'reading', duration: 20 },
+          { id: 'com-l4', title: 'Marketing and Consumer Protection', type: 'video', duration: 25 },
+          { id: 'com-l5', title: 'International Trade', type: 'quiz', duration: 35 },
+        ],
+      }
+    ],
+  },
+  {
+    id: 'chemistry',
+    name: 'Chemistry',
+    description: 'Understanding and application of chemistry concepts and principles.',
+    imageUrl: 'https://picsum.photos/seed/chem-course/400/225',
+    imageHint: 'chemistry beakers',
+    courses: [
+       {
+        id: 'chem-forms-3-4',
+        name: 'Chemistry (Forms 3-4)',
+        description: 'From atomic structure to industrial processes.',
+        tutor: 'Dr. Kenji Tanaka',
+        duration: '2 years',
+        curriculum: [
+          { id: 'chem-l1', title: 'Introduction to Chemistry & Lab Safety', type: 'video', duration: 20 },
+          { id: 'chem-l2', title: 'The Particulate Nature of Matter', type: 'reading', duration: 25 },
+          { id: 'chem-l3', title: 'Atomic Structure and the Periodic Table', type: 'video', duration: 30 },
+          { id: 'chem-l4', title: 'Chemical Bonding and Stoichiometry', type: 'reading', duration: 35 },
+          { id: 'chem-l5', title: 'Acids, Bases, and Salts', type: 'video', duration: 28 },
+          { id: 'chem-l6', title: 'Organic Chemistry', type: 'reading', duration: 40 },
+          { id: 'chem-l7', title: 'Industrial Processes', type: 'quiz', duration: 50 },
+        ],
+      }
+    ],
+  },
+  {
+    id: 'indigenous-languages',
+    name: 'Indigenous Languages',
+    description: 'Enhancing communication skills and cultural identity.',
+    imageUrl: 'https://picsum.photos/seed/lang-course/400/225',
+    imageHint: 'cultural art',
+    courses: [
+       {
+        id: 'lang-forms-1-4',
+        name: 'Indigenous Languages (Shona)',
+        description: 'Promoting Unhu/Ubuntu/Vumunhu and enterprising skills.',
+        tutor: 'Prof. Omar Badawi',
+        duration: '4 years',
+        curriculum: [
+          { id: 'lang-l1', title: 'Communication and Language Skills', type: 'video', duration: 25 },
+          { id: 'lang-l2', title: 'Creative and Functional Writing', type: 'reading', duration: 30 },
+          { id: 'lang-l3', title: 'Language Structure (Phonology, Morphology, Syntax)', type: 'video', duration: 35 },
+          { id: 'lang-l4', title: 'Literary Genres and Analysis', type: 'reading', duration: 40 },
+          { id: 'lang-l5', title: 'Cultural and Social Aspects', type: 'quiz', duration: 45 },
+          { id: 'lang-l6', title: 'Research Skills', type: 'reading', duration: 20 },
+        ],
+      }
+    ],
   },
 ];
 
