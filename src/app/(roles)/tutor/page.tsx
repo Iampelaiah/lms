@@ -5,23 +5,7 @@ import { Calendar, FolderPlus, PlusCircle, FilePlus, Users, Activity, FileCheck,
 import Link from "next/link";
 import { ClassPerformance } from "@/components/app/tutor/dashboard/class-performance";
 import * as React from "react";
-
-function SchoolHeader() {
-  return (
-    <Card>
-      <CardContent className="flex items-center gap-6 p-6">
-        <Avatar className="h-24 w-24 border">
-          <AvatarImage src="https://picsum.photos/seed/school-logo/100/100" alt="School Logo" data-ai-hint="school logo" />
-          <AvatarFallback>SH</AvatarFallback>
-        </Avatar>
-        <div>
-          <h2 className="text-2xl font-bold">Northwood High School</h2>
-          <p className="text-muted-foreground italic">"Our mission is to foster a community of lifelong learners and critical thinkers."</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+import { SchoolHeader } from "@/components/app/school-header";
 
 const tutorTools = [
     {
