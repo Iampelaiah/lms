@@ -69,8 +69,8 @@ export function StatisticsSection() {
                     <CardDescription>Number of active students over the last 6 months.</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
-                    <ChartContainer config={areaChartConfig} className="min-h-[250px] w-full">
-                         <ResponsiveContainer width="100%" height={300}>
+                    <ChartContainer config={areaChartConfig} className="min-h-[200px] w-full">
+                         <ResponsiveContainer width="100%" height={250}>
                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
