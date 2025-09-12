@@ -1,3 +1,4 @@
+
 import {
   User,
   Subject,
@@ -334,21 +335,25 @@ export const resourceLibrary: ResourceSubject[] = [
     title: 'Mathematics',
     topics: [
       {
-        id: 'algebra',
-        title: 'Algebra',
+        id: 'math-topic-1',
+        title: 'Number Concepts and Operations',
         resources: [
-          { id: 'alg-pdf-1', title: 'Algebra I Workbook', type: 'pdf', url: '#', size: '5.2 MB', image: 'https://picsum.photos/seed/resource-alg-1/600/400', imageHint: 'math workbook' },
-          { id: 'alg-vid-1', title: 'Introduction to Polynomials', type: 'video', url: '#', size: '120 MB', image: 'https://picsum.photos/seed/resource-alg-2/600/400', imageHint: 'math lecture' },
+          { id: 'alg-pdf-1', title: 'Real Numbers Workbook', type: 'pdf', url: '#', size: '5.2 MB', image: 'https://picsum.photos/seed/resource-alg-1/600/400', imageHint: 'math workbook' },
+          { id: 'alg-vid-1', title: 'Consumer Arithmetic Explained', type: 'video', url: '#', size: '120 MB', image: 'https://picsum.photos/seed/resource-alg-2/600/400', imageHint: 'math lecture' },
         ],
       },
       {
-        id: 'geometry',
-        title: 'Geometry',
+        id: 'math-topic-2',
+        title: 'Algebraic Manipulation',
         resources: [
-          { id: 'geo-ws-1', title: 'Triangle Properties Worksheet', type: 'worksheet', url: '#', size: '1.8 MB', image: 'https://picsum.photos/seed/resource-geo-1/600/400', imageHint: 'geometry diagrams' },
-          { id: 'geo-word-1', title: 'Geometry Proofs', type: 'word', url: '#', size: '3.1 MB', image: 'https://picsum.photos/seed/resource-geo-2/600/400', imageHint: 'geometric proofs' },
+          { id: 'geo-ws-1', title: 'Simultaneous Equations Worksheet', type: 'worksheet', url: '#', size: '1.8 MB', image: 'https://picsum.photos/seed/resource-geo-1/600/400', imageHint: 'geometry diagrams' },
+          { id: 'geo-word-1', title: 'Functional Graphs Guide', type: 'word', url: '#', size: '3.1 MB', image: 'https://picsum.photos/seed/resource-geo-2/600/400', imageHint: 'geometric proofs' },
         ],
       },
+      { id: 'math-topic-3', title: 'Mensuration', resources: [] },
+      { id: 'math-topic-4', title: 'Geometry and Trigonometry', resources: [] },
+      { id: 'math-topic-5', title: 'Matrices and Transformations', resources: [] },
+      { id: 'math-topic-6', title: 'Statistics and Probability', resources: [] },
     ],
   },
   {
@@ -414,7 +419,15 @@ export const resourceLibrary: ResourceSubject[] = [
   {
     id: 'chemistry-resources',
     title: 'Chemistry',
-    topics: [],
+    topics: [
+        { id: 'chem-topic-1', title: 'Introduction to Chemistry', resources: [] },
+        { id: 'chem-topic-2', title: 'The Particulate Nature of Matter', resources: [] },
+        { id: 'chem-topic-3', title: 'Atomic Structure and the Periodic Table', resources: [] },
+        { id: 'chem-topic-4', title: 'Chemical Bonding and Stoichiometry', resources: [] },
+        { id: 'chem-topic-5', title: 'Acids, Bases, and Salts', resources: [] },
+        { id: 'chem-topic-6', title: 'Organic Chemistry', resources: [] },
+        { id: 'chem-topic-7', title: 'Industrial Processes', resources: [] },
+    ],
   },
   {
     id: 'economics-resources',
@@ -437,12 +450,24 @@ export const resourceLibrary: ResourceSubject[] = [
   {
     id: 'commerce-resources',
     title: 'Commerce',
-    topics: [],
+    topics: [
+        { id: 'com-topic-1', title: 'Business Fundamentals', resources: [] },
+        { id: 'com-topic-2', title: 'Trade and Aids to Trade', resources: [] },
+        { id: 'com-topic-3', title: 'Financial Management', resources: [] },
+        { id: 'com-topic-4', title: 'Marketing and Consumer Protection', resources: [] },
+        { id: 'com-topic-5', title: 'International Trade', resources: [] },
+    ],
   },
   {
     id: 'cs-resources',
     title: 'Computer Science',
-    topics: [],
+    topics: [
+        { id: 'cs-topic-1', title: 'Computer Systems and Fundamentals', resources: [] },
+        { id: 'cs-topic-2', title: 'Communication and Networking', resources: [] },
+        { id: 'cs-topic-3', title: 'Data Management', resources: [] },
+        { id: 'cs-topic-4', title: 'Programming and Algorithms', resources: [] },
+        { id: 'cs-topic-5', title: 'Technology in Society', resources: [] },
+    ],
   },
   {
     id: 'performing-arts-resources',
@@ -482,12 +507,24 @@ export const resourceLibrary: ResourceSubject[] = [
   {
     id: 'shona-resources',
     title: 'Shona',
-    topics: [],
+    topics: [
+        { id: 'shona-topic-1', title: 'Communication and Language Skills', resources: [] },
+        { id: 'shona-topic-2', title: 'Creative and Functional Writing', resources: [] },
+        { id: 'shona-topic-3', title: 'Language Structure', resources: [] },
+        { id: 'shona-topic-4', title: 'Literary Genres and Analysis', resources: [] },
+        { id: 'shona-topic-5', title: 'Cultural and Social Aspects', resources: [] },
+        { id: 'shona-topic-6', title: 'Research Skills', resources: [] },
+    ],
   },
    {
     id: 'geography-resources',
     title: 'Geography',
-    topics: [],
+    topics: [
+        { id: 'geo-topic-1', title: 'Map Work and GIS', resources: [] },
+        { id: 'geo-topic-2', title: 'Physical Geography', resources: [] },
+        { id: 'geo-topic-3', title: 'Human and Economic Geography', resources: [] },
+        { id: 'geo-topic-4', title: 'Environmental Issues', resources: [] },
+    ],
   },
    {
     id: 'history-resources',
@@ -500,3 +537,5 @@ export const resourceLibrary: ResourceSubject[] = [
     topics: [],
   },
 ];
+
+    
