@@ -1,7 +1,6 @@
 'use client';
 
 import { communities } from '@/lib/data';
-import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import {
@@ -22,6 +21,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { SchoolHeader } from '@/components/app/school-header';
+import { useParams } from 'next/navigation';
 
 function AboutCommunity({ community }: { community: (typeof communities)[0] }) {
   return (
@@ -43,15 +43,27 @@ function AboutCommunity({ community }: { community: (typeof communities)[0] }) {
   );
 }
 
-export default function CommunityPostsPage({
-  params,
-}: {
-  params: { communityId: string };
-}) {
-  const community = communities.find((c) => c.id === params.communityId);
+export default function CommunityPostsPage() {
+  const params = useParams();
+  const communityId = Array.isArray(params.communityId) ? params.communityId[0] : params.communityId;
+  const community = communities.find((c) => c.id === communityId);
 
   if (!community) {
-    notFound();
+    return (
+        <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm min-h-[400px]">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <h3 className="text-2xl font-bold tracking-tight">
+              Community Not Found
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              This community does not exist or has been moved.
+            </p>
+            <Button asChild className="mt-4">
+                <Link href="/student/community">Back to Communities</Link>
+            </Button>
+          </div>
+        </div>
+    );
   }
 
   const iconMap: Record<string, React.ElementType> = {
