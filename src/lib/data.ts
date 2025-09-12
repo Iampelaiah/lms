@@ -229,13 +229,129 @@ export const resourceLibrary: ResourceSubject[] = [
     title: 'Science',
     topics: [
       {
-        id: 'biology',
-        title: 'Biology',
+        id: 'physics-topics',
+        title: 'Physics',
+        resources: [],
+      },
+      {
+        id: 'chemistry-topics',
+        title: 'Chemistry',
+        resources: [],
+      },
+    ],
+  },
+  {
+    id: 'biology-resources',
+    title: 'Biology',
+    topics: [
+      {
+        id: 'biology-topics',
+        title: 'General Biology',
         resources: [
           { id: 'bio-art-1', title: 'The Structure of a Cell', type: 'article', url: '#' },
           { id: 'bio-vid-1', title: 'Photosynthesis Explained', type: 'video', url: '#' },
         ],
       },
     ],
+  },
+  {
+    id: 'business-studies-resources',
+    title: 'Business studies',
+    topics: [],
+  },
+  {
+    id: 'physics-resources',
+    title: 'Physics',
+    topics: [],
+  },
+  {
+    id: 'ict-resources',
+    title: 'ICT',
+    topics: [],
+  },
+  {
+    id: 'pe-resources',
+    title: 'Physical Education',
+    topics: [],
+  },
+  {
+    id: 'chemistry-resources',
+    title: 'Chemistry',
+    topics: [],
+  },
+  {
+    id: 'economics-resources',
+    title: 'Economics',
+    topics: [],
+  },
+  {
+    id: 'english-lit-resources',
+    title: 'English Literature',
+    topics: [],
+  },
+  {
+    id: 'commerce-resources',
+    title: 'Commerce',
+    topics: [],
+  },
+  {
+    id: 'cs-resources',
+    title: 'Computer Science',
+    topics: [],
+  },
+  {
+    id: 'performing-arts-resources',
+    title: 'Performing arts',
+    topics: [],
+  },
+  {
+    id: 'religious-studies-resources',
+    title: 'Religious studies',
+    topics: [],
+  },
+  {
+    id: 'sociology-resources',
+    title: 'Sociology',
+    topics: [],
+  },
+  {
+    id: 'agriculture-resources',
+    title: 'Agriculture',
+    topics: [],
+  },
+  {
+    id: 'design-tech-resources',
+    title: 'Design and Technology',
+    topics: [],
+  },
+  {
+    id: 'visual-arts-resources',
+    title: 'Visual Arts',
+    topics: [],
+  },
+  {
+    id: 'business-english-resources',
+    title: 'Business English',
+    topics: [],
+  },
+  {
+    id: 'shona-resources',
+    title: 'Shona',
+    topics: [],
+  },
+   {
+    id: 'geography-resources',
+    title: 'Geography',
+    topics: [],
+  },
+   {
+    id: 'history-resources',
+    title: 'History',
+    topics: [],
+  },
+   {
+    id: 'accounting-resources',
+    title: 'Accounting',
+    topics: [],
   },
 ];
