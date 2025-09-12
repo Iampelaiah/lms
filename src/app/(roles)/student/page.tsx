@@ -5,11 +5,16 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { studentData } from '@/lib/data';
-import { BrainCircuit } from 'lucide-react';
+import { BrainCircuit, Lightbulb, Video, Calendar, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { DetailedProgressCard } from "@/components/app/student/dashboard/subject-progress-card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Image from "next/image";
 
 function SchoolHeader() {
   return (
@@ -43,6 +48,91 @@ function AiStudyPanel() {
                 <Link href="#">Go to Study Panel</Link>
             </Button>
         </CardContent>
+    </Card>
+  )
+}
+
+function AiTutorAssistant() {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-100 rounded-md">
+            <Lightbulb className="w-6 h-6 text-amber-500" />
+          </div>
+          <div>
+            <CardTitle>AI Tutor Assistant</CardTitle>
+            <CardDescription>Get personalized learning resource recommendations.</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Select>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Grade Level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="9">Grade 9</SelectItem>
+              <SelectItem value="10">Grade 10</SelectItem>
+              <SelectItem value="11">Grade 11</SelectItem>
+              <SelectItem value="12">Grade 12</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Subject" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="math">Mathematics</SelectItem>
+              <SelectItem value="physics">Physics</SelectItem>
+              <SelectItem value="history">History</SelectItem>
+              <SelectItem value="english">English</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button className="w-full">
+          <Lightbulb className="mr-2 h-4 w-4" />
+          Get Recommendations
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function UpcomingLiveClass() {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-md">
+            <Video className="w-6 h-6 text-blue-500" />
+          </div>
+          <CardTitle>Upcoming Live Class</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="aspect-[3/2] rounded-lg overflow-hidden">
+          <Image src="https://picsum.photos/seed/live-class-card/600/400" alt="Live class thumbnail" width={600} height={400} className="object-cover w-full h-full" data-ai-hint="online lecture" />
+        </div>
+        <div>
+          <h3 className="font-bold text-lg">Intro to Quantum Physics</h3>
+          <p className="text-sm text-muted-foreground">with Prof. Alistair Finch</p>
+        </div>
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Calendar className="w-4 h-4" />
+            <span>Today</span>
+          </div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Clock className="w-4 h-4" />
+            <span>3:00 PM - 4:00 PM</span>
+          </div>
+        </div>
+        <Button className="w-full">
+          Join Class
+        </Button>
+      </CardContent>
     </Card>
   )
 }
@@ -82,6 +172,15 @@ export default function StudentDashboardPage() {
         <p className="text-muted-foreground">
           Here's your learning snapshot for today. Keep up the great work!
         </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+            <AiTutorAssistant />
+        </div>
+        <div>
+            <UpcomingLiveClass />
+        </div>
       </div>
 
      <AiStudyPanel />
