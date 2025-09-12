@@ -45,7 +45,7 @@ function AiStudyPanel() {
                 <p className="text-muted-foreground">Choose a subject to get key concepts, resources, and answers from your AI Study Buddy.</p>
             </div>
             <Button asChild size="lg">
-                <Link href="#">Go to Study Panel</Link>
+                <Link href="/student/study-panel">Go to Study Panel</Link>
             </Button>
         </CardContent>
     </Card>
