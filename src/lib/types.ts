@@ -61,7 +61,7 @@ export type User = {
 export type Resource = {
   id: string;
   title: string;
-  type: 'pdf' | 'video' | 'article' | 'worksheet';
+  type: 'pdf' | 'video' | 'article' | 'worksheet' | 'word' | 'excel' | 'ppt' | 'mp3';
   url: string;
   size: string;
   image: string;

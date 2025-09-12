@@ -1,3 +1,6 @@
+
+'use client';
+
 import {
   Accordion,
   AccordionContent,
@@ -5,7 +8,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { resourceLibrary } from '@/lib/data';
-import { Download, FileText, PlayCircle, Sheet, Book, Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle, File, Video } from 'lucide-react';
+import { Download, FileText, PlayCircle, Sheet, Book, Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle, File, Video, FileSpreadsheet, FilePresentation, FileAudio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Resource, ResourceSubject } from '@/lib/types';
@@ -13,12 +16,17 @@ import { SchoolHeader } from '@/components/app/school-header';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import * as React from 'react';
 
 const resourceIcons: Record<Resource['type'], React.ElementType> = {
   pdf: File,
   video: Video,
   article: Book,
   worksheet: Sheet,
+  word: FileText,
+  excel: FileSpreadsheet,
+  ppt: FilePresentation,
+  mp3: FileAudio,
 };
 
 const subjectIcons: Record<string, React.ElementType> = {
@@ -46,6 +54,15 @@ const subjectIcons: Record<string, React.ElementType> = {
     "Business English": MessageCircle,
     "Shona": Languages,
 }
+
+const filterOptions: {type: Resource['type'], label: string}[] = [
+    { type: 'pdf', label: 'PDFs' },
+    { type: 'video', label: 'Videos' },
+    { type: 'word', label: 'Word' },
+    { type: 'excel', label: 'Excel' },
+    { type: 'ppt', label: 'PPT' },
+    { type: 'mp3', label: 'MP3' },
+];
 
 function ResourceCard({ resource }: { resource: Resource }) {
     const Icon = resourceIcons[resource.type];
@@ -76,8 +93,17 @@ function ResourceCard({ resource }: { resource: Resource }) {
     );
 }
 
-function SubjectAccordionItem({ subject }: { subject: ResourceSubject }) {
+function SubjectAccordionItem({ subject, filter }: { subject: ResourceSubject, filter: Resource['type'] | 'all' }) {
     const Icon = subjectIcons[subject.title] || Book;
+
+    const filteredTopics = subject.topics.map(topic => ({
+        ...topic,
+        resources: topic.resources.filter(resource => filter === 'all' || resource.type === filter)
+    })).filter(topic => topic.resources.length > 0);
+
+    if (filteredTopics.length === 0) {
+        return null; // Don't render the subject if no topics match the filter
+    }
 
     return (
         <AccordionItem value={subject.id} className="border rounded-lg bg-card">
@@ -88,9 +114,9 @@ function SubjectAccordionItem({ subject }: { subject: ResourceSubject }) {
               </div>
             </AccordionTrigger>
             <AccordionContent className="p-6 pt-0">
-                {subject.topics.length > 0 ? (
+                {filteredTopics.length > 0 ? (
                     <Accordion type="multiple" className="w-full space-y-4">
-                        {subject.topics.map((topic) => (
+                        {filteredTopics.map((topic) => (
                         <AccordionItem value={topic.id} key={topic.id} className="border-none bg-muted/50 rounded-lg">
                             <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
                             {topic.title}
@@ -118,6 +144,16 @@ function SubjectAccordionItem({ subject }: { subject: ResourceSubject }) {
 }
 
 export default function ResourcesPage() {
+  const [activeFilter, setActiveFilter] = React.useState<Resource['type'] | 'all'>('all');
+
+  const filteredSubjects = resourceLibrary.map(subject => ({
+      ...subject,
+      topics: subject.topics.map(topic => ({
+          ...topic,
+          resources: topic.resources.filter(resource => activeFilter === 'all' || resource.type === activeFilter)
+      })).filter(topic => topic.resources.length > 0)
+  })).filter(subject => subject.topics.length > 0);
+
   return (
     <div className="space-y-6">
         <SchoolHeader />
@@ -128,10 +164,27 @@ export default function ResourcesPage() {
         </p>
       </div>
 
+       <Card>
+        <CardContent className="p-4 flex flex-wrap items-center gap-2">
+            <Button variant={activeFilter === 'all' ? 'default' : 'ghost'} onClick={() => setActiveFilter('all')}>All Formats</Button>
+            {filterOptions.map(option => (
+                <Button key={option.type} variant={activeFilter === option.type ? 'default' : 'ghost'} onClick={() => setActiveFilter(option.type)}>
+                    {option.label}
+                </Button>
+            ))}
+        </CardContent>
+      </Card>
+
       <Accordion type="multiple" className="w-full space-y-4">
-        {resourceLibrary.map((subject) => (
-            <SubjectAccordionItem key={subject.id} subject={subject} />
-        ))}
+        {filteredSubjects.length > 0 ? (
+            filteredSubjects.map((subject) => (
+                <SubjectAccordionItem key={subject.id} subject={subject} filter={activeFilter} />
+            ))
+        ) : (
+            <div className="text-center py-16 text-muted-foreground border rounded-lg">
+              <p>No resources found for the selected filter.</p>
+            </div>
+        )}
       </Accordion>
     </div>
   );

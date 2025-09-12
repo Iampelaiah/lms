@@ -220,6 +220,7 @@ export const resourceLibrary: ResourceSubject[] = [
         title: 'Geometry',
         resources: [
           { id: 'geo-ws-1', title: 'Triangle Properties Worksheet', type: 'worksheet', url: '#', size: '1.8 MB', image: 'https://picsum.photos/seed/resource-geo-1/600/400', imageHint: 'geometry diagrams' },
+          { id: 'geo-word-1', title: 'Geometry Proofs', type: 'word', url: '#', size: '3.1 MB', image: 'https://picsum.photos/seed/resource-geo-2/600/400', imageHint: 'geometric proofs' },
         ],
       },
     ],
@@ -231,7 +232,9 @@ export const resourceLibrary: ResourceSubject[] = [
       {
         id: 'physics-topics',
         title: 'Physics',
-        resources: [],
+        resources: [
+            { id: 'phy-ppt-1', title: 'Newton\'s Laws', type: 'ppt', url: '#', size: '8.5 MB', image: 'https://picsum.photos/seed/resource-phy-1/600/400', imageHint: 'physics presentation' },
+        ],
       },
       {
         id: 'chemistry-topics',
@@ -257,7 +260,15 @@ export const resourceLibrary: ResourceSubject[] = [
   {
     id: 'business-studies-resources',
     title: 'Business studies',
-    topics: [],
+    topics: [
+        {
+        id: 'marketing-topics',
+        title: 'Marketing',
+        resources: [
+          { id: 'mkt-excel-1', title: 'Marketing Budget Template', type: 'excel', url: '#', size: '450 KB', image: 'https://picsum.photos/seed/resource-mkt-1/600/400', imageHint: 'spreadsheet chart' },
+        ],
+      },
+    ],
   },
   {
     id: 'physics-resources',
@@ -287,7 +298,15 @@ export const resourceLibrary: ResourceSubject[] = [
   {
     id: 'english-lit-resources',
     title: 'English Literature',
-    topics: [],
+    topics: [
+        {
+        id: 'shakespeare-topics',
+        title: 'Shakespeare',
+        resources: [
+          { id: 'shk-mp3-1', title: 'Hamlet Audiobook', type: 'mp3', url: '#', size: '150 MB', image: 'https://picsum.photos/seed/resource-shk-1/600/400', imageHint: 'audiobook player' },
+        ],
+      },
+    ],
   },
   {
     id: 'commerce-resources',
