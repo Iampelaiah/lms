@@ -9,7 +9,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { resourceLibrary } from '@/lib/data';
-import { Download, FileText, PlayCircle, Sheet, Book, Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle, File, Video, FileSpreadsheet, Presentation, FileAudio } from 'lucide-react';
+import { Download, FileText, Sheet, Book, Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle, File, Video, FileSpreadsheet, Presentation, FileAudio, Scale, Lightbulb, BookCopy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import type { Resource, ResourceSubject } from '@/lib/types';
@@ -31,21 +31,26 @@ const resourceIcons: Record<Resource['type'], React.ElementType> = {
 };
 
 const subjectIcons: Record<string, React.ElementType> = {
+    "English Language": BookOpenText,
     "Mathematics": Calculator,
-    "Geography": Map,
-    "History": Landmark,
-    "Accounting": Briefcase,
-    "Science": FlaskConical,
+    "Additional Mathematics": Cpu,
     "Biology": Dna,
+    "History": Landmark,
+    "Chemistry": Beaker,
+    "Geography": Map,
+    "Commerce": Store,
+    "Principles of Accounting": Scale,
+    "Business Enterprise and Skills": Lightbulb,
+    "Literature in Indigenous Languages": BookCopy,
+    "Indigenous Languages (Shona)": Languages,
+    "Computer Science": Cpu,
+    "Science": FlaskConical,
     "Business studies": Building2,
     "Physics": Atom,
     "ICT": Network,
     "Physical Education": Dumbbell,
-    "Chemistry": Beaker,
     "Economics": TrendingUp,
     "English Literature": BookOpenText,
-    "Commerce": Store,
-    "Computer Science": Cpu,
     "Performing arts": Theater,
     "Religious studies": ScrollText,
     "Sociology": Users,
@@ -53,7 +58,6 @@ const subjectIcons: Record<string, React.ElementType> = {
     "Design and Technology": DraftingCompass,
     "Visual Arts": Palette,
     "Business English": MessageCircle,
-    "Shona": Languages,
 }
 
 const filterOptions: {type: Resource['type'], label: string}[] = [
