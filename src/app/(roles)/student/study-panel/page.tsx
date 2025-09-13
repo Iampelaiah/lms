@@ -1,60 +1,91 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, Globe, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle, LanguagesIcon } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calculator, Map, Landmark, Briefcase, Atom, Beaker, Dna, Languages, FlaskConical, Building2, Network, Dumbbell, TrendingUp, BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor, DraftingCompass, Palette, MessageCircle, Scale, Lightbulb, BookCopy, BookMark, Globe } from "lucide-react";
 import Link from 'next/link';
-
-function SchoolHeader() {
-  return (
-    <Card>
-      <CardContent className="flex items-center gap-6 p-6">
-        <Avatar className="h-24 w-24 border">
-          <AvatarImage src="https://picsum.photos/seed/school-logo/100/100" alt="School Logo" data-ai-hint="school logo" />
-          <AvatarFallback>SH</AvatarFallback>
-        </Avatar>
-        <div>
-          <h2 className="text-2xl font-bold">Northwood High School</h2>
-          <p className="text-muted-foreground italic">"Our mission is to foster a community of lifelong learners and critical thinkers."</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+import { SchoolHeader } from "@/components/app/school-header";
 
 const studySubjects = [
     {
+        name: "English Language",
+        description: "Reading, writing, and communication.",
+        icon: BookOpenText,
+        href: "/student/courses/english"
+    },
+    {
         name: "Mathematics",
-        description: "Explore numbers, structures, and space.",
+        description: "Numbers, algebra, and geometry.",
         icon: Calculator,
         href: "/student/courses/mathematics"
     },
     {
-        name: "Geography",
-        description: "Discover the world and its features.",
-        icon: Map,
-        href: "#"
+        name: "Additional Mathematics",
+        description: "Advanced calculus, vectors, and stats.",
+        icon: Cpu,
+        href: "/student/courses/additional-mathematics"
+    },
+    {
+        name: "Biology",
+        description: "Study of life, cells, and ecosystems.",
+        icon: Dna,
+        href: "/student/courses/biology"
     },
     {
         name: "History",
-        description: "Learn from the events of the past.",
+        description: "Heritage and economic history of Zimbabwe.",
         icon: Landmark,
         href: "/student/courses/history"
     },
     {
-        name: "Accounting",
-        description: "Understand financial information.",
-        icon: Briefcase,
-        href: "#"
+        name: "Chemistry",
+        description: "Atomic structure and chemical reactions.",
+        icon: Beaker,
+        href: "/student/courses/chemistry"
+    },
+    {
+        name: "Geography",
+        description: "Map work, physical and human geography.",
+        icon: Map,
+        href: "/student/courses/geography"
+    },
+    {
+        name: "Commerce",
+        description: "Business, trade, and financial literacy.",
+        icon: Store,
+        href: "/student/courses/commerce"
+    },
+    {
+        name: "Principles of Accounting",
+        description: "Bookkeeping and financial statements.",
+        icon: Scale,
+        href: "/student/courses/principles-of-accounting"
+    },
+    {
+        name: "Business Enterprise and Skills",
+        description: "Entrepreneurship and business planning.",
+        icon: Lightbulb,
+        href: "/student/courses/business-enterprise-skills"
+    },
+    {
+        name: "Literature in Indigenous Languages",
+        description: "Prose, poetry, and drama in Shona.",
+        icon: BookCopy,
+        href: "/student/courses/literature-in-indigenous-languages"
+    },
+    {
+        name: "Indigenous Languages (Shona)",
+        description: "Language structure and cultural aspects.",
+        icon: Languages,
+        href: "/student/courses/indigenous-languages"
+    },
+     {
+        name: "Computer Science",
+        description: "Programming, networking, and systems.",
+        icon: Cpu,
+        href: "/student/courses/computer-science"
     },
     {
         name: "Science",
         description: "Investigate the natural and physical world.",
         icon: FlaskConical,
-        href: "/student/courses/science"
-    },
-    {
-        name: "Biology",
-        description: "Study life and living organisms.",
-        icon: Dna,
         href: "/student/courses/science"
     },
     {
@@ -82,33 +113,9 @@ const studySubjects = [
         href: "#"
     },
     {
-        name: "Chemistry",
-        description: "Study substances and their properties.",
-        icon: Beaker,
-        href: "#"
-    },
-    {
         name: "Economics",
         description: "Analyze production, distribution, and consumption.",
         icon: TrendingUp,
-        href: "#"
-    },
-    {
-        name: "English Literature",
-        description: "Explore classic and modern literary works.",
-        icon: BookOpenText,
-        href: "/student/courses/english"
-    },
-    {
-        name: "Commerce",
-        description: "Learn about trade and business activities.",
-        icon: Store,
-        href: "#"
-    },
-    {
-        name: "Computer Science",
-        description: "Delve into computation and information.",
-        icon: Cpu,
         href: "#"
     },
     {
@@ -153,12 +160,6 @@ const studySubjects = [
         icon: MessageCircle,
         href: "/student/courses/english"
     },
-    {
-        name: "Shona",
-        description: "Learn the language and culture of the Shona people.",
-        icon: Languages,
-        href: "#"
-    }
 ];
 
 function SubjectCard({ subject }: { subject: (typeof studySubjects)[0] }) {

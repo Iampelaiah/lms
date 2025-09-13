@@ -126,9 +126,31 @@ export const communities: Community[] = [
 
 export const subjects: Subject[] = [
   {
+    id: 'english',
+    name: 'English Language (Forms 1-4)',
+    description: 'Proficiency in written and spoken English, focusing on functional and communicative competence.',
+    imageUrl: 'https://picsum.photos/seed/204/400/225',
+    imageHint: 'books library',
+    courses: [
+        {
+            id: 'english-1-4',
+            name: 'English Language (Forms 1-4)',
+            description: 'Covers reading, writing, language structures, and oral skills.',
+            tutor: 'Ms. Chloe Dubois',
+            duration: '4 years',
+            curriculum: [
+                { id: 'eng-l1', title: 'Reading and Comprehension', type: 'reading', duration: 30 },
+                { id: 'eng-l2', title: 'Creative and Functional Writing', type: 'video', duration: 40 },
+                { id: 'eng-l3', title: 'Language Structures (Grammar, Punctuation)', type: 'reading', duration: 35 },
+                { id: 'eng-l4', title: 'Oral and Aural Skills', type: 'quiz', duration: 25 },
+            ],
+        }
+    ],
+  },
+  {
     id: 'mathematics',
-    name: 'Mathematics',
-    description: 'Explore the world of numbers, from basic algebra to advanced calculus.',
+    name: 'Mathematics (Forms 1-4)',
+    description: 'Developing problem-solving skills and applying mathematical concepts to real-life situations.',
     imageUrl: 'https://picsum.photos/seed/201/400/225',
     imageHint: 'mathematics chalkboard',
     courses: [
@@ -144,130 +166,83 @@ export const subjects: Subject[] = [
           { id: 'math-l3', title: 'Mensuration', type: 'reading', duration: 20 },
           { id: 'math-l4', title: 'Geometry and Trigonometry', type: 'video', duration: 35 },
           { id: 'math-l5', title: 'Matrices and Transformations', type: 'quiz', duration: 45 },
-          { id: 'math-l6', title: 'Statistics and Probability', type: 'reading', duration: 20 },
+          { id: 'math-l6', title: title: 'Statistics and Probability', type: 'reading', duration: 20 },
         ],
       },
+    ],
+  },
+   {
+    id: 'additional-mathematics',
+    name: 'Additional Mathematics (Forms 3-4)',
+    description: 'For students seeking a deeper understanding of mathematical principles.',
+    imageUrl: 'https://picsum.photos/seed/add-math-course/400/225',
+    imageHint: 'calculus graph',
+    courses: [
       {
-        id: 'additional-mathematics',
+        id: 'additional-mathematics-3-4',
         name: 'Additional Mathematics (Forms 3-4)',
-        description: 'For students seeking a deeper understanding of mathematical principles.',
+        description: 'Advanced algebra, calculus, vectors, and trigonometry.',
         tutor: 'Dr. Evelyn Reed',
         duration: '2 years',
         curriculum: [
-          { id: 'add-math-l1', title: 'Algebra (Quadratics, Polynomials)', type: 'reading', duration: 30 },
+          { id: 'add-math-l1', title: 'Algebra (Polynomials, Partial Fractions)', type: 'reading', duration: 30 },
           { id: 'add-math-l2', title: 'Calculus (Differentiation, Integration)', type: 'video', duration: 40 },
-          { id: 'add-math-l3', title: 'Matrices and Determinants', type: 'reading', duration: 25 },
-          { id: 'add-math-l4', title: 'Vectors in Geometry', type: 'video', duration: 30 },
-          { id: 'add-math-l5', title: 'Advanced Trigonometry', type: 'quiz', duration: 45 },
-          { id: 'add-math-l6', title: 'Advanced Statistics and Probability', type: 'reading', duration: 25 },
+          { id: 'add-math-l3', title: 'Vectors in Geometry', type: 'video', duration: 30 },
+          { id: 'add-math-l4', title: 'Advanced Trigonometry', type: 'quiz', duration: 45 },
+          { id: 'add-math-l5', title: 'Permutations and Combinations', type: 'reading', duration: 25 },
         ],
       },
     ],
   },
   {
-    id: 'science',
-    name: 'Science',
-    description: 'Discover the laws of the universe, from biology to physics.',
-    imageUrl: 'https://picsum.photos/seed/202/400/225',
-    imageHint: 'science laboratory',
+    id: 'biology',
+    name: 'Biology (Forms 1-4)',
+    description: 'Fostering an understanding of biological principles and their application in daily life.',
+    imageUrl: 'https://picsum.photos/seed/bio-course/400/225',
+    imageHint: 'dna strand',
     courses: [
         {
-          id: 'biology-101',
-          name: 'Biology 101',
-          description: 'The study of life and living organisms.',
+          id: 'biology-1-4',
+          name: 'Biology (Forms 1-4)',
+          description: 'The study of life, from cells to ecosystems.',
           tutor: 'Dr. Ben Carter',
-          duration: '12 weeks',
-          curriculum: [],
+          duration: '4 years',
+          curriculum: [
+             { id: 'bio-l1', title: 'Cells and Living Organisms', type: 'video', duration: 30 },
+             { id: 'bio-l2', title: 'Human Biology (Systems, Health)', type: 'reading', duration: 25 },
+             { id: 'bio-l3', title: 'Ecology and Ecosystems', type: 'video', duration: 28 },
+             { id: 'bio-l4', title: 'Genetics and Inheritance', type: 'reading', duration: 22 },
+             { id: 'bio-l5', title: 'Agriculture and Environmental Science', type: 'quiz', duration: 40 },
+          ],
         }
     ],
   },
   {
     id: 'history',
-    name: 'History',
-    description: 'Journey through time and uncover the stories of our past.',
+    name: 'History (Forms 1-4)',
+    description: 'A comprehensive understanding of Zimbabwe\'s past and present.',
     imageUrl: 'https://picsum.photos/seed/203/400/225',
     imageHint: 'historical artifacts',
-    courses: [],
-  },
-  {
-    id: 'english',
-    name: 'English',
-    description: 'Master the art of language, literature, and composition.',
-    imageUrl: 'https://picsum.photos/seed/204/400/225',
-    imageHint: 'books library',
-    courses: [],
-  },
-   {
-    id: 'computer-science',
-    name: 'Computer Science',
-    description: 'Developing skills in computational thinking, problem-solving, and technology.',
-    imageUrl: 'https://picsum.photos/seed/cs-course/400/225',
-    imageHint: 'computer code',
-    courses: [
-      {
-        id: 'cs-forms-1-4',
-        name: 'Computer Science (Forms 1-4)',
-        description: 'Covering fundamentals, networking, data management, and programming.',
-        tutor: 'Mr. David Chen',
-        duration: '4 years',
-        curriculum: [
-          { id: 'cs-l1', title: 'Computer Systems and Fundamentals', type: 'reading', duration: 20 },
-          { id: 'cs-l2', title: 'Communication and Networking', type: 'video', duration: 25 },
-          { id: 'cs-l3', title: 'Data Management (Databases, Spreadsheets)', type: 'reading', duration: 30 },
-          { id: 'cs-l4', title: 'Programming and Algorithms', type: 'video', duration: 40 },
-          { id: 'cs-l5', title: 'Technology in Society', type: 'quiz', duration: 35 },
-        ],
-      }
-    ],
-  },
-  {
-    id: 'geography',
-    name: 'Geography',
-    description: 'Understand the physical, environmental, and human aspects of the world.',
-    imageUrl: 'https://picsum.photos/seed/geo-course/400/225',
-    imageHint: 'world map',
     courses: [
        {
-        id: 'geo-forms-1-4',
-        name: 'Geography (Forms 1-4)',
-        description: 'From map work to environmental issues.',
-        tutor: 'Ms. Helena Garcia',
+        id: 'history-1-4',
+        name: 'History (Forms 1-4)',
+        description: 'Combining Heritage Studies and Economic History of Zimbabwe.',
+        tutor: 'Prof. Alistair Finch',
         duration: '4 years',
         curriculum: [
-          { id: 'geo-l1', title: 'Map Work and GIS', type: 'video', duration: 30 },
-          { id: 'geo-l2', title: 'Physical Geography', type: 'reading', duration: 25 },
-          { id: 'geo-l3', title: 'Human and Economic Geography', type: 'video', duration: 28 },
-          { id: 'geo-l4', title: 'Environmental Issues', type: 'quiz', duration: 40 },
-        ],
-      }
-    ],
-  },
-  {
-    id: 'commerce',
-    name: 'Commerce',
-    description: 'Provides practical enterprise skills and business-related competencies.',
-    imageUrl: 'https://picsum.photos/seed/com-course/400/225',
-    imageHint: 'business chart',
-    courses: [
-       {
-        id: 'com-forms-1-4',
-        name: 'Commerce (Forms 1-4)',
-        description: 'Covering production, consumer protection, finance, and trade.',
-        tutor: 'Mrs. Sofia Rossi',
-        duration: '4 years',
-        curriculum: [
-          { id: 'com-l1', title: 'Business Fundamentals', type: 'reading', duration: 25 },
-          { id: 'com-l2', title: 'Trade and Aids to Trade', type: 'video', duration: 30 },
-          { id: 'com-l3', title: 'Financial Management', type: 'reading', duration: 20 },
-          { id: 'com-l4', title: 'Marketing and Consumer Protection', type: 'video', duration: 25 },
-          { id: 'com-l5', title: 'International Trade', type: 'quiz', duration: 35 },
+          { id: 'hist-l1', title: 'Identity and National History', type: 'reading', duration: 30 },
+          { id: 'hist-l2', title: 'Cultural Heritage and Citizenship', type: 'video', duration: 25 },
+          { id: 'hist-l3', title: 'Pre-Colonial Economies', type: 'reading', duration: 20 },
+          { id: 'hist-l4', title: 'The Colonial Period Economy', type: 'video', duration: 35 },
+          { id: 'hist-l5', title: 'Economic History since 1980', type: 'quiz', duration: 45 },
         ],
       }
     ],
   },
   {
     id: 'chemistry',
-    name: 'Chemistry',
+    name: 'Chemistry (Forms 3-4)',
     description: 'Understanding and application of chemistry concepts and principles.',
     imageUrl: 'https://picsum.photos/seed/chem-course/400/225',
     imageHint: 'chemistry beakers',
@@ -291,9 +266,120 @@ export const subjects: Subject[] = [
     ],
   },
   {
+    id: 'geography',
+    name: 'Geography (Forms 1-4)',
+    description: 'Understand the physical, environmental, and human aspects of the world.',
+    imageUrl: 'https://picsum.photos/seed/geo-course/400/225',
+    imageHint: 'world map',
+    courses: [
+       {
+        id: 'geo-forms-1-4',
+        name: 'Geography (Forms 1-4)',
+        description: 'From map work to environmental issues.',
+        tutor: 'Ms. Helena Garcia',
+        duration: '4 years',
+        curriculum: [
+          { id: 'geo-l1', title: 'Map Work and GIS', type: 'video', duration: 30 },
+          { id: 'geo-l2', title: 'Physical Geography', type: 'reading', duration: 25 },
+          { id: 'geo-l3', title: 'Human and Economic Geography', type: 'video', duration: 28 },
+          { id: 'geo-l4', title: 'Environmental Issues', type: 'quiz', duration: 40 },
+        ],
+      }
+    ],
+  },
+  {
+    id: 'commerce',
+    name: 'Commerce (Forms 1-4)',
+    description: 'Provides practical enterprise skills and business-related competencies.',
+    imageUrl: 'https://picsum.photos/seed/com-course/400/2D/225',
+    imageHint: 'business chart',
+    courses: [
+       {
+        id: 'com-forms-1-4',
+        name: 'Commerce (Forms 1-4)',
+        description: 'Covering production, consumer protection, finance, and trade.',
+        tutor: 'Mrs. Sofia Rossi',
+        duration: '4 years',
+        curriculum: [
+          { id: 'com-l1', title: 'Business Fundamentals', type: 'reading', duration: 25 },
+          { id: 'com-l2', title: 'Trade and Aids to Trade', type: 'video', duration: 30 },
+          { id: 'com-l3', title: 'Financial Management', type: 'reading', duration: 20 },
+          { id: 'com-l4', title: 'Marketing and Consumer Protection', type: 'video', duration: 25 },
+          { id: 'com-l5', title: 'International Trade', type: 'quiz', duration: 35 },
+        ],
+      }
+    ],
+  },
+  {
+    id: 'principles-of-accounting',
+    name: 'Principles of Accounting (Forms 1-4)',
+    description: 'Introduction to the fundamentals of accounting.',
+    imageUrl: 'https://picsum.photos/seed/acc-course/400/225',
+    imageHint: 'financial ledger',
+    courses: [
+      {
+        id: 'acc-1-4',
+        name: 'Principles of Accounting (Forms 1-4)',
+        description: 'Covering bookkeeping, financial records, and final accounts.',
+        tutor: 'Mr. Leo Maxwell',
+        duration: '4 years',
+        curriculum: [
+          { id: 'acc-l1', title: 'Introduction to Accounting', type: 'reading', duration: 30 },
+          { id: 'acc-l2', title: 'Financial Records (Journals, Ledgers)', type: 'video', duration: 35 },
+          { id: 'acc-l3', title: 'Final Accounts (Trading, P&L)', type: 'reading', duration: 40 },
+          { id: 'acc-l4', title: 'Financial Statements Analysis', type: 'quiz', duration: 45 },
+        ],
+      }
+    ],
+  },
+  {
+    id: 'business-enterprise-skills',
+    name: 'Business Enterprise and Skills (Forms 1-4)',
+    description: 'Developing practical entrepreneurial skills.',
+    imageUrl: 'https://picsum.photos/seed/bes-course/400/225',
+    imageHint: 'business startup',
+    courses: [
+      {
+        id: 'bes-1-4',
+        name: 'Business Enterprise and Skills (Forms 1-4)',
+        description: 'From ideation to business management and legislation.',
+        tutor: 'Mrs. Sofia Rossi',
+        duration: '4 years',
+        curriculum: [
+          { id: 'bes-l1', title: 'The Entrepreneur and Business Cycle', type: 'reading', duration: 25 },
+          { id: 'bes-l2', title: 'Business Planning and Feasibility', type: 'video', duration: 35 },
+          { id: 'bes-l3', title: 'Business Operations Management', type: 'reading', duration: 30 },
+          { id: 'bes-l4' , title: 'Business Laws and Ethics', type: 'quiz', duration: 40 },
+        ],
+      }
+    ],
+  },
+  {
+    id: 'literature-in-indigenous-languages',
+    name: 'Literature in Indigenous Languages (Forms 1-4)',
+    description: 'Literary appreciation and critical thinking in indigenous languages.',
+    imageUrl: 'https://picsum.photos/seed/lit-lang-course/400/225',
+    imageHint: 'cultural storytelling',
+    courses: [
+      {
+        id: 'lit-lang-1-4',
+        name: 'Literature in Indigenous Languages (Shona)',
+        description: 'Study of prose, poetry, drama, and oral literature.',
+        tutor: 'Prof. Omar Badawi',
+        duration: '4 years',
+        curriculum: [
+          { id: 'lit-lang-l1', title: 'Literary Genres (Prose, Poetry, Drama)', type: 'reading', duration: 30 },
+          { id: 'lit-lang-l2', title: 'Literary Analysis and Criticism', type: 'video', duration: 35 },
+          { id: 'lit-lang-l3', title: 'Oral Literature (Folklore, Proverbs)', type: 'reading', duration: 25 },
+          { id: 'lit-lang-l4', title: 'Creative Writing Workshop', type: 'quiz', duration: 50 },
+        ],
+      }
+    ],
+  },
+  {
     id: 'indigenous-languages',
-    name: 'Indigenous Languages',
-    description: 'Enhancing communication skills and cultural identity.',
+    name: 'Indigenous Languages (Forms 1-4)',
+    description: 'Practical application of indigenous languages for communication and cultural identity.',
     imageUrl: 'https://picsum.photos/seed/lang-course/400/225',
     imageHint: 'cultural art',
     courses: [
@@ -314,6 +400,37 @@ export const subjects: Subject[] = [
       }
     ],
   },
+  {
+    id: 'computer-science',
+    name: 'Computer Science (Forms 1-4)',
+    description: 'Developing skills in computational thinking, problem-solving, and technology.',
+    imageUrl: 'https://picsum.photos/seed/cs-course/400/225',
+    imageHint: 'computer code',
+    courses: [
+      {
+        id: 'cs-forms-1-4',
+        name: 'Computer Science (Forms 1-4)',
+        description: 'Covering fundamentals, networking, data management, and programming.',
+        tutor: 'Mr. David Chen',
+        duration: '4 years',
+        curriculum: [
+          { id: 'cs-l1', title: 'Computer Systems and Fundamentals', type: 'reading', duration: 20 },
+          { id: 'cs-l2', title: 'Communication and Networking', type: 'video', duration: 25 },
+          { id: 'cs-l3', title: 'Data Management (Databases, Spreadsheets)', type: 'reading', duration: 30 },
+          { id: 'cs-l4', title: 'Programming and Algorithms', type: 'video', duration: 40 },
+          { id: 'cs-l5', title: 'Technology in Society', type: 'quiz', duration: 35 },
+        ],
+      }
+    ],
+  },
+  {
+    id: 'science',
+    name: 'Science',
+    description: 'Discover the laws of the universe, from biology to physics.',
+    imageUrl: 'https://picsum.photos/seed/202/400/225',
+    imageHint: 'science laboratory',
+    courses: [],
+  },
 ];
 
 export const studentData = {
@@ -330,6 +447,16 @@ export const studentData = {
 };
 
 export const resourceLibrary: ResourceSubject[] = [
+  {
+    id: 'english-resources',
+    title: 'English Language',
+    topics: [
+      { id: 'eng-topic-1', title: 'Reading and Comprehension', resources: [] },
+      { id: 'eng-topic-2', title: 'Creative and Functional Writing', resources: [] },
+      { id: 'eng-topic-3', title: 'Language Structures', resources: [] },
+      { id: 'eng-topic-4', title: 'Oral and Aural Skills', resources: [] },
+    ],
+  },
   {
     id: 'math-resources',
     title: 'Mathematics',
@@ -357,6 +484,137 @@ export const resourceLibrary: ResourceSubject[] = [
     ],
   },
   {
+    id: 'additional-mathematics-resources',
+    title: 'Additional Mathematics',
+    topics: [
+        { id: 'add-math-topic-1', title: 'Algebra', resources: [] },
+        { id: 'add-math-topic-2', title: 'Calculus', resources: [] },
+        { id: 'add-math-topic-3', title: 'Matrices', resources: [] },
+        { id: 'add-math-topic-4', title: 'Vectors', resources: [] },
+        { id: 'add-math-topic-5', title: 'Trigonometry', resources: [] },
+        { id: 'add-math-topic-6', title: 'Statistics and Probability', resources: [] },
+    ],
+  },
+  {
+    id: 'biology-resources',
+    title: 'Biology',
+    topics: [
+      {
+        id: 'bio-topic-1',
+        title: 'Cells and Living Organisms',
+        resources: [
+          { id: 'bio-art-1', title: 'The Structure of a Cell', type: 'article', url: '#', size: '850 KB', image: 'https://picsum.photos/seed/resource-bio-1/600/400', imageHint: 'cell diagram' },
+          { id: 'bio-vid-1', title: 'Photosynthesis Explained', type: 'video', url: '#', size: '250 MB', image: 'https://picsum.photos/seed/resource-bio-2/600/400', imageHint: 'plant leaves' },
+        ],
+      },
+      { id: 'bio-topic-2', title: 'Human Biology', resources: [] },
+      { id: 'bio-topic-3', title: 'Ecology', resources: [] },
+      { id: 'bio-topic-4', title: 'Genetics and Inheritance', resources: [] },
+      { id: 'bio-topic-5', title: 'Agriculture and Environmental Science', resources: [] },
+    ],
+  },
+  {
+    id: 'history-resources',
+    title: 'History',
+    topics: [
+        { id: 'hist-topic-1', title: 'Identity', resources: [] },
+        { id: 'hist-topic-2', title: 'National History', resources: [] },
+        { id: 'hist-topic-3', title: 'Cultural Heritage', resources: [] },
+        { id: 'hist-topic-4', title: 'Citizenship', resources: [] },
+        { id: 'hist-topic-5', title: 'Production and Distribution', resources: [] },
+        { id: 'hist-topic-6', title: 'Pre-Colonial Economies', resources: [] },
+        { id: 'hist-topic-7', title: 'Colonial Period', resources: [] },
+        { id: 'hist-topic-8', title: 'Economic History of Zimbabwe since 1980', resources: [] },
+    ],
+  },
+  {
+    id: 'chemistry-resources',
+    title: 'Chemistry',
+    topics: [
+        { id: 'chem-topic-1', title: 'Introduction to Chemistry', resources: [] },
+        { id: 'chem-topic-2', title: 'The Particulate Nature of Matter', resources: [] },
+        { id: 'chem-topic-3', title: 'Atomic Structure and the Periodic Table', resources: [] },
+        { id: 'chem-topic-4', title: 'Chemical Bonding and Stoichiometry', resources: [] },
+        { id: 'chem-topic-5', title: 'Acids, Bases, and Salts', resources: [] },
+        { id: 'chem-topic-6', title: 'Organic Chemistry', resources: [] },
+        { id: 'chem-topic-7', title: 'Industrial Processes', resources: [] },
+    ],
+  },
+  {
+    id: 'geography-resources',
+    title: 'Geography',
+    topics: [
+        { id: 'geo-topic-1', title: 'Map Work and GIS', resources: [] },
+        { id: 'geo-topic-2', title: 'Physical Geography', resources: [] },
+        { id: 'geo-topic-3', title: 'Human and Economic Geography', resources: [] },
+        { id: 'geo-topic-4', title: 'Environmental Issues', resources: [] },
+    ],
+  },
+  {
+    id: 'commerce-resources',
+    title: 'Commerce',
+    topics: [
+        { id: 'com-topic-1', title: 'Business Fundamentals', resources: [] },
+        { id: 'com-topic-2', title: 'Trade and Aids to Trade', resources: [] },
+        { id: 'com-topic-3', title: 'Financial Management', resources: [] },
+        { id: 'com-topic-4', title: 'Marketing and Consumer Protection', resources: [] },
+        { id: 'com-topic-5', title: 'International Trade', resources: [] },
+    ],
+  },
+  {
+    id: 'accounting-resources',
+    title: 'Principles of Accounting',
+    topics: [
+        { id: 'acc-topic-1', title: 'Introduction to Accounting', resources: [] },
+        { id: 'acc-topic-2', title: 'Financial Records', resources: [] },
+        { id: 'acc-topic-3', title: 'Final Accounts', resources: [] },
+        { id: 'acc-topic-4', title: 'Financial Statements Analysis', resources: [] },
+    ],
+  },
+  {
+    id: 'business-enterprise-resources',
+    title: 'Business Enterprise and Skills',
+    topics: [
+        { id: 'bes-topic-1', title: 'The Entrepreneur', resources: [] },
+        { id: 'bes-topic-2', title: 'Business Planning', resources: [] },
+        { id: 'bes-topic-3', title: 'Business Operations', resources: [] },
+        { id: 'bes-topic-4', title: 'Legislation', resources: [] },
+    ],
+  },
+  {
+    id: 'literature-indigenous-resources',
+    title: 'Literature in Indigenous Languages',
+    topics: [
+        { id: 'lit-lang-topic-1', title: 'Literary Genres', resources: [] },
+        { id: 'lit-lang-topic-2', title: 'Literary Analysis', resources: [] },
+        { id: 'lit-lang-topic-3', title: 'Oral Literature', resources: [] },
+        { id 'lit-lang-topic-4', title: 'Creative Writing', resources: [] },
+    ],
+  },
+  {
+    id: 'indigenous-languages-resources',
+    title: 'Indigenous Languages (Shona)',
+    topics: [
+        { id: 'shona-topic-1', title: 'Communication and Language Skills', resources: [] },
+        { id: 'shona-topic-2', title: 'Creative and Functional Writing', resources: [] },
+        { id: 'shona-topic-3', title: 'Language Structure', resources: [] },
+        { id: 'shona-topic-4', title: 'Literary Genres and Analysis', resources: [] },
+        { id: 'shona-topic-5', title: 'Cultural and Social Aspects', resources: [] },
+        { id: 'shona-topic-6', title: 'Research Skills', resources: [] },
+    ],
+  },
+  {
+    id: 'cs-resources',
+    title: 'Computer Science',
+    topics: [
+        { id: 'cs-topic-1', title: 'Computer Systems and Fundamentals', resources: [] },
+        { id: 'cs-topic-2', title: 'Communication and Networking', resources: [] },
+        { id: 'cs-topic-3', title: 'Data Management', resources: [] },
+        { id: 'cs-topic-4', title: 'Programming and Algorithms', resources: [] },
+        { id: 'cs-topic-5', title: 'Technology in Society', resources: [] },
+    ],
+  },
+  {
     id: 'science-resources',
     title: 'Science',
     topics: [
@@ -371,20 +629,6 @@ export const resourceLibrary: ResourceSubject[] = [
         id: 'chemistry-topics',
         title: 'Chemistry',
         resources: [],
-      },
-    ],
-  },
-  {
-    id: 'biology-resources',
-    title: 'Biology',
-    topics: [
-      {
-        id: 'biology-topics',
-        title: 'General Biology',
-        resources: [
-          { id: 'bio-art-1', title: 'The Structure of a Cell', type: 'article', url: '#', size: '850 KB', image: 'https://picsum.photos/seed/resource-bio-1/600/400', imageHint: 'cell diagram' },
-          { id: 'bio-vid-1', title: 'Photosynthesis Explained', type: 'video', url: '#', size: '250 MB', image: 'https://picsum.photos/seed/resource-bio-2/600/400', imageHint: 'plant leaves' },
-        ],
       },
     ],
   },
@@ -417,19 +661,6 @@ export const resourceLibrary: ResourceSubject[] = [
     topics: [],
   },
   {
-    id: 'chemistry-resources',
-    title: 'Chemistry',
-    topics: [
-        { id: 'chem-topic-1', title: 'Introduction to Chemistry', resources: [] },
-        { id: 'chem-topic-2', title: 'The Particulate Nature of Matter', resources: [] },
-        { id: 'chem-topic-3', title: 'Atomic Structure and the Periodic Table', resources: [] },
-        { id: 'chem-topic-4', title: 'Chemical Bonding and Stoichiometry', resources: [] },
-        { id: 'chem-topic-5', title: 'Acids, Bases, and Salts', resources: [] },
-        { id: 'chem-topic-6', title: 'Organic Chemistry', resources: [] },
-        { id: 'chem-topic-7', title: 'Industrial Processes', resources: [] },
-    ],
-  },
-  {
     id: 'economics-resources',
     title: 'Economics',
     topics: [],
@@ -445,28 +676,6 @@ export const resourceLibrary: ResourceSubject[] = [
           { id: 'shk-mp3-1', title: 'Hamlet Audiobook', type: 'mp3', url: '#', size: '150 MB', image: 'https://picsum.photos/seed/resource-shk-1/600/400', imageHint: 'audiobook player' },
         ],
       },
-    ],
-  },
-  {
-    id: 'commerce-resources',
-    title: 'Commerce',
-    topics: [
-        { id: 'com-topic-1', title: 'Business Fundamentals', resources: [] },
-        { id: 'com-topic-2', title: 'Trade and Aids to Trade', resources: [] },
-        { id: 'com-topic-3', title: 'Financial Management', resources: [] },
-        { id: 'com-topic-4', title: 'Marketing and Consumer Protection', resources: [] },
-        { id: 'com-topic-5', title: 'International Trade', resources: [] },
-    ],
-  },
-  {
-    id: 'cs-resources',
-    title: 'Computer Science',
-    topics: [
-        { id: 'cs-topic-1', title: 'Computer Systems and Fundamentals', resources: [] },
-        { id: 'cs-topic-2', title: 'Communication and Networking', resources: [] },
-        { id: 'cs-topic-3', title: 'Data Management', resources: [] },
-        { id: 'cs-topic-4', title: 'Programming and Algorithms', resources: [] },
-        { id: 'cs-topic-5', title: 'Technology in Society', resources: [] },
     ],
   },
   {
@@ -504,38 +713,4 @@ export const resourceLibrary: ResourceSubject[] = [
     title: 'Business English',
     topics: [],
   },
-  {
-    id: 'shona-resources',
-    title: 'Shona',
-    topics: [
-        { id: 'shona-topic-1', title: 'Communication and Language Skills', resources: [] },
-        { id: 'shona-topic-2', title: 'Creative and Functional Writing', resources: [] },
-        { id: 'shona-topic-3', title: 'Language Structure', resources: [] },
-        { id: 'shona-topic-4', title: 'Literary Genres and Analysis', resources: [] },
-        { id: 'shona-topic-5', title: 'Cultural and Social Aspects', resources: [] },
-        { id: 'shona-topic-6', title: 'Research Skills', resources: [] },
-    ],
-  },
-   {
-    id: 'geography-resources',
-    title: 'Geography',
-    topics: [
-        { id: 'geo-topic-1', title: 'Map Work and GIS', resources: [] },
-        { id: 'geo-topic-2', title: 'Physical Geography', resources: [] },
-        { id: 'geo-topic-3', title: 'Human and Economic Geography', resources: [] },
-        { id: 'geo-topic-4', title: 'Environmental Issues', resources: [] },
-    ],
-  },
-   {
-    id: 'history-resources',
-    title: 'History',
-    topics: [],
-  },
-   {
-    id: 'accounting-resources',
-    title: 'Accounting',
-    topics: [],
-  },
 ];
-
-    
