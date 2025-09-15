@@ -1,3 +1,4 @@
+
 import { Sidebar, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarProvider, SidebarInset, SidebarFooter, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { UserCog, LayoutDashboard, Folder, Calendar, Mail, Bell, BarChart, Settings, Plus, Star, Copy, Slack, CircleHelp, LogOut, GraduationCap, Users, ShieldCheck, CreditCard, UserCheck, SlidersHorizontal, Palette, Puzzle, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -114,15 +115,19 @@ function AdminSidebar() {
                         <Button variant="ghost" size="icon"><Copy /></Button>
                         <Button variant="ghost" size="icon"><Star /></Button>
                         <Button variant="ghost" size="icon"><Bell /></Button>
-                        <Button variant="ghost" size="icon"><Settings /></Button>
-                        <Button variant="ghost" size="icon"><LogOut /></Button>
+                        <Link href="#">
+                            <Button variant="ghost" size="icon"><Settings /></Button>
+                        </Link>
+                        <Link href="/login">
+                            <Button variant="ghost" size="icon"><LogOut /></Button>
+                        </Link>
                     </div>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
                     <Button className="w-full h-12 mt-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0" asChild>
-                        <Link href="#">
+                        <Link href="/admin/tutors">
                             <Plus className="group-data-[collapsible=icon]:w-6 group-data-[collapsible=icon]:h-6" />
-                            <span className="group-data-[collapsible=icon]:hidden">Create new task</span>
+                            <span className="group-data-[collapsible=icon]:hidden">New Invitation</span>
                         </Link>
                     </Button>
                 </SidebarMenuItem>
