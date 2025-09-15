@@ -15,9 +15,11 @@ const generateStudents = () => Array.from({ length: 450 }, (_, i) => {
     const firstNames = ["Alex", "Brenda", "Charlie", "Diana", "Ethan", "Fiona", "George", "Hannah", "Ian", "Julia"];
     const lastNames = ["Johnson", "Smith", "Brown", "Prince", "Hunt", "Gallagher", "Harrison", "Ivers", "Jones", "King"];
     const status = ["Active", "Inactive", "Suspended"];
+    const firstName = firstNames[i % firstNames.length];
+    const lastName = lastNames[i % lastNames.length];
     return {
-        name: `${firstNames[i % firstNames.length]} ${lastNames[i % lastNames.length]}`,
-        email: `user${i+1}@example.com`,
+        name: `${firstName} ${lastName}`,
+        email: `${firstName.charAt(0).toLowerCase()}${lastName.toLowerCase()}@northwood.lq.zw`,
         avatarUrl: `https://picsum.photos/seed/${seed}/100/100`,
         avatarHint: "student portrait",
         coursesEnrolled: Math.floor(Math.random() * 8) + 1,
