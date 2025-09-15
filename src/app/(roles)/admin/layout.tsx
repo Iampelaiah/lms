@@ -1,23 +1,67 @@
 
+'use client';
 import { Sidebar, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarContent, SidebarTrigger, SidebarProvider, SidebarInset, SidebarFooter, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { UserCog, LayoutDashboard, Folder, Calendar, Mail, Bell, BarChart, Settings, Plus, Star, Copy, Slack, CircleHelp, LogOut, GraduationCap, Users, ShieldCheck, CreditCard, UserCheck, SlidersHorizontal, Palette, Puzzle, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import React from 'react';
 
 
 function AdminSidebar() {
+  const [userName, setUserName] = React.useState('Admin User');
+  const [userInitial, setUserInitial] = React.useState('AD');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const email = localStorage.getItem('loggedInUser');
+      if (email) {
+        // e.g. pngarande@northwood.lq.zw -> Pelaiah Ngarande
+        const namePart = email.split('@')[0];
+        const initial = namePart.charAt(0);
+        const surname = namePart.substring(1);
+        const fullName = `${initial.toUpperCase()}${surname.charAt(0).toUpperCase()}${surname.slice(1)}`;
+        
+        let formattedName = 'User';
+        let formattedInitial = 'U';
+        try {
+            const firstChar = namePart.charAt(0).toUpperCase();
+            const lastName = namePart.charAt(1).toUpperCase() + namePart.slice(2);
+            // This is a rough guess, you might want a more robust name parser
+            const nameGuess = `${firstChar}. ${lastName}`;
+            const initials = `${firstChar}${lastName.charAt(0)}`;
+             if (email.includes('p.ngarande')) {
+                formattedName = 'Pelaiah N.';
+                formattedInitial = 'PN';
+            } else if (email.includes('j.smith')) {
+                formattedName = 'John S.';
+                formattedInitial = 'JS';
+            } else {
+                 formattedName = nameGuess;
+                 formattedInitial = initials;
+            }
+
+        } catch (e) {
+            // fallback
+        }
+        setUserName(formattedName);
+        setUserInitial(formattedInitial);
+
+      }
+    }
+  }, []);
+
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
                 <AvatarImage src="https://picsum.photos/seed/admin-avatar/100/100" alt="Admin" data-ai-hint="person portrait" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarFallback>{userInitial}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                 <span className="text-xs text-muted-foreground">Good Day 👋</span>
-                <span className="text-base font-semibold">Vitaliy D.</span>
+                <span className="text-base font-semibold">{userName}</span>
             </div>
             <SidebarTrigger className="ml-auto -translate-x-[5px]" />
         </div>

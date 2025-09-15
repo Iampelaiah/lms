@@ -14,6 +14,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { type UserRole } from '@/lib/types';
+import { useState } from 'react';
 
 function capitalizeFirstLetter(string: string) {
   if (!string) return string;
@@ -33,10 +34,16 @@ export default function RoleLoginPage() {
   const router = useRouter();
   const params = useParams();
   const role = Array.isArray(params.role) ? params.role[0] : params.role;
+  const [email, setEmail] = useState('');
+
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // This is a mock login. In a real app, you'd handle authentication.
+    // We'll store the "logged in" user's email in localStorage for the prototype.
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('loggedInUser', email);
+    }
     // Redirect to the corresponding dashboard after "login".
     router.push(`/${role}`);
   };
@@ -56,7 +63,14 @@ export default function RoleLoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required />
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="m@example.com" 
+                required 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
