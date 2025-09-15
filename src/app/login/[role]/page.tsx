@@ -82,27 +82,6 @@ export default function RoleLoginPage() {
             </Button>
           </form>
 
-          {role === 'student' && (
-            <>
-                <div className="my-4 flex items-center">
-                    <Separator className="flex-1" />
-                    <span className="mx-4 text-xs text-muted-foreground">OR</span>
-                    <Separator className="flex-1" />
-                </div>
-                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); router.push('/student'); }}>
-                    <div className="space-y-2">
-                        <Label htmlFor="invite-link">Join with Invite Link</Label>
-                        <div className="flex gap-2">
-                            <Input id="invite-link" type="url" placeholder="Paste invite link..." />
-                            <Button variant="secondary" type="submit" size="icon">
-                                <Link2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-                </form>
-            </>
-          )}
-
           <Button variant="link" asChild className="mt-4 px-0">
              <Link href="/login">
                 <ArrowLeft className="mr-2 h-4 w-4" />

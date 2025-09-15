@@ -15,6 +15,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { Link2 } from 'lucide-react';
 
 function Step1({ onNext }: { onNext: () => void }) {
   const handleSignup = (e: React.FormEvent) => {
@@ -27,33 +29,28 @@ function Step1({ onNext }: { onNext: () => void }) {
     <>
       <CardHeader>
         <CardTitle className="text-2xl">Create an Account</CardTitle>
-        <CardDescription>Create your admin account</CardDescription>
+        <CardDescription>First, create your school's primary admin account.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSignup} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input id="name" type="text" placeholder="John Doe" required />
+           <div className="space-y-2">
+            <Label htmlFor="invite-link">Join with Invite Link</Label>
+            <div className="flex gap-2">
+                <Input id="invite-link" type="url" placeholder="Paste invite link..." />
+                <Button variant="secondary" type="submit" size="icon">
+                    <Link2 className="h-4 w-4" />
+                </Button>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Personal Email (backup mail)</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              required
-            />
+          
+          <div className="my-4 flex items-center">
+              <Separator className="flex-1" />
+              <span className="mx-4 text-xs text-muted-foreground">OR</span>
+              <Separator className="flex-1" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm Password</Label>
-            <Input id="confirm-password" type="password" required />
-          </div>
-          <Button type="submit" className="w-full">
-            Create Account
+
+          <Button type="button" variant="outline" className="w-full" onClick={onNext}>
+            Sign Up with Email
           </Button>
         </form>
         <div className="mt-4 text-center text-sm">
@@ -153,16 +150,66 @@ function Step2({ onComplete }: { onComplete: () => void }) {
     )
 }
 
+function EmailSignupStep({ onBack }: { onBack: () => void; }) {
+    const router = useRouter();
+    const handleSignup = (e: React.FormEvent) => {
+        e.preventDefault();
+        // In a real app, you'd handle account creation here.
+        router.push('/admin'); // Or to a confirmation page
+    };
+
+    return (
+        <>
+            <CardHeader>
+                <CardTitle className="text-2xl">Create Admin Account</CardTitle>
+                <CardDescription>Enter your details to register your school.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSignup} className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="name">Full Name</Label>
+                        <Input id="name" type="text" placeholder="John Doe" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="email">Work Email</Label>
+                        <Input id="email" type="email" placeholder="admin@school.com" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input id="password" type="password" required />
+                    </div>
+                    <Button type="submit" className="w-full">Create Account</Button>
+                </form>
+                <Button variant="link" onClick={onBack} className="mt-4 px-0">Back</Button>
+            </CardContent>
+        </>
+    );
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
 
   const handleNext = () => setStep(2);
+  const handleBack = () => setStep(1);
 
   const handleComplete = () => {
     // For now, we'll just redirect to the admin dashboard.
     router.push('/admin');
   };
+
+  const renderStep = () => {
+    switch (step) {
+      case 1:
+        return <Step1 onNext={handleNext} />;
+      case 2:
+        return <EmailSignupStep onBack={handleBack} />;
+      case 3:
+        return <Step2 onComplete={handleComplete} />;
+      default:
+        return <Step1 onNext={handleNext} />;
+    }
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
@@ -176,8 +223,7 @@ export default function SignupPage() {
         </p>
       </div>
       <Card className="w-full max-w-md">
-        {step === 1 && <Step1 onNext={handleNext} />}
-        {step === 2 && <Step2 onComplete={handleComplete} />}
+        {renderStep()}
       </Card>
     </main>
   );
