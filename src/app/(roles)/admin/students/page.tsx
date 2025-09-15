@@ -11,12 +11,12 @@ import { Search } from "lucide-react";
 import * as React from "react";
 
 const generateStudents = () => {
-    const firstNames = ["Emily", "Liam", "Olivia", "Noah", "Emma", "Oliver", "Ava", "Elijah", "Charlotte", "William", "Sophia", "James", "Amelia", "Benjamin", "Isabella", "Lucas", "Mia", "Henry", "Evelyn", "Alexander", "Michael", "Abigail", "Daniel", "Harper", "Matthew", "Emily", "David", "Elizabeth", "Joseph", "Sofia", "Jackson", "Avery", "Samuel", "Ella", "Sebastian", "Scarlett", "John", "Grace", "Gabriel", "Chloe", "Carter", "Victoria", "Jayden", "Riley", "Luke", "Aria", "Anthony", "Lily", "Isaac"];
-    const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts"];
+    const firstNames = ["Emily", "Liam", "Olivia", "Noah", "Emma", "Oliver", "Ava", "Elijah", "Charlotte", "William", "Sophia", "James", "Amelia", "Benjamin", "Isabella", "Lucas", "Mia", "Henry", "Evelyn", "Alexander", "Michael", "Abigail", "Daniel", "Harper", "Matthew", "David", "Elizabeth", "Joseph", "Sofia", "Jackson", "Avery", "Samuel", "Ella", "Sebastian", "Scarlett", "John", "Grace", "Gabriel", "Chloe", "Carter", "Victoria", "Jayden", "Riley", "Luke", "Aria", "Anthony", "Lily", "Isaac", "Leo", "Zoe", "Ryan", "Nora", "Caleb", "Hannah", "Owen", "Lillian", "Jack", "Addison", "Levi", "Aubrey", "Muhammad", "Stella", "Isaiah", "Natalie", "Julian", "Aurora", "Aaron", "Savannah", "Eli", "Brooklyn", "Landon", "Claire", "Jonathan", "Skylar", "Christian", "Paisley", "Jeremiah", "Audrey", "Hudson", "Leah", "Charles", "Sadie", "Thomas", "Aaliyah"];
+    const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts", "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker", "Cruz", "Edwards", "Collins", "Reyes", "Stewart", "Morris", "Morales", "Murphy", "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper", "Peterson", "Bailey", "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson", "Watson", "Brooks", "Chavez", "Wood", "James", "Bennet", "Gray", "Mendoza", "Ruiz", "Hughes", "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long", "Ross", "Foster", "Jimenez"];
     const status = ["Active", "Inactive", "Suspended"];
     
     const students = [];
-    const usedNames = new Set();
+    const usedNames = new Set<string>();
 
     while (students.length < 450) {
         const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
@@ -111,8 +111,8 @@ function StudentList() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {paginatedStudents.map((student) => (
-                            <TableRow key={student.email}>
+                        {paginatedStudents.map((student, index) => (
+                            <TableRow key={`${student.email}-${index}`}>
                                 <TableCell>
                                     <div className="flex items-center gap-4">
                                         <Avatar>
