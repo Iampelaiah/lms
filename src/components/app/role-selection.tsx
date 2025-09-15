@@ -7,12 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Briefcase, GraduationCap, Shield, UserCog } from 'lucide-react';
+import { Briefcase, GraduationCap, Shield, UserCog, Eye } from 'lucide-react';
 import Link from 'next/link';
 import type { UserRole } from '@/lib/types';
 
 type Role = {
-  name: UserRole;
+  name: UserRole | 'Preview';
   description: string;
   icon: React.ElementType;
   href: string;
@@ -43,11 +43,17 @@ const roles: Role[] = [
     icon: UserCog,
     href: '/login/admin',
   },
+   {
+    name: 'Preview',
+    description: 'Explore the student dashboard features without logging in.',
+    icon: Eye,
+    href: '/student',
+  },
 ];
 
 export function RoleSelection() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 w-full max-w-7xl">
       {roles.map((role) => (
         <Link href={role.href} key={role.name} className="block group">
           <Card className="h-full hover:border-primary transition-colors duration-300 hover:shadow-lg hover:-translate-y-1">
