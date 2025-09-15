@@ -10,7 +10,8 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, Link2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { type UserRole } from '@/lib/types';
@@ -80,6 +81,28 @@ export default function RoleLoginPage() {
               Login
             </Button>
           </form>
+
+          {role === 'student' && (
+            <>
+                <div className="my-4 flex items-center">
+                    <Separator className="flex-1" />
+                    <span className="mx-4 text-xs text-muted-foreground">OR</span>
+                    <Separator className="flex-1" />
+                </div>
+                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); router.push('/student'); }}>
+                    <div className="space-y-2">
+                        <Label htmlFor="invite-link">Join with Invite Link</Label>
+                        <div className="flex gap-2">
+                            <Input id="invite-link" type="url" placeholder="Paste invite link..." />
+                            <Button variant="secondary" type="submit" size="icon">
+                                <Link2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </form>
+            </>
+          )}
+
           <Button variant="link" asChild className="mt-4 px-0">
              <Link href="/login">
                 <ArrowLeft className="mr-2 h-4 w-4" />
