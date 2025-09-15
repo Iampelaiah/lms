@@ -11,7 +11,7 @@ import { SchoolHeader } from "@/components/app/school-header";
 const tutors = [
     {
         name: "Dr. Evelyn Reed",
-        email: "e.reed@example.com",
+        email: "ereed@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/102/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 4,
@@ -20,7 +20,7 @@ const tutors = [
     },
     {
         name: "Prof. Alistair Finch",
-        email: "a.finch@example.com",
+        email: "afinch@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/105/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 2,
@@ -29,7 +29,7 @@ const tutors = [
     },
     {
         name: "Ms. Helena Garcia",
-        email: "h.garcia@example.com",
+        email: "hgarcia@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/106/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 3,
@@ -38,7 +38,7 @@ const tutors = [
     },
     {
         name: "Dr. Kenji Tanaka",
-        email: "k.tanaka@example.com",
+        email: "ktanaka@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/107/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 5,
@@ -47,7 +47,7 @@ const tutors = [
     },
     {
         name: "Mrs. Sofia Rossi",
-        email: "s.rossi@example.com",
+        email: "srossi@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/108/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 3,
@@ -56,7 +56,7 @@ const tutors = [
     },
     {
         name: "Mr. David Chen",
-        email: "d.chen@example.com",
+        email: "dchen@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/109/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 4,
@@ -65,7 +65,7 @@ const tutors = [
     },
     {
         name: "Dr. Isabella Vance",
-        email: "i.vance@example.com",
+        email: "ivance@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/110/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 1,
@@ -74,7 +74,7 @@ const tutors = [
     },
     {
         name: "Prof. Omar Badawi",
-        email: "o.badawi@example.com",
+        email: "obadawi@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/111/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 3,
@@ -83,7 +83,7 @@ const tutors = [
     },
     {
         name: "Ms. Chloe Dubois",
-        email: "c.dubois@example.com",
+        email: "cdubois@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/112/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 2,
@@ -92,7 +92,7 @@ const tutors = [
     },
     {
         name: "Dr. Arthur Pendelton",
-        email: "a.pendelton@example.com",
+        email: "apendelton@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/113/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 4,
@@ -101,7 +101,7 @@ const tutors = [
     },
     {
         name: "Prof. Nina Simone",
-        email: "n.simone@example.com",
+        email: "nsimone@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/114/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 2,
@@ -110,7 +110,7 @@ const tutors = [
     },
     {
         name: "Mr. Leo Maxwell",
-        email: "l.maxwell@example.com",
+        email: "lmaxwell@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/115/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 3,
