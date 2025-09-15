@@ -10,23 +10,35 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search } from "lucide-react";
 import * as React from "react";
 
-const generateStudents = () => Array.from({ length: 450 }, (_, i) => {
-    const seed = 101 + i;
-    const firstNames = ["Alex", "Brenda", "Charlie", "Diana", "Ethan", "Fiona", "George", "Hannah", "Ian", "Julia"];
-    const lastNames = ["Johnson", "Smith", "Brown", "Prince", "Hunt", "Gallagher", "Harrison", "Ivers", "Jones", "King"];
+const generateStudents = () => {
+    const firstNames = ["Emily", "Liam", "Olivia", "Noah", "Emma", "Oliver", "Ava", "Elijah", "Charlotte", "William", "Sophia", "James", "Amelia", "Benjamin", "Isabella", "Lucas", "Mia", "Henry", "Evelyn", "Alexander", "Michael", "Abigail", "Daniel", "Harper", "Matthew", "Emily", "David", "Elizabeth", "Joseph", "Sofia", "Jackson", "Avery", "Samuel", "Ella", "Sebastian", "Scarlett", "John", "Grace", "Gabriel", "Chloe", "Carter", "Victoria", "Jayden", "Riley", "Luke", "Aria", "Anthony", "Lily", "Isaac"];
+    const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell", "Carter", "Roberts"];
     const status = ["Active", "Inactive", "Suspended"];
-    const firstName = firstNames[i % firstNames.length];
-    const lastName = lastNames[i % lastNames.length];
-    return {
-        name: `${firstName} ${lastName}`,
-        email: `${firstName.charAt(0).toLowerCase()}${lastName.toLowerCase()}@northwood.lq.zw`,
-        avatarUrl: `https://picsum.photos/seed/${seed}/100/100`,
-        avatarHint: "student portrait",
-        coursesEnrolled: Math.floor(Math.random() * 8) + 1,
-        lastActive: `${Math.floor(Math.random() * 24)} hours ago`,
-        status: status[i % status.length]
+    
+    const students = [];
+    const usedNames = new Set();
+
+    while (students.length < 450) {
+        const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+        const name = `${firstName} ${lastName}`;
+
+        if (!usedNames.has(name)) {
+            usedNames.add(name);
+            const seed = 101 + students.length;
+            students.push({
+                name: name,
+                email: `${firstName.charAt(0).toLowerCase()}${lastName.toLowerCase()}@northwood.lq.zw`,
+                avatarUrl: `https://picsum.photos/seed/${seed}/100/100`,
+                avatarHint: "student portrait",
+                coursesEnrolled: Math.floor(Math.random() * 8) + 1,
+                lastActive: `${Math.floor(Math.random() * 24)} hours ago`,
+                status: status[students.length % status.length]
+            });
+        }
     }
-});
+    return students;
+};
 
 
 const statusVariantMap: Record<string, "default" | "secondary" | "destructive"> = {
