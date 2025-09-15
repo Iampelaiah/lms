@@ -82,6 +82,16 @@ export default function RoleLoginPage() {
             </Button>
           </form>
 
+            <div className="my-4 flex items-center">
+              <Separator className="flex-1" />
+              <span className="mx-4 text-xs text-muted-foreground">OR</span>
+              <Separator className="flex-1" />
+            </div>
+            
+            <Button variant="outline" className="w-full" asChild>
+                <Link href="/signup">Configure New Account</Link>
+            </Button>
+
           <Button variant="link" asChild className="mt-4 px-0">
              <Link href="/login">
                 <ArrowLeft className="mr-2 h-4 w-4" />
