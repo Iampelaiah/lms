@@ -56,9 +56,9 @@ export default function AdminDashboardPage() {
     };
 
     const inviteLinks = {
-        tutor: "http://localhost:3000/invite/tutor-d3f4a1b2c3",
-        student: "http://localhost:3000/invite/student-e5f6a7b8c9",
-        admin: "http://localhost:3000/invite/admin-d0e1f2a3b4"
+        tutor: "http://localhost:3000/invite/tutor-a1b2-c3d4-e5f6",
+        student: "http://localhost:3000/invite/student-g7h8-i9j0-k1l2",
+        admin: "http://localhost:3000/invite/admin-m3n4-o5p6-q7r8"
     }
 
     return (
