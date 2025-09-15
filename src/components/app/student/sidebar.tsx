@@ -35,8 +35,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import React from 'react';
 
 const navItems = [
+  { href: '/student', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/student/study-panel', icon: BrainCircuit, label: 'Study Panel' },
   { href: '/student/live-classes', icon: Video, label: 'Live Classes' },
   { href: '/student/community', icon: MessageSquare, label: 'Forums' },
@@ -46,6 +48,56 @@ const navItems = [
 
 export function StudentSidebar() {
   const pathname = usePathname();
+  const [userName, setUserName] = React.useState('Student');
+  const [userInitials, setUserInitials] = React.useState('S');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const email = localStorage.getItem('loggedInUser');
+      if (email) {
+        const namePart = email.split('@')[0]; // e.g., 'pngarande'
+        try {
+          // Attempt to construct a name
+          const initial = namePart.charAt(0).toUpperCase();
+          const rest = namePart.slice(1);
+          let lastName = '';
+          // simple logic to find separation of first and last name
+          for(let i=0; i<rest.length; i++) {
+              if (rest.charCodeAt(i) >= 65 && rest.charCodeAt(i) <= 90) { // is uppercase
+                  lastName = rest.slice(i);
+                  break;
+              }
+          }
+          if (!lastName) { // find numbers
+              for(let i=0; i<rest.length; i++) {
+                  if (rest.charCodeAt(i) >= 48 && rest.charCodeAt(i) <= 57) { // is number
+                      lastName = rest.slice(i);
+                      break;
+                  }
+              }
+          }
+
+          let firstName = rest.replace(lastName, '');
+          firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+          lastName = lastName.charAt(0).toUpperCase() + lastName.slice(1);
+          
+          if (firstName && lastName) {
+            setUserName(`${firstName} ${lastName}`);
+            setUserInitials(`${firstName.charAt(0)}${lastName.charAt(0)}`);
+          } else {
+             const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+             setUserName(formattedName);
+             setUserInitials(formattedName.substring(0,2).toUpperCase());
+          }
+          
+        } catch (e) {
+          // Fallback if name parsing fails
+          setUserName('Student');
+          setUserInitials('S');
+        }
+      }
+    }
+  }, []);
 
   return (
     <Sidebar variant="floating" collapsible="icon">
@@ -53,11 +105,11 @@ export function StudentSidebar() {
         <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
                 <AvatarImage src="https://picsum.photos/seed/101/100/100" alt="Alex Johnson" data-ai-hint="student portrait" />
-                <AvatarFallback>AJ</AvatarFallback>
+                <AvatarFallback>{userInitials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                 <span className="text-xs text-muted-foreground">Welcome back,</span>
-                <span className="text-base font-semibold">Alex Johnson</span>
+                <span className="text-base font-semibold">{userName}</span>
             </div>
             <SidebarTrigger className="ml-auto -translate-x-[5px]" />
         </div>
@@ -70,7 +122,7 @@ export function StudentSidebar() {
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
                   <SidebarMenuButton
-                    isActive={pathname === item.href}
+                    isActive={pathname.startsWith(item.href) && (item.href !== '/student' || pathname === '/student')}
                     tooltip={item.label}
                   >
                     <item.icon />

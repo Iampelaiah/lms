@@ -11,7 +11,7 @@ import { SchoolHeader } from "@/components/app/school-header";
 const tutors = [
     {
         name: "Dr. Evelyn Reed",
-        email: "ereed@northwood.lq.zw",
+        email: "e.reed@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/102/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 4,
@@ -20,7 +20,7 @@ const tutors = [
     },
     {
         name: "Prof. Alistair Finch",
-        email: "afinch@northwood.lq.zw",
+        email: "a.finch@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/105/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 2,
@@ -29,7 +29,7 @@ const tutors = [
     },
     {
         name: "Ms. Helena Garcia",
-        email: "hgarcia@northwood.lq.zw",
+        email: "h.garcia@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/106/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 3,
@@ -38,7 +38,7 @@ const tutors = [
     },
     {
         name: "Dr. Kenji Tanaka",
-        email: "ktanaka@northwood.lq.zw",
+        email: "k.tanaka@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/107/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 5,
@@ -47,7 +47,7 @@ const tutors = [
     },
     {
         name: "Mrs. Sofia Rossi",
-        email: "srossi@northwood.lq.zw",
+        email: "s.rossi@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/108/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 3,
@@ -56,7 +56,7 @@ const tutors = [
     },
     {
         name: "Mr. David Chen",
-        email: "dchen@northwood.lq.zw",
+        email: "d.chen@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/109/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 4,
@@ -65,7 +65,7 @@ const tutors = [
     },
     {
         name: "Dr. Isabella Vance",
-        email: "ivance@northwood.lq.zw",
+        email: "i.vance@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/110/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 1,
@@ -74,7 +74,7 @@ const tutors = [
     },
     {
         name: "Prof. Omar Badawi",
-        email: "obadawi@northwood.lq.zw",
+        email: "o.badawi@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/111/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 3,
@@ -83,7 +83,7 @@ const tutors = [
     },
     {
         name: "Ms. Chloe Dubois",
-        email: "cdubois@northwood.lq.zw",
+        email: "c.dubois@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/112/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 2,
@@ -92,7 +92,7 @@ const tutors = [
     },
     {
         name: "Dr. Arthur Pendelton",
-        email: "apendelton@northwood.lq.zw",
+        email: "a.pendelton@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/113/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 4,
@@ -101,7 +101,7 @@ const tutors = [
     },
     {
         name: "Prof. Nina Simone",
-        email: "nsimone@northwood.lq.zw",
+        email: "n.simone@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/114/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 2,
@@ -110,14 +110,50 @@ const tutors = [
     },
     {
         name: "Mr. Leo Maxwell",
-        email: "lmaxwell@northwood.lq.zw",
+        email: "l.maxwell@northwood.lq.zw",
         avatarUrl: "https://picsum.photos/seed/115/100/100",
         avatarHint: "teacher portrait",
         coursesAssigned: 3,
         totalStudents: 100,
         status: "Active"
+    },
+    {
+        name: "Dr. Samuel Jones",
+        email: "s.jones@northwood.lq.zw",
+        avatarUrl: "https://picsum.photos/seed/116/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 3,
+        totalStudents: 115,
+        status: "Active"
+    },
+    {
+        name: "Ms. Anita Desai",
+        email: "a.desai@northwood.lq.zw",
+        avatarUrl: "https://picsum.photos/seed/117/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 2,
+        totalStudents: 80,
+        status: "Active"
+    },
+    {
+        name: "Mr. Javier Morales",
+        email: "j.morales@northwood.lq.zw",
+        avatarUrl: "https://picsum.photos/seed/118/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 4,
+        totalStudents: 125,
+        status: "Inactive"
+    },
+    {
+        name: "Dr. Fiona Gallagher",
+        email: "f.gallagher@northwood.lq.zw",
+        avatarUrl: "https://picsum.photos/seed/119/100/100",
+        avatarHint: "teacher portrait",
+        coursesAssigned: 3,
+        totalStudents: 98,
+        status: "Active"
     }
-]
+];
 
 function TutorList() {
     const inviteLink = "http://localhost:3000/invite/tutor-a1b2-c3d4-e5f6";
@@ -131,7 +167,7 @@ function TutorList() {
                     </div>
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                          <div className="flex items-center gap-2">
-                            <Input readOnly value={inviteLink} className="h-8 text-xs" />
+                            <Input readOnly value={inviteLink} className="h-8 text-xs min-w-[280px]" />
                             <Button variant="outline" size="icon" className="h-8 w-8">
                                 <Copy className="h-3 w-3" />
                                 <span className="sr-only">Copy link</span>
@@ -200,3 +236,5 @@ export default function TutorsPage() {
         </div>
     );
 }
+
+    
