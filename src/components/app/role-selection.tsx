@@ -53,7 +53,7 @@ const roles: Role[] = [
 
 export function RoleSelection() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 w-full max-w-7xl">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 w-full max-w-7xl">
       {roles.map((role) => (
         <Link href={role.href} key={role.name} className="block group">
           <Card className="h-full hover:border-primary transition-colors duration-300 hover:shadow-lg hover:-translate-y-1">
