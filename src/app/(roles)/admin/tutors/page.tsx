@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search } from "lucide-react";
+import { Copy, Search } from "lucide-react";
 import * as React from "react";
 import { SchoolHeader } from "@/components/app/school-header";
 
@@ -120,17 +120,27 @@ const tutors = [
 ]
 
 function TutorList() {
+    const inviteLink = "http://localhost:3000/invite/tutor-a1b2-c3d4-e5f6";
     return (
         <Card>
             <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div>
                         <CardTitle>All Tutors</CardTitle>
                         <CardDescription>A list of all tutors registered at your institution.</CardDescription>
                     </div>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search tutors..." className="pl-9" />
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                         <div className="flex items-center gap-2">
+                            <Input readOnly value={inviteLink} className="h-8 text-xs" />
+                            <Button variant="outline" size="icon" className="h-8 w-8">
+                                <Copy className="h-3 w-3" />
+                                <span className="sr-only">Copy link</span>
+                            </Button>
+                        </div>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Search tutors..." className="pl-9" />
+                        </div>
                     </div>
                 </div>
             </CardHeader>
