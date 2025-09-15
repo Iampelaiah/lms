@@ -70,7 +70,7 @@ export default function AdminDashboardPage() {
             <SchoolHeader />
             <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">School Admin Dashboard</h1>
-                <p className="text-muted-foreground">Welcome, Jane Doe! Manage your school, tutors, and students.</p>
+                <p className="text-muted-foreground">Welcome, Pelaiah Ngarande! Manage your school, tutors, and students.</p>
             </div>
             
             <InvitationCard />

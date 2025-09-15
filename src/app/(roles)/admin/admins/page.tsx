@@ -8,20 +8,20 @@ import { Search } from "lucide-react";
 
 const admins = [
     {
-        name: "Jane Doe",
-        email: "jane.doe@northwood.edu",
+        name: "Pelaiah Ngarande",
+        email: "pngarande@northwood.lq.zw",
         role: "Super Admin",
         status: "Active",
     },
     {
         name: "John Smith",
-        email: "j.smith@northwood.edu",
+        email: "jsmith@northwood.lq.zw",
         role: "Admin",
         status: "Active",
     },
     {
         name: "Michael Johnson",
-        email: "michael.j@northwood.edu",
+        email: "mjohnson@northwood.lq.zw",
         role: "Admin",
         status: "Active",
     },
