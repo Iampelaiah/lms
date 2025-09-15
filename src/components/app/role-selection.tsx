@@ -81,7 +81,7 @@ export function RoleSelection() {
             </CardContent>
           </Link>
           <div className="px-6 pb-4 mt-auto flex justify-end">
-              <Link href={role.previewHref} className="group/preview flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors border rounded-md px-3 py-1 hover:bg-muted">
+              <Link href={role.previewHref} className="group/preview flex items-center justify-center gap-2 text-sm font-medium text-accent hover:text-accent-foreground transition-colors border border-accent/50 rounded-md px-3 py-1 hover:bg-accent">
                   <Eye className="h-4 w-4" />
                   <span>Preview</span>
               </Link>
