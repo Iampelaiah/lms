@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,12 @@ function AiTutorAssistant() {
               <SelectValue placeholder="Select Grade Level" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="form-1">Form 1</SelectItem>
+              <SelectItem value="form-2">Form 2</SelectItem>
+              <SelectItem value="form-3">Form 3</SelectItem>
+              <SelectItem value="form-4">Form 4</SelectItem>
+              <SelectItem value="form-5">Form 5</SelectItem>
+              <SelectItem value="form-6">Form 6</SelectItem>
               <SelectItem value="9">Grade 9</SelectItem>
               <SelectItem value="10">Grade 10</SelectItem>
               <SelectItem value="11">Grade 11</SelectItem>
