@@ -120,35 +120,6 @@ function AdminSidebar() {
               </SidebarMenuItem>
             </SidebarMenu>
         </SidebarGroup>
-         <SidebarGroup>
-            <SidebarGroupLabel>Settings</SidebarGroupLabel>
-            <SidebarMenu>
-                 <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Preferences">
-                        <SlidersHorizontal />
-                        <span>Preferences</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Appearance">
-                        <Palette />
-                        <span>Appearance</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Plugins">
-                        <Puzzle />
-                        <span>Plugins</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <SidebarMenuButton tooltip="Help">
-                        <HelpCircle />
-                        <span>Help</span>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
          <SidebarGroup>
