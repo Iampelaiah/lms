@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import React from 'react';
 import { useTheme } from "next-themes"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 function AdminSidebar() {
   const [userName, setUserName] = React.useState('Admin User');
@@ -119,6 +120,14 @@ function AdminSidebar() {
                     </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
+               <SidebarMenuItem>
+                <Link href="/admin/settings">
+                    <SidebarMenuButton tooltip="Settings">
+                      <Settings />
+                      <span>Settings</span>
+                    </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
@@ -142,7 +151,7 @@ function AdminSidebar() {
                                 <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Link href="#">
+                        <Link href="/admin/settings">
                             <Button variant="ghost" size="icon"><Settings /></Button>
                         </Link>
                         <Link href="/login">

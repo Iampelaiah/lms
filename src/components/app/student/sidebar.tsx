@@ -47,6 +47,7 @@ const navItems = [
   { href: '/student/community', icon: MessageSquare, label: 'Forums' },
   { href: '/student/resources', icon: Library, label: 'Resources' },
   { href: '/student/progress', icon: BarChart, label: 'Progress' },
+  { href: '/student/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function StudentSidebar() {
@@ -158,7 +159,7 @@ export function StudentSidebar() {
                                 <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Link href="#"><Button variant="ghost" size="icon"><Settings /></Button></Link>
+                        <Link href="/student/settings"><Button variant="ghost" size="icon"><Settings /></Button></Link>
                         <Link href="/login"><Button variant="ghost" size="icon"><LogOut /></Button></Link>
                     </div>
                 </SidebarMenuItem>

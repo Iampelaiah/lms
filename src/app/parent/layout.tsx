@@ -70,6 +70,14 @@ function ParentSidebar() {
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
+                 <SidebarMenuItem>
+                    <Link href="/parent/settings">
+                        <SidebarMenuButton tooltip="Settings">
+                            <Settings />
+                            <span>Settings</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
             </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
@@ -93,7 +101,7 @@ function ParentSidebar() {
                                 <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Link href="#">
+                        <Link href="/parent/settings">
                             <Button variant="ghost" size="icon"><Settings /></Button>
                         </Link>
                         <Link href="/login">

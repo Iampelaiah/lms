@@ -51,6 +51,7 @@ function TutorSidebar() {
     { href: '/tutor/students', icon: Users, label: 'My Students' },
     { href: '/tutor/assignments', icon: FileText, label: 'Assignments' },
     { href: '/tutor/live-classes', icon: Video, label: 'Live Classes' },
+    { href: '/tutor/settings', icon: Settings, label: 'Settings' },
   ];
 
   React.useEffect(() => {
@@ -146,7 +147,7 @@ function TutorSidebar() {
                                 <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Link href="#"><Button variant="ghost" size="icon"><Settings /></Button></Link>
+                        <Link href="/tutor/settings"><Button variant="ghost" size="icon"><Settings /></Button></Link>
                         <Link href="/login"><Button variant="ghost" size="icon"><LogOut /></Button></Link>
                     </div>
                 </SidebarMenuItem>

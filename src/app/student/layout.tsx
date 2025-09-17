@@ -1,7 +1,6 @@
 
 import { StudentSidebar } from '@/components/app/student/sidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { ThemeProvider } from '@/components/theme-provider';
 
 export default function StudentLayout({
   children,
