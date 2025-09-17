@@ -129,6 +129,7 @@ function AdminSidebar() {
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
                         <Button variant="ghost" size="icon"><HelpCircle /></Button>
                         <Button variant="ghost" size="icon"><Puzzle /></Button>
+                        <Button variant="ghost" size="icon"><Palette /></Button>
                         <Link href="#">
                             <Button variant="ghost" size="icon"><Settings /></Button>
                         </Link>
