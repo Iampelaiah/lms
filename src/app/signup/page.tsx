@@ -53,6 +53,9 @@ function Step1({ onNext }: { onNext: () => void }) {
           <Button type="button" variant="outline" className="w-full" onClick={onNext}>
             Sign Up with Email
           </Button>
+          <p className="text-xs text-muted-foreground text-center">
+            Only school administrators can create a new school account.
+          </p>
         </form>
         <div className="mt-4 text-center text-sm">
           Already have an account?{' '}
