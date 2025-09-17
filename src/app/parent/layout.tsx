@@ -8,11 +8,21 @@ import { Button } from '@/components/ui/button';
 import React from 'react';
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 function ParentSidebar() {
     const [userName, setUserName] = React.useState('Parent');
     const [userInitials, setUserInitials] = React.useState('P');
     const { setTheme } = useTheme()
+    const router = useRouter();
+
+    const handleLogout = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (typeof window !== 'undefined') {
+        localStorage.removeItem('loggedInUser');
+        }
+        router.push('/login');
+    };
 
     React.useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -70,6 +80,14 @@ function ParentSidebar() {
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <Link href="/parent/settings">
+                    <SidebarMenuButton tooltip="Settings">
+                      <Settings />
+                      <span>Settings</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
             </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
@@ -96,9 +114,7 @@ function ParentSidebar() {
                         <Link href="/parent/settings">
                             <Button variant="ghost" size="icon"><Settings /></Button>
                         </Link>
-                        <Link href="/login">
-                            <Button variant="ghost" size="icon"><LogOut /></Button>
-                        </Link>
+                        <Button variant="ghost" size="icon" onClick={handleLogout}><LogOut /></Button>
                     </div>
                 </SidebarMenuItem>
              </SidebarMenu>

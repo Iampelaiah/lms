@@ -34,7 +34,7 @@ import {
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -43,7 +43,16 @@ function TutorSidebar() {
   const pathname = usePathname();
   const [userName, setUserName] = React.useState('Tutor');
   const [userInitials, setUserInitials] = React.useState('T');
-  const { setTheme } = useTheme()
+  const { setTheme } = useTheme();
+  const router = useRouter();
+
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('loggedInUser');
+    }
+    router.push('/login');
+  };
 
   const navItems = [
     { href: '/tutor', icon: LayoutDashboard, label: 'Dashboard' },
@@ -51,6 +60,7 @@ function TutorSidebar() {
     { href: '/tutor/students', icon: Users, label: 'My Students' },
     { href: '/tutor/assignments', icon: FileText, label: 'Assignments' },
     { href: '/tutor/live-classes', icon: Video, label: 'Live Classes' },
+    { href: '/tutor/settings', icon: Settings, label: 'Settings' },
   ];
 
   React.useEffect(() => {
@@ -147,7 +157,7 @@ function TutorSidebar() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                         <Link href="/tutor/settings"><Button variant="ghost" size="icon"><Settings /></Button></Link>
-                        <Link href="/login"><Button variant="ghost" size="icon"><LogOut /></Button></Link>
+                        <Button variant="ghost" size="icon" onClick={handleLogout}><LogOut /></Button>
                     </div>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
