@@ -28,6 +28,7 @@ import {
   Star,
   Bell,
   HelpCircle,
+  Puzzle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -129,6 +130,7 @@ function TutorSidebar() {
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
                         <Button variant="ghost" size="icon"><HelpCircle /></Button>
+                        <Button variant="ghost" size="icon"><Puzzle /></Button>
                         <Button variant="ghost" size="icon"><Settings /></Button>
                         <Button variant="ghost" size="icon"><LogOut /></Button>
                     </div>
