@@ -51,7 +51,6 @@ function TutorSidebar() {
     { href: '/tutor/students', icon: Users, label: 'My Students' },
     { href: '/tutor/assignments', icon: FileText, label: 'Assignments' },
     { href: '/tutor/live-classes', icon: Video, label: 'Live Classes' },
-    { href: '/tutor/settings', icon: Settings, label: 'Settings' },
   ];
 
   React.useEffect(() => {

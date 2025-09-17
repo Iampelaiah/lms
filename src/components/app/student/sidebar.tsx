@@ -47,7 +47,6 @@ const navItems = [
   { href: '/student/community', icon: MessageSquare, label: 'Forums' },
   { href: '/student/resources', icon: Library, label: 'Resources' },
   { href: '/student/progress', icon: BarChart, label: 'Progress' },
-  { href: '/student/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function StudentSidebar() {

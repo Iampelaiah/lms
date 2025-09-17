@@ -70,14 +70,6 @@ function ParentSidebar() {
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <Link href="/parent/settings">
-                        <SidebarMenuButton tooltip="Settings">
-                            <Settings />
-                            <span>Settings</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
             </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
