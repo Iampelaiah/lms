@@ -196,5 +196,3 @@ export default function StudyPanelPage() {
     </div>
   );
 }
-
-    
