@@ -44,6 +44,7 @@ function ProfileSettings() {
                         <Input id="email" type="email" defaultValue="alex.j@northwood.lq.zw" />
                     </div>
                      <Button>Update Profile</Button>
+                     <p className="text-sm text-muted-foreground">Note: Profile changes must be approved by an administrator and may take up to 3 business days to reflect.</p>
                 </form>
 
                 <Separator />
