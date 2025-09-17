@@ -76,8 +76,7 @@ function ParentSidebar() {
              <SidebarMenu>
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
-                        <Button variant="ghost" size="icon"><Star /></Button>
-                        <Button variant="ghost" size="icon"><Bell /></Button>
+                        <Button variant="ghost" size="icon"><HelpCircle /></Button>
                         <Link href="#">
                             <Button variant="ghost" size="icon"><Settings /></Button>
                         </Link>

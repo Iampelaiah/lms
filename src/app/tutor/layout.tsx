@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -26,6 +27,7 @@ import {
   Video,
   Star,
   Bell,
+  HelpCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -126,8 +128,7 @@ function TutorSidebar() {
              <SidebarMenu>
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
-                        <Button variant="ghost" size="icon"><Star /></Button>
-                        <Button variant="ghost" size="icon"><Bell /></Button>
+                        <Button variant="ghost" size="icon"><HelpCircle /></Button>
                         <Button variant="ghost" size="icon"><Settings /></Button>
                         <Button variant="ghost" size="icon"><LogOut /></Button>
                     </div>
