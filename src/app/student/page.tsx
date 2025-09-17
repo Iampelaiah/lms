@@ -16,6 +16,7 @@ import { DetailedProgressCard } from "@/components/app/student/dashboard/subject
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import { SchoolHeader } from '@/components/app/school-header';
+import React from 'react';
 
 function AiStudyPanel() {
   return (
@@ -129,6 +130,19 @@ function UpcomingLiveClass() {
 
 
 export default function StudentDashboardPage() {
+  const [userName, setUserName] = React.useState(studentData.name);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const email = localStorage.getItem('loggedInUser');
+      if (email && email.toLowerCase().startsWith('alex.j')) {
+        setUserName(studentData.name);
+      } else {
+        setUserName('Student');
+      }
+    }
+  }, []);
+
   const subjectsWithProgress = [
     { name: 'Mathematics', overallProgress: 75, icon: 'BookOpen', topics: [
         { name: 'Algebra II', progress: 90 },
@@ -157,7 +171,7 @@ export default function StudentDashboardPage() {
         <SchoolHeader />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {studentData.name}!
+          Welcome back, {userName}!
         </h1>
         <p className="text-muted-foreground">
           Here's your learning snapshot for today. Keep up the great work!

@@ -1,3 +1,5 @@
+
+'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,7 +49,25 @@ function StatCard({ title, value, icon: Icon, inviteLink, href }: StatCardProps)
 }
 
 export default function AdminDashboardPage() {
-    // These values would typically come from a database based on the signup process.
+    const [userName, setUserName] = React.useState('Admin');
+
+    React.useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const email = localStorage.getItem('loggedInUser');
+            if (email) {
+                if (email.toLowerCase().startsWith('pngarande')) {
+                    setUserName('Pelaiah Ngarande');
+                } else if (email.toLowerCase().startsWith('jsmith')) {
+                    setUserName('John Smith');
+                } else {
+                    const namePart = email.split('@')[0];
+                    const name = namePart.replace('.', ' ');
+                    setUserName(name.charAt(0).toUpperCase() + name.slice(1));
+                }
+            }
+        }
+    }, []);
+
     const schoolStats = {
         tutors: "12/50",
         students: "450/5000",
@@ -66,7 +86,7 @@ export default function AdminDashboardPage() {
             <SchoolHeader />
             <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">School Admin Dashboard</h1>
-                <p className="text-muted-foreground">Welcome, Pelaiah Ngarande! Manage your school, tutors, and students.</p>
+                <p className="text-muted-foreground">Welcome, {userName}! Manage your school, tutors, and students.</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

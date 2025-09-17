@@ -30,35 +30,35 @@ function AdminSidebar() {
       if (email) {
         // e.g. pngarande@northwood.lq.zw -> Pelaiah Ngarande
         const namePart = email.split('@')[0];
-        const initial = namePart.charAt(0);
-        const surname = namePart.substring(1);
-        const fullName = `${initial.toUpperCase()}${surname.charAt(0).toUpperCase()}${surname.slice(1)}`;
         
         let formattedName = 'User';
         let formattedInitial = 'U';
-        try {
-            const firstChar = namePart.charAt(0).toUpperCase();
-            const lastName = namePart.charAt(1).toUpperCase() + namePart.slice(2);
-            // This is a rough guess, you might want a more robust name parser
-            const nameGuess = `${firstChar}. ${lastName}`;
-            const initials = `${firstChar}${lastName.charAt(0)}`;
-             if (email.includes('p.ngarande')) {
-                formattedName = 'Pelaiah N.';
-                formattedInitial = 'PN';
-            } else if (email.includes('j.smith')) {
-                formattedName = 'John S.';
-                formattedInitial = 'JS';
-            } else {
-                 formattedName = nameGuess;
-                 formattedInitial = initials;
-            }
 
-        } catch (e) {
-            // fallback
+        if (email.toLowerCase().startsWith('pngarande')) {
+            formattedName = 'Pelaiah Ngarande';
+            formattedInitial = 'PN';
+        } else if (email.toLowerCase().startsWith('jsmith')) {
+            formattedName = 'John Smith';
+            formattedInitial = 'JS';
+        } else {
+             try {
+                const nameParts = namePart.split('.');
+                if (nameParts.length > 1) {
+                    const firstName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+                    const lastName = nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1);
+                    formattedName = `${firstName} ${lastName}`;
+                    formattedInitial = `${firstName.charAt(0)}${lastName.charAt(0)}`;
+                } else {
+                    formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+                    formattedInitial = namePart.substring(0, 2).toUpperCase();
+                }
+            } catch (e) {
+                // fallback
+            }
         }
+        
         setUserName(formattedName);
         setUserInitial(formattedInitial);
-
       }
     }
   }, []);
@@ -128,14 +128,6 @@ function AdminSidebar() {
                       <CreditCard />
                       <span>Billing</span>
                     </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-               <SidebarMenuItem>
-                <Link href="/admin/settings">
-                  <SidebarMenuButton tooltip="Settings">
-                    <Settings />
-                    <span>Settings</span>
-                  </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
             </SidebarMenu>

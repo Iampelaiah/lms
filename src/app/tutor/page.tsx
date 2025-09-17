@@ -1,3 +1,5 @@
+
+'use client';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -106,12 +108,29 @@ function TutorTools() {
 }
 
 export default function TutorPage() {
+    const [userName, setUserName] = React.useState('Tutor');
+
+    React.useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const email = localStorage.getItem('loggedInUser');
+            if (email) {
+                if (email.toLowerCase().startsWith('e.reed')) {
+                    setUserName('Dr. Reed');
+                } else {
+                    const namePart = email.split('@')[0];
+                    const name = namePart.replace('.', ' ');
+                    setUserName(name.charAt(0).toUpperCase() + name.slice(1));
+                }
+            }
+        }
+    }, []);
+
     return (
         <div className="p-4 sm:p-6 space-y-6">
             <SchoolHeader />
              <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">Tutor Dashboard</h1>
-                <p className="text-muted-foreground">Welcome back, Dr. Reed. Here's your overview for today.</p>
+                <p className="text-muted-foreground">Welcome back, {userName}. Here's your overview for today.</p>
             </div>
             <TutorStats />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

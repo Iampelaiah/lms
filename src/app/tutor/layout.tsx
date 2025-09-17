@@ -43,6 +43,7 @@ function TutorSidebar() {
   const pathname = usePathname();
   const [userName, setUserName] = React.useState('Tutor');
   const [userInitials, setUserInitials] = React.useState('T');
+  const [avatarUrl, setAvatarUrl] = React.useState("https://picsum.photos/seed/tutor-avatar/100/100");
   const { setTheme } = useTheme();
   const router = useRouter();
 
@@ -60,42 +61,40 @@ function TutorSidebar() {
     { href: '/tutor/students', icon: Users, label: 'My Students' },
     { href: '/tutor/assignments', icon: FileText, label: 'Assignments' },
     { href: '/tutor/live-classes', icon: Video, label: 'Live Classes' },
-    { href: '/tutor/settings', icon: Settings, label: 'Settings' },
   ];
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const email = localStorage.getItem('loggedInUser');
       if (email) {
-        const namePart = email.split('@')[0];
-        try {
-          let nameGuess = 'Tutor';
-          let initials = 'T';
-          // Very basic name parsing from email
-          if (namePart.includes('.')) {
-            const parts = namePart.split('.');
-            const firstName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-            const lastName = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
-            nameGuess = `${firstName} ${lastName}`;
-            initials = `${firstName.charAt(0)}${lastName.charAt(0)}`;
-          } else {
-             nameGuess = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-             const nameParts = nameGuess.split(' ');
-             if (nameParts.length > 1) {
-                initials = `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`;
-             } else {
-                initials = nameGuess.substring(0, 2).toUpperCase();
-             }
-          }
-          if (email.includes('ereed')) nameGuess = `Dr. ${nameGuess}`;
+        let nameGuess = 'Tutor';
+        let initials = 'T';
+        let avatar = "https://picsum.photos/seed/tutor-avatar/100/100";
 
-          setUserName(nameGuess);
-          setUserInitials(initials);
-        } catch (e) {
-          // fallback
-          setUserName('Tutor');
-          setUserInitials('T');
+        if (email.toLowerCase().startsWith('e.reed')) {
+            nameGuess = "Dr. Evelyn Reed";
+            initials = "ER";
+            avatar = "https://picsum.photos/seed/102/100/100";
+        } else {
+            const namePart = email.split('@')[0];
+            try {
+              if (namePart.includes('.')) {
+                const parts = namePart.split('.');
+                const firstName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+                const lastName = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+                nameGuess = `${firstName} ${lastName}`;
+                initials = `${firstName.charAt(0)}${lastName.charAt(0)}`;
+              } else {
+                 nameGuess = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+                 initials = nameGuess.substring(0, 2).toUpperCase();
+              }
+            } catch (e) {
+              // fallback
+            }
         }
+        setUserName(nameGuess);
+        setUserInitials(initials);
+        setAvatarUrl(avatar);
       }
     }
   }, []);
@@ -106,7 +105,7 @@ function TutorSidebar() {
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             <AvatarImage
-              src="https://picsum.photos/seed/102/100/100"
+              src={avatarUrl}
               alt="Tutor"
               data-ai-hint="teacher portrait"
             />
