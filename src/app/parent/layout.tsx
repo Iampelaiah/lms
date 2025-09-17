@@ -6,10 +6,13 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import React from 'react';
+import { useTheme } from "next-themes"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 function ParentSidebar() {
     const [userName, setUserName] = React.useState('Parent');
     const [userInitials, setUserInitials] = React.useState('P');
+    const { setTheme } = useTheme()
 
     React.useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -76,9 +79,20 @@ function ParentSidebar() {
              <SidebarMenu>
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
-                        <Button variant="ghost" size="icon"><HelpCircle /></Button>
-                        <Button variant="ghost" size="icon"><Puzzle /></Button>
-                        <Button variant="ghost" size="icon"><Palette /></Button>
+                        <Link href="#"><Button variant="ghost" size="icon"><HelpCircle /></Button></Link>
+                        <Link href="#"><Button variant="ghost" size="icon"><Puzzle /></Button></Link>
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                <Palette />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="mb-2">
+                                <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         <Link href="#">
                             <Button variant="ghost" size="icon"><Settings /></Button>
                         </Link>

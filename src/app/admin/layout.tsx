@@ -6,11 +6,12 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import React from 'react';
-
+import { useTheme } from "next-themes"
 
 function AdminSidebar() {
   const [userName, setUserName] = React.useState('Admin User');
   const [userInitial, setUserInitial] = React.useState('AD');
+  const { setTheme } = useTheme()
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -127,9 +128,20 @@ function AdminSidebar() {
              <SidebarMenu>
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
-                        <Button variant="ghost" size="icon"><HelpCircle /></Button>
-                        <Button variant="ghost" size="icon"><Puzzle /></Button>
-                        <Button variant="ghost" size="icon"><Palette /></Button>
+                        <Link href="#"><Button variant="ghost" size="icon"><HelpCircle /></Button></Link>
+                        <Link href="#"><Button variant="ghost" size="icon"><Puzzle /></Button></Link>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                <Palette />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="mb-2">
+                                <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         <Link href="#">
                             <Button variant="ghost" size="icon"><Settings /></Button>
                         </Link>
