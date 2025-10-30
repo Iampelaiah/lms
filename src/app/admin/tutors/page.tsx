@@ -1,160 +1,16 @@
 
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Copy, Search } from "lucide-react";
+import { Copy, GraduationCap, Search } from "lucide-react";
 import * as React from "react";
 import { SchoolHeader } from "@/components/app/school-header";
 
-const tutors = [
-    {
-        name: "Dr. Evelyn Reed",
-        email: "e.reed@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/102/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 4,
-        totalStudents: 120,
-        status: "Active"
-    },
-    {
-        name: "Prof. Alistair Finch",
-        email: "a.finch@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/105/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 2,
-        totalStudents: 85,
-        status: "Active"
-    },
-    {
-        name: "Ms. Helena Garcia",
-        email: "h.garcia@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/106/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 3,
-        totalStudents: 105,
-        status: "Inactive"
-    },
-    {
-        name: "Dr. Kenji Tanaka",
-        email: "k.tanaka@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/107/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 5,
-        totalStudents: 150,
-        status: "Active"
-    },
-    {
-        name: "Mrs. Sofia Rossi",
-        email: "s.rossi@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/108/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 3,
-        totalStudents: 90,
-        status: "Active"
-    },
-    {
-        name: "Mr. David Chen",
-        email: "d.chen@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/109/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 4,
-        totalStudents: 110,
-        status: "Active"
-    },
-    {
-        name: "Dr. Isabella Vance",
-        email: "i.vance@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/110/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 1,
-        totalStudents: 30,
-        status: "Inactive"
-    },
-    {
-        name: "Prof. Omar Badawi",
-        email: "o.badawi@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/111/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 3,
-        totalStudents: 95,
-        status: "Active"
-    },
-    {
-        name: "Ms. Chloe Dubois",
-        email: "c.dubois@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/112/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 2,
-        totalStudents: 60,
-        status: "Active"
-    },
-    {
-        name: "Dr. Arthur Pendelton",
-        email: "a.pendelton@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/113/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 4,
-        totalStudents: 130,
-        status: "Active"
-    },
-    {
-        name: "Prof. Nina Simone",
-        email: "n.simone@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/114/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 2,
-        totalStudents: 70,
-        status: "Active"
-    },
-    {
-        name: "Mr. Leo Maxwell",
-        email: "l.maxwell@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/115/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 3,
-        totalStudents: 100,
-        status: "Active"
-    },
-    {
-        name: "Dr. Samuel Jones",
-        email: "s.jones@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/116/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 3,
-        totalStudents: 115,
-        status: "Active"
-    },
-    {
-        name: "Ms. Anita Desai",
-        email: "a.desai@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/117/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 2,
-        totalStudents: 80,
-        status: "Active"
-    },
-    {
-        name: "Mr. Javier Morales",
-        email: "j.morales@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/118/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 4,
-        totalStudents: 125,
-        status: "Inactive"
-    },
-    {
-        name: "Dr. Fiona Gallagher",
-        email: "f.gallagher@northwood.lq.zw",
-        avatarUrl: "https://picsum.photos/seed/119/100/100",
-        avatarHint: "teacher portrait",
-        coursesAssigned: 3,
-        totalStudents: 98,
-        status: "Active"
-    }
-];
+const tutors: any[] = [];
 
 function TutorList() {
     const inviteLink = "http://localhost:3000/invite/tutor-a1b2-c3d4-e5f6";
@@ -193,7 +49,13 @@ function TutorList() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {tutors.map((tutor) => (
+                        {tutors.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center">
+                                    No tutors have been invited yet.
+                                </TableCell>
+                            </TableRow>
+                        ) : tutors.map((tutor) => (
                             <TableRow key={tutor.email}>
                                 <TableCell>
                                     <div className="flex items-center gap-4">
@@ -233,9 +95,17 @@ export default function TutorsPage() {
                 <h1 className="text-3xl font-bold tracking-tight">Tutor Management</h1>
                 <p className="text-muted-foreground">View, search, and manage all tutors in your school.</p>
             </div>
-            <TutorList />
+            <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm min-h-[400px]">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <GraduationCap className="h-16 w-16 text-muted-foreground" />
+                <h3 className="text-2xl font-bold tracking-tight">
+                  No Tutors Invited
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Use the invitation link on the dashboard to invite tutors to your school.
+                </p>
+              </div>
+            </div>
         </div>
     );
 }
-
-    
