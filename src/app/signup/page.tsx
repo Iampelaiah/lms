@@ -13,6 +13,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -44,10 +49,46 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   }
 
 export default function SignupPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleGoogleSignup = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // In a real app, you would now create a user document in Firestore
+      // with the role 'admin' and associate them with a new school.
+      // For this prototype, we'll just show a success toast and redirect.
+
+      if (user.email) {
+        localStorage.setItem('loggedInUser', user.email);
+      }
+
+      toast({
+        title: "Account Created!",
+        description: "Redirecting you to the admin dashboard...",
+      });
+      router.push('/admin');
+
+    } catch (error) {
+      console.error("Google Sign-up Error: ", error);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: "There was a problem with Google Sign-Up. Please try again.",
+      });
+    }
+  };
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, you'd handle account creation here.
+    toast({
+        title: "Feature in development",
+        description: "Email signup will be implemented soon.",
+      });
   };
 
   return (
@@ -94,7 +135,7 @@ export default function SignupPage() {
                 <Separator className="flex-1" />
             </div>
             <div className="flex justify-center">
-                <Button variant="outline" size="icon" className="rounded-full">
+                <Button variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignup}>
                     <GoogleIcon className="h-5 w-5" />
                 </Button>
             </div>
