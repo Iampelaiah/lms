@@ -9,6 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 
@@ -61,30 +63,41 @@ export default function SignupPage() {
       </div>
       <Card className="w-full max-w-md">
         <CardHeader>
-            <CardTitle className="text-2xl">Create an Account</CardTitle>
-            <CardDescription>Join an existing school or create a new one.</CardDescription>
+            <CardTitle className="text-2xl">Create a School Account</CardTitle>
+            <CardDescription>Only school administrators can create a new school.</CardDescription>
         </CardHeader>
         <CardContent>
             <form onSubmit={handleSignup} className="space-y-4">
-                 <Button type="button" variant="outline" className="w-full">
-                    Sign Up with Email to Create a School
+                <div className="space-y-2">
+                    <Label htmlFor="full-name">Full Name</Label>
+                    <Input id="full-name" type="text" placeholder="John Doe" required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" placeholder="m@example.com" required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input id="password" type="password" required />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Input id="confirm-password" type="password" required />
+                </div>
+                <Button type="submit" className="w-full">
+                    Create School Account
                 </Button>
-                <p className="text-xs text-muted-foreground text-center !mt-2">
-                    Only school administrators can create a new school account.
-                </p>
-            
-                <div className="my-4 flex items-center">
-                    <Separator className="flex-1" />
-                    <span className="mx-4 text-xs text-muted-foreground">OR</span>
-                    <Separator className="flex-1" />
-                </div>
-
-                <div className="flex justify-center">
-                    <Button variant="outline" size="icon" className="rounded-full">
-                        <GoogleIcon className="h-5 w-5" />
-                    </Button>
-                </div>
             </form>
+            <div className="my-4 flex items-center">
+                <Separator className="flex-1" />
+                <span className="mx-4 text-xs text-muted-foreground">OR</span>
+                <Separator className="flex-1" />
+            </div>
+            <div className="flex justify-center">
+                <Button variant="outline" size="icon" className="rounded-full">
+                    <GoogleIcon className="h-5 w-5" />
+                </Button>
+            </div>
             <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
             <Link href="/login" className="underline">
