@@ -97,6 +97,18 @@ function EmailSignupStep({ onNext, onBack }: { onNext: () => void; onBack: () =>
                     </div>
                     <Button type="submit" className="w-full">Create Account & Continue</Button>
                 </form>
+
+                <div className="my-4 flex items-center">
+                    <Separator className="flex-1" />
+                    <span className="mx-4 text-xs text-muted-foreground">OR</span>
+                    <Separator className="flex-1" />
+                </div>
+                
+                <Button variant="outline" className="w-full" onClick={handleSignup}>
+                    {/* In a real app you'd have an icon here */}
+                    Sign Up with Google
+                </Button>
+
                 <Button variant="link" onClick={onBack} className="mt-4 px-0">Back</Button>
             </CardContent>
         </>
