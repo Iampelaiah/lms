@@ -51,9 +51,9 @@ function StatCard({ title, value, icon: Icon, inviteLink, href }: StatCardProps)
 export default function AdminDashboardPage() {
     const [userName, setUserName] = React.useState('Admin');
     const [schoolStats, setSchoolStats] = React.useState({
-        tutors: "12/50",
-        students: "450/5000",
-        admins: "3/10",
+        tutors: "0/50",
+        students: "0/5000",
+        admins: "1/10",
         subscription: "Pro"
     });
 
@@ -77,8 +77,8 @@ export default function AdminDashboardPage() {
 
             setSchoolStats(prevStats => ({
                 ...prevStats,
-                tutors: `12/${numTeachers}`,
-                admins: `3/${numAdmins}`,
+                tutors: `0/${numTeachers}`,
+                admins: `1/${numAdmins}`,
             }));
         }
     }, []);
