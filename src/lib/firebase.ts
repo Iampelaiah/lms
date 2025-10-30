@@ -1,3 +1,4 @@
+
 'use client';
 
 // Import the functions you need from the SDKs you need
@@ -20,12 +21,11 @@ let app: FirebaseApp;
 if (getApps().length === 0) {
   if (firebaseConfig.apiKey) {
     app = initializeApp(firebaseConfig);
+    console.log("Firebase initialized successfully with projectId:", firebaseConfig.projectId);
   } else {
     // In a server-side context or if env vars are not available,
     // this can prevent the app from crashing.
     console.error("Firebase API Key is missing. App cannot be initialized.");
-    // This part of the code will likely not be executed on the client-side in Next.js
-    // if the environment variables are correctly configured.
   }
 } else {
   app = getApp();
@@ -33,8 +33,8 @@ if (getApps().length === 0) {
 
 // It's safer to get auth and db instances only when the app is initialized.
 // This prevents errors if initialization fails.
-const auth = app ? getAuth(app) : null;
-const db = app ? getFirestore(app) : null;
+const auth = app! ? getAuth(app) : null;
+const db = app! ? getFirestore(app) : null;
 
 // Re-exporting auth and db, but now they can be null if initialization failed.
 // The consuming code should handle this possibility.
