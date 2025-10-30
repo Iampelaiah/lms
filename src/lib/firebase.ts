@@ -24,15 +24,18 @@ if (getApps().length === 0) {
     // In a server-side context or if env vars are not available,
     // this can prevent the app from crashing.
     console.error("Firebase API Key is missing. App cannot be initialized.");
-    // A mock app could be created here for testing if necessary, but for now we'll throw an error.
     // This part of the code will likely not be executed on the client-side in Next.js
     // if the environment variables are correctly configured.
-    throw new Error("Firebase API Key is missing.");
   }
 } else {
   app = getApp();
 }
 
+// It's safer to get auth and db instances only when the app is initialized.
+// This prevents errors if initialization fails.
+const auth = app ? getAuth(app) : null;
+const db = app ? getFirestore(app) : null;
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Re-exporting auth and db, but now they can be null if initialization failed.
+// The consuming code should handle this possibility.
+export { app, auth, db };

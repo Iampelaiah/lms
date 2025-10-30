@@ -53,6 +53,14 @@ export default function SignupPage() {
   const { toast } = useToast();
 
   const handleGoogleSignup = async () => {
+    if (!auth) {
+        toast({
+            variant: "destructive",
+            title: "Firebase not configured",
+            description: "Please check your Firebase configuration and try again."
+        });
+        return;
+    }
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
