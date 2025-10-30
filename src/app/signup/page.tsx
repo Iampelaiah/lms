@@ -9,10 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Link2 } from 'lucide-react';
 import Link from 'next/link';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -69,23 +66,23 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
             <form onSubmit={handleSignup} className="space-y-4">
+                <Button type="button" variant="outline" className="w-full">
+                    Sign Up with Email to Create a School
+                </Button>
+                <p className="text-xs text-muted-foreground text-center !mt-2">
+                    Only school administrators can create a new school account.
+                </p>
             
-            <div className="my-4 flex items-center">
-                <Separator className="flex-1" />
-                <span className="mx-4 text-xs text-muted-foreground">OR</span>
-                <Separator className="flex-1" />
-            </div>
+                <div className="my-4 flex items-center">
+                    <Separator className="flex-1" />
+                    <span className="mx-4 text-xs text-muted-foreground">OR</span>
+                    <Separator className="flex-1" />
+                </div>
 
-            <Button type="button" variant="outline" className="w-full">
-                Sign Up with Email to Create a School
-            </Button>
-            <Button variant="outline" className="w-full">
-                <GoogleIcon className="mr-2 h-5 w-5" />
-                Sign Up with Google
-            </Button>
-            <p className="text-xs text-muted-foreground text-center">
-                Only school administrators can create a new school account.
-            </p>
+                <Button variant="outline" className="w-full">
+                    <GoogleIcon className="mr-2 h-5 w-5" />
+                    Sign Up with Google
+                </Button>
             </form>
             <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
@@ -98,3 +95,4 @@ export default function SignupPage() {
     </main>
   );
 }
+
