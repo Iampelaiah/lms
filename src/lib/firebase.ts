@@ -1,5 +1,7 @@
+'use client';
+
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApp, getApps } from "firebase/app";
+import { initializeApp, getApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -14,12 +16,23 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-// We check if an app has already been initialized to prevent errors.
-const app = !getApps().length && firebaseConfig.apiKey ? initializeApp(firebaseConfig) : getApp();
-
-if (!firebaseConfig.apiKey) {
-    console.error("Firebase API Key is missing. Please check your .env.local file and restart the server.");
+let app: FirebaseApp;
+if (getApps().length === 0) {
+  if (firebaseConfig.apiKey) {
+    app = initializeApp(firebaseConfig);
+  } else {
+    // In a server-side context or if env vars are not available,
+    // this can prevent the app from crashing.
+    console.error("Firebase API Key is missing. App cannot be initialized.");
+    // A mock app could be created here for testing if necessary, but for now we'll throw an error.
+    // This part of the code will likely not be executed on the client-side in Next.js
+    // if the environment variables are correctly configured.
+    throw new Error("Firebase API Key is missing.");
+  }
+} else {
+  app = getApp();
 }
+
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
