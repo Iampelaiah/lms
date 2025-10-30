@@ -192,9 +192,17 @@ function SchoolDetailsForm({ user }: { user: User }) {
     const router = useRouter();
     const { toast } = useToast();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // In a real app, you'd save this data to your database
+        const formData = new FormData(e.currentTarget);
+        const schoolName = formData.get('school-name') as string;
+        const schoolMantra = formData.get('school-mantra') as string;
+
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('schoolName', schoolName);
+            localStorage.setItem('schoolMantra', schoolMantra);
+        }
+
         toast({
             title: "School Created!",
             description: "Redirecting you to the admin dashboard...",
@@ -214,15 +222,19 @@ function SchoolDetailsForm({ user }: { user: User }) {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="school-name">School Name</Label>
-                        <Input id="school-name" type="text" placeholder="e.g., Northwood High School" required />
+                        <Input id="school-name" name="school-name" type="text" placeholder="e.g., Northwood High School" required />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="school-mantra">School Mantra</Label>
+                        <Input id="school-mantra" name="school-mantra" type="text" placeholder="e.g., Fostering lifelong learners" required />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="num-teachers">Number of Teachers</Label>
-                        <Input id="num-teachers" type="number" placeholder="e.g., 50" required />
+                        <Input id="num-teachers" name="num-teachers" type="number" placeholder="e.g., 50" required />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="num-admins">Number of Admins</Label>
-                        <Input id="num-admins" type="number" placeholder="e.g., 5" required />
+                        <Input id="num-admins" name="num-admins" type="number" placeholder="e.g., 5" required />
                     </div>
                     <Button type="submit" className="w-full">
                         Complete Setup
