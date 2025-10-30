@@ -17,6 +17,8 @@ import { useRouter } from 'next/navigation';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Terminal } from 'lucide-react';
 
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -51,6 +53,7 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const isFirebaseConfigured = !!auth;
 
   const handleGoogleSignup = async () => {
     if (!auth) {
@@ -116,6 +119,15 @@ export default function SignupPage() {
             <CardDescription>Only school administrators can create a new school.</CardDescription>
         </CardHeader>
         <CardContent>
+            {!isFirebaseConfigured && (
+              <Alert variant="destructive" className="mb-4">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Configuration Error</AlertTitle>
+                <AlertDescription>
+                  Firebase API Key is invalid or missing. Please check your `.env.local` file and restart the development server.
+                </AlertDescription>
+              </Alert>
+            )}
             <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="full-name">Full Name</Label>
@@ -143,7 +155,7 @@ export default function SignupPage() {
                 <Separator className="flex-1" />
             </div>
             <div className="flex justify-center">
-                <Button variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignup}>
+                <Button variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignup} disabled={!isFirebaseConfigured}>
                     <GoogleIcon className="h-5 w-5" />
                 </Button>
             </div>
