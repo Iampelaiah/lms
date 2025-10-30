@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -69,10 +71,6 @@ export default function SignupPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
-      // In a real app, you would now create a user document in Firestore
-      // with the role 'admin' and associate them with a new school.
-      // For this prototype, we'll just show a success toast and redirect.
-
       if (user.email) {
         localStorage.setItem('loggedInUser', user.email);
       }
@@ -85,10 +83,11 @@ export default function SignupPage() {
 
     } catch (error) {
       console.error("Google Sign-up Error: ", error);
+      const errorMessage = (error as Error).message || "There was a problem with Google Sign-Up. Please try again.";
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong.",
-        description: "There was a problem with Google Sign-Up. Please try again.",
+        description: errorMessage,
       });
     }
   };
@@ -155,9 +154,22 @@ export default function SignupPage() {
                 <Separator className="flex-1" />
             </div>
             <div className="flex justify-center">
-                <Button variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignup} disabled={!isFirebaseConfigured}>
-                    <GoogleIcon className="h-5 w-5" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div tabIndex={0}>
+                         <Button variant="outline" size="icon" className="rounded-full" onClick={handleGoogleSignup} disabled={!isFirebaseConfigured}>
+                            <GoogleIcon className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
+                    {!isFirebaseConfigured && (
+                       <TooltipContent>
+                        <p>Firebase is not configured. Please check your API keys.</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
             </div>
             <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
