@@ -66,7 +66,7 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
             <form onSubmit={handleSignup} className="space-y-4">
-                <Button type="button" variant="outline" className="w-full">
+                 <Button type="button" variant="outline" className="w-full">
                     Sign Up with Email to Create a School
                 </Button>
                 <p className="text-xs text-muted-foreground text-center !mt-2">
@@ -80,8 +80,7 @@ export default function SignupPage() {
                 </div>
 
                 <Button variant="outline" className="w-full">
-                    <GoogleIcon className="mr-2 h-5 w-5" />
-                    Sign Up with Google
+                    <GoogleIcon className="h-5 w-5" />
                 </Button>
             </form>
             <div className="mt-4 text-center text-sm">
@@ -95,4 +94,3 @@ export default function SignupPage() {
     </main>
   );
 }
-
