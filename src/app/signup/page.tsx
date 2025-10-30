@@ -79,9 +79,11 @@ export default function SignupPage() {
                     <Separator className="flex-1" />
                 </div>
 
-                <Button variant="outline" className="w-full">
-                    <GoogleIcon className="h-5 w-5" />
-                </Button>
+                <div className="flex justify-center">
+                    <Button variant="outline" size="icon" className="rounded-full">
+                        <GoogleIcon className="h-5 w-5" />
+                    </Button>
+                </div>
             </form>
             <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
