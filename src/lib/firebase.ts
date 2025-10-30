@@ -15,7 +15,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 // We check if an app has already been initialized to prevent errors.
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = !getApps().length && firebaseConfig.apiKey ? initializeApp(firebaseConfig) : getApp();
+
+if (!firebaseConfig.apiKey) {
+    console.error("Firebase API Key is missing. Please check your .env.local file and restart the server.");
+}
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
