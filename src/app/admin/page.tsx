@@ -50,6 +50,12 @@ function StatCard({ title, value, icon: Icon, inviteLink, href }: StatCardProps)
 
 export default function AdminDashboardPage() {
     const [userName, setUserName] = React.useState('Admin');
+    const [schoolStats, setSchoolStats] = React.useState({
+        tutors: "12/50",
+        students: "450/5000",
+        admins: "3/10",
+        subscription: "Pro"
+    });
 
     React.useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -65,15 +71,17 @@ export default function AdminDashboardPage() {
                     setUserName(name.charAt(0).toUpperCase() + name.slice(1));
                 }
             }
+            
+            const numTeachers = localStorage.getItem('numTeachers') || '50';
+            const numAdmins = localStorage.getItem('numAdmins') || '10';
+
+            setSchoolStats(prevStats => ({
+                ...prevStats,
+                tutors: `12/${numTeachers}`,
+                admins: `3/${numAdmins}`,
+            }));
         }
     }, []);
-
-    const schoolStats = {
-        tutors: "12/50",
-        students: "450/5000",
-        admins: "3/10",
-        subscription: "Pro"
-    };
 
     const inviteLinks = {
         tutor: "http://localhost:3000/invite/tutor-a1b2-c3d4-e5f6",

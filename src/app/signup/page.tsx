@@ -197,10 +197,14 @@ function SchoolDetailsForm({ user }: { user: User }) {
         const formData = new FormData(e.currentTarget);
         const schoolName = formData.get('school-name') as string;
         const schoolMantra = formData.get('school-mantra') as string;
+        const numTeachers = formData.get('num-teachers') as string;
+        const numAdmins = formData.get('num-admins') as string;
 
         if (typeof window !== 'undefined') {
             localStorage.setItem('schoolName', schoolName);
             localStorage.setItem('schoolMantra', schoolMantra);
+            localStorage.setItem('numTeachers', numTeachers);
+            localStorage.setItem('numAdmins', numAdmins);
         }
 
         toast({
