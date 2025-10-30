@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Link2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 function Step1({ onNext }: { onNext: () => void }) {
   const handleSignup = (e: React.FormEvent) => {
@@ -115,10 +116,19 @@ function EmailSignupStep({ onNext, onBack }: { onNext: () => void; onBack: () =>
                     <Separator className="flex-1" />
                 </div>
                 
-                <Button variant="outline" className="w-full" onClick={handleSignup}>
-                    <GoogleIcon className="h-5 w-5 mr-2" />
-                    Sign Up with Google
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" className="w-full" disabled>
+                          <GoogleIcon className="h-5 w-5 mr-2" />
+                          Sign Up with Google
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Google Sign-Up is coming soon!</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
                 <Button variant="link" onClick={onBack} className="mt-4 px-0">Back</Button>
             </CardContent>
@@ -246,3 +256,5 @@ export default function SignupPage() {
     </main>
   );
 }
+
+    
