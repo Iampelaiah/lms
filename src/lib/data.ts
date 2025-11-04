@@ -6,6 +6,7 @@ import {
   Post,
   Comment,
   ResourceSubject,
+  LiveClass,
 } from './types';
 
 export const users: Record<string, User> = {
@@ -445,6 +446,45 @@ export const studentData = {
   recentSubjects: ['Mathematics', 'Science'],
   learningGoals: 'Improve my understanding of Geometry and prepare for the SATs.'
 };
+
+export const liveClasses: LiveClass[] = [
+    {
+        id: 'live-class-1',
+        title: "Calculus I - Midterm Review",
+        status: "Upcoming",
+        time: "Tomorrow at 10:00 AM",
+        students: 42,
+        imageUrl: "https://picsum.photos/seed/live-class-1/600/400",
+        imageHint: "calculus equation",
+    },
+    {
+        id: 'live-class-2',
+        title: "Quantum Physics - Wave-Particle Duality",
+        status: "Upcoming",
+        time: "In 3 days at 2:00 PM",
+        students: 28,
+        imageUrl: "https://picsum.photos/seed/live-class-2/600/400",
+        imageHint: "quantum physics atom",
+    },
+     {
+        id: 'live-class-3',
+        title: "Intro to Shakespeare",
+        status: "Ongoing",
+        time: "Started 15 mins ago",
+        students: 35,
+        imageUrl: "https://picsum.photos/seed/live-class-3/600/400",
+        imageHint: "shakespeare portrait",
+    },
+    {
+        id: 'live-class-4',
+        title: "Algebra Basics - Final Q&A",
+        status: "Completed",
+        time: "Yesterday at 4:00 PM",
+        students: 55,
+        imageUrl: "https://picsum.photos/seed/live-class-4/600/400",
+        imageHint: "math chalkboard",
+    }
+];
 
 export const resourceLibrary: ResourceSubject[] = [
   {

@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { studentData } from '@/lib/data';
+import { studentData, liveClasses } from '@/lib/data';
 import { BrainCircuit, Lightbulb, Video, Calendar, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { DetailedProgressCard } from "@/components/app/student/dashboard/subject-progress-card";
@@ -92,6 +92,26 @@ function AiTutorAssistant() {
 }
 
 function UpcomingLiveClass() {
+  const upcomingClass = liveClasses.find(c => c.status === "Ongoing") || liveClasses.find(c => c.status === "Upcoming");
+
+  if (!upcomingClass) {
+    return (
+       <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-md">
+                <Video className="w-6 h-6 text-blue-500" />
+              </div>
+              <CardTitle>Upcoming Live Class</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-center py-12">No upcoming classes scheduled.</p>
+          </CardContent>
+       </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -104,24 +124,24 @@ function UpcomingLiveClass() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="aspect-[3/2] rounded-lg overflow-hidden">
-          <Image src="https://picsum.photos/seed/live-class-card/600/400" alt="Live class thumbnail" width={600} height={400} className="object-cover w-full h-full" data-ai-hint="online lecture" />
+          <Image src={upcomingClass.imageUrl} alt="Live class thumbnail" width={600} height={400} className="object-cover w-full h-full" data-ai-hint={upcomingClass.imageHint} />
         </div>
         <div>
-          <h3 className="font-bold text-lg">Intro to Quantum Physics</h3>
+          <h3 className="font-bold text-lg">{upcomingClass.title}</h3>
           <p className="text-sm text-muted-foreground">with Prof. Alistair Finch</p>
         </div>
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="w-4 h-4" />
-            <span>Today</span>
+            <span>{upcomingClass.time.split(' at ')[0]}</span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="w-4 h-4" />
-            <span>3:00 PM - 4:00 PM</span>
+            <span>{upcomingClass.time.split(' at ')[1]}</span>
           </div>
         </div>
-        <Button className="w-full">
-          Join Class
+        <Button className="w-full" asChild>
+          <Link href={`/student/live-classes/${upcomingClass.id}`}>Join Class</Link>
         </Button>
       </CardContent>
     </Card>

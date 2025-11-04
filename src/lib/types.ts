@@ -1,3 +1,4 @@
+
 export type UserRole = 'Student' | 'Tutor' | 'Parent' | 'School Admin';
 
 export type Subject = {
@@ -79,3 +80,13 @@ export type ResourceSubject = {
   title: string;
   topics: ResourceTopic[];
 };
+
+export type LiveClass = {
+  id: string;
+  title: string;
+  status: 'Upcoming' | 'Ongoing' | 'Completed';
+  time: string;
+  students: number;
+  imageUrl: string;
+  imageHint: string;
+}
