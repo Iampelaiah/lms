@@ -91,11 +91,7 @@ export default function LiveClassPage({
     if (!db || !pc.current) return;
     if (!localStream) {
       await getCameraPermission();
-      // If permission is granted, localStream will be set, and we can proceed in the next effect.
-      // For now, let's just return and let the useEffects handle it.
-      // A more direct approach would involve awaiting getCameraPermission and then proceeding,
-      // but this requires getCameraPermission to return the stream. Let's stick to the current flow.
-      if (!navigator.mediaDevices) return; // a second check
+      if (!navigator.mediaDevices) return;
     }
     const newCallId = await createOffer(db, pc.current);
     setCallId(newCallId);
@@ -131,7 +127,6 @@ export default function LiveClassPage({
       if(pc.current) {
         hangUp(pc.current, localStream);
       }
-      // Resetting the peer connection
       pc.current = new RTCPeerConnection(servers);
        pc.current.onicecandidate = (event) => {
         event.candidate && console.log('ICE candidate:', event.candidate);
@@ -216,7 +211,7 @@ export default function LiveClassPage({
                         <Video className="mr-2" /> Enable Camera & Mic
                     </Button>
                 )}
-                {hasCameraPermission && (
+                {hasCameraPermission === true && (
                     <>
                         <div className="flex items-center gap-4">
                             <Button onClick={handleStartCall} className="flex-1">
