@@ -15,13 +15,13 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getAuth, GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -55,7 +55,35 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 
 function AccountCreation({ onAccountCreated }: { onAccountCreated: (user: User) => void }) {
   const { toast } = useToast();
+  const router = useRouter();
   const isFirebaseConfigured = !!auth;
+
+  useEffect(() => {
+    if (!auth) return;
+
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          const user = result.user;
+          if (user.email) {
+            localStorage.setItem('loggedInUser', user.email);
+          }
+          toast({
+            title: 'Account Created!',
+            description: 'Please enter your school details to continue.',
+          });
+          onAccountCreated(user);
+        }
+      })
+      .catch((error) => {
+        console.error('Google Redirect Error: ', error);
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: error.message || 'There was a problem with Google Sign-In. Please try again.',
+        });
+      });
+  }, [auth, onAccountCreated, toast]);
 
   const handleGoogleSignup = async () => {
     if (!auth) {
@@ -67,30 +95,7 @@ function AccountCreation({ onAccountCreated }: { onAccountCreated: (user: User) 
       return;
     }
     const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      if (user.email) {
-        localStorage.setItem('loggedInUser', user.email);
-      }
-
-      toast({
-        title: 'Account Created!',
-        description: 'Please enter your school details to continue.',
-      });
-      onAccountCreated(user);
-    } catch (error) {
-      console.error('Google Sign-up Error: ', error);
-      const errorMessage =
-        (error as Error).message ||
-        'There was a problem with Google Sign-Up. Please try again.';
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: errorMessage,
-      });
-    }
+    await signInWithRedirect(auth, provider);
   };
 
   const handleSignup = (e: React.FormEvent) => {
