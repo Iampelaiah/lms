@@ -2,7 +2,7 @@
 'use client';
 
 import { liveClasses } from '@/lib/data';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -19,12 +19,10 @@ import { createOffer, createAnswer, hangUp, servers } from '@/lib/webrtc';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-export default function LiveClassPage({
-  params,
-}: {
-  params: { classId: string };
-}) {
-  const liveClass = liveClasses.find((c) => c.id === params.classId);
+export default function LiveClassPage() {
+  const params = useParams();
+  const classIdParam = Array.isArray(params.classId) ? params.classId[0] : params.classId;
+  const liveClass = liveClasses.find((c) => c.id === classIdParam);
   const { toast } = useToast();
 
   const [localStream, setLocalStream] = React.useState<MediaStream | null>(null);
