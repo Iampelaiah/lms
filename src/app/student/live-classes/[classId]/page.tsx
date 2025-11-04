@@ -91,6 +91,11 @@ export default function LiveClassPage({
     if (!db || !pc.current) return;
     if (!localStream) {
       await getCameraPermission();
+      // If permission is granted, localStream will be set, and we can proceed in the next effect.
+      // For now, let's just return and let the useEffects handle it.
+      // A more direct approach would involve awaiting getCameraPermission and then proceeding,
+      // but this requires getCameraPermission to return the stream. Let's stick to the current flow.
+      if (!navigator.mediaDevices) return; // a second check
     }
     const newCallId = await createOffer(db, pc.current);
     setCallId(newCallId);
@@ -112,6 +117,7 @@ export default function LiveClassPage({
     };
     if (!localStream) {
       await getCameraPermission();
+      if (!navigator.mediaDevices) return;
     }
     await createAnswer(db, pc.current, callId);
     setIsCallActive(true);
@@ -125,11 +131,25 @@ export default function LiveClassPage({
       if(pc.current) {
         hangUp(pc.current, localStream);
       }
+      // Resetting the peer connection
+      pc.current = new RTCPeerConnection(servers);
+       pc.current.onicecandidate = (event) => {
+        event.candidate && console.log('ICE candidate:', event.candidate);
+      };
+      pc.current.ontrack = (event) => {
+          if (event.streams && event.streams[0]) {
+              setRemoteStream(event.streams[0]);
+          }
+      };
+
+
       setLocalStream(null);
       setRemoteStream(null);
       setIsCallActive(false);
       setCallId('');
       setHasCameraPermission(null);
+      if (localVideoRef.current) localVideoRef.current.srcObject = null;
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
       toast({
           title: "Call Ended",
       });
@@ -168,6 +188,12 @@ export default function LiveClassPage({
                     </Alert>
                 </div>
             )}
+             {!localStream && hasCameraPermission !== false && (
+                 <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                    <Video className="w-16 h-16" />
+                    <p className="mt-2">Your video is off</p>
+                </div>
+            )}
           </Card>
           <Card className="bg-secondary flex items-center justify-center aspect-video relative overflow-hidden">
              <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
@@ -185,19 +211,33 @@ export default function LiveClassPage({
         <CardContent className="space-y-4">
             {!isCallActive ? (
                 <>
-                <div className="flex items-center gap-4">
-                    <Button onClick={handleStartCall} className="flex-1">
-                        <PhoneCall className="mr-2" /> Start New Call
+                {hasCameraPermission === null && (
+                    <Button onClick={getCameraPermission} className="w-full">
+                        <Video className="mr-2" /> Enable Camera & Mic
                     </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Input 
-                        value={callId}
-                        onChange={(e) => setCallId(e.target.value)}
-                        placeholder="Enter Call ID to join"
-                    />
-                    <Button onClick={handleAnswerCall}>Join Call</Button>
-                </div>
+                )}
+                {hasCameraPermission && (
+                    <>
+                        <div className="flex items-center gap-4">
+                            <Button onClick={handleStartCall} className="flex-1">
+                                <PhoneCall className="mr-2" /> Start New Call
+                            </Button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Input 
+                                value={callId}
+                                onChange={(e) => setCallId(e.target.value)}
+                                placeholder="Enter Call ID to join"
+                            />
+                            <Button onClick={handleAnswerCall}>Join Call</Button>
+                        </div>
+                    </>
+                )}
+                {hasCameraPermission === false && (
+                     <Button onClick={getCameraPermission} className="w-full">
+                        <Video className="mr-2" /> Re-try Enabling Camera & Mic
+                    </Button>
+                )}
                 </>
             ) : (
                 <div className="flex flex-col gap-4">
@@ -212,12 +252,6 @@ export default function LiveClassPage({
                         <PhoneOff className="mr-2" /> Hang Up
                     </Button>
                 </div>
-            )}
-
-            {!hasCameraPermission && hasCameraPermission !== null && (
-                 <Button onClick={getCameraPermission}>
-                    Enable Camera
-                </Button>
             )}
 
         </CardContent>
