@@ -1,7 +1,7 @@
 
 'use client';
 
-import { liveClasses, users } from '@/lib/data';
+import { liveClasses } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import {
   Card,
@@ -10,90 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Send, Hand, Mic, MicOff, Video, VideoOff } from 'lucide-react';
-import Image from 'next/image';
+import { Input } from '@/components/ui/input';
+import { Copy, PhoneCall, PhoneOff, Video } from 'lucide-react';
 import * as React from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-
-const attendees = [
-    users['user-2'],
-    users['user-1'],
-    users['user-3'],
-    users['user-4'],
-    { id: 'user-5', name: 'Liam', avatarUrl: 'https://picsum.photos/seed/105/100/100', avatarHint: 'student portrait' },
-    { id: 'user-6', name: 'Olivia', avatarUrl: 'https://picsum.photos/seed/106/100/100', avatarHint: 'student portrait' },
-    { id: 'user-7', name: 'Noah', avatarUrl: 'https://picsum.photos/seed/107/100/100', avatarHint: 'student portrait' },
-    { id: 'user-8', name: 'Emma', avatarUrl: 'https://picsum.photos/seed/108/100/100', avatarHint: 'student portrait' },
-];
-
-const chatMessages = [
-    { user: 'Alex Johnson', message: 'Hello Prof. Reed!', time: '10:02 AM' },
-    { user: 'Dr. Evelyn Reed', message: "Welcome everyone! We'll start in a moment.", time: '10:03 AM' },
-    { user: 'Samantha Blue', message: 'Will this be on the test?', time: '10:15 AM' },
-    { user: 'Dr. Evelyn Reed', message: 'Yes, the concepts covered today are crucial for the midterm.', time: '10:16 AM' },
-    { user: 'Ben Carter', message: 'Could you please explain the last point again?', time: '10:25 AM' },
-];
-
-function ClassChat() {
-    return (
-        <Card className="flex flex-col h-full">
-            <CardHeader>
-                <CardTitle>Class Chat</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-grow overflow-hidden">
-                <ScrollArea className="h-full">
-                    <div className="space-y-4 pr-4">
-                        {chatMessages.map((msg, index) => (
-                            <div key={index} className="flex flex-col">
-                                <div className="flex items-baseline gap-2">
-                                     <span className="font-bold text-sm">{msg.user}</span>
-                                     <span className="text-xs text-muted-foreground">{msg.time}</span>
-                                </div>
-                                <p className="text-sm">{msg.message}</p>
-                            </div>
-                        ))}
-                    </div>
-                </ScrollArea>
-            </CardContent>
-            <CardContent>
-                <form className="flex items-center gap-2 pt-4 border-t">
-                    <Textarea placeholder="Type a message..." className="min-h-0 h-10" />
-                    <Button size="icon">
-                        <Send className="h-4 w-4" />
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
-    );
-}
-
-function AttendeeList() {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Attendees ({attendees.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-                 <ScrollArea className="h-[200px] lg:h-auto lg:max-h-[calc(100vh-22rem)]">
-                    <div className="space-y-4 pr-4">
-                        {attendees.map(user => (
-                            <div key={user.id} className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8">
-                                    <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} />
-                                    <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium text-sm">{user.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </ScrollArea>
-            </CardContent>
-        </Card>
-    )
-}
+import { db } from '@/lib/firebase';
+import { createOffer, createAnswer, hangUp, servers } from '@/lib/webrtc';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function LiveClassPage({
   params,
@@ -101,8 +25,116 @@ export default function LiveClassPage({
   params: { classId: string };
 }) {
   const liveClass = liveClasses.find((c) => c.id === params.classId);
-  const [micOn, setMicOn] = React.useState(true);
-  const [videoOn, setVideoOn] = React.useState(true);
+  const { toast } = useToast();
+
+  const [localStream, setLocalStream] = React.useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = React.useState<MediaStream | null>(null);
+  const [hasCameraPermission, setHasCameraPermission] = React.useState<boolean | null>(null);
+  const [callId, setCallId] = React.useState('');
+  const [isCallActive, setIsCallActive] = React.useState(false);
+
+  const pc = React.useRef<RTCPeerConnection | null>(null);
+  const localVideoRef = React.useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = React.useRef<HTMLVideoElement>(null);
+
+  React.useEffect(() => {
+    pc.current = new RTCPeerConnection(servers);
+
+    pc.current.onicecandidate = (event) => {
+        event.candidate && console.log('ICE candidate:', event.candidate);
+    };
+    pc.current.ontrack = (event) => {
+        if (event.streams && event.streams[0]) {
+            setRemoteStream(event.streams[0]);
+        }
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (localStream && pc.current) {
+      localStream.getTracks().forEach((track) => {
+        pc.current!.addTrack(track, localStream);
+      });
+    }
+  }, [localStream]);
+
+  React.useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
+
+  React.useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
+
+
+  const getCameraPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setLocalStream(stream);
+      setHasCameraPermission(true);
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setHasCameraPermission(false);
+      toast({
+        variant: 'destructive',
+        title: 'Camera Access Denied',
+        description: 'Please enable camera permissions in your browser settings to use this feature.',
+      });
+    }
+  };
+
+  const handleStartCall = async () => {
+    if (!db || !pc.current) return;
+    if (!localStream) {
+      await getCameraPermission();
+    }
+    const newCallId = await createOffer(db, pc.current);
+    setCallId(newCallId);
+    setIsCallActive(true);
+    toast({
+        title: "Call Started",
+        description: "Share the Call ID with another user to join."
+    });
+  };
+
+  const handleAnswerCall = async () => {
+    if (!db || !pc.current || !callId) {
+        toast({
+            variant: "destructive",
+            title: "No Call ID",
+            description: "Please enter a Call ID to join a call."
+        });
+        return
+    };
+    if (!localStream) {
+      await getCameraPermission();
+    }
+    await createAnswer(db, pc.current, callId);
+    setIsCallActive(true);
+    toast({
+        title: "Call Joined",
+        description: "You have successfully joined the call."
+    });
+  };
+
+  const handleHangUp = async () => {
+      if(pc.current) {
+        hangUp(pc.current, localStream);
+      }
+      setLocalStream(null);
+      setRemoteStream(null);
+      setIsCallActive(false);
+      setCallId('');
+      setHasCameraPermission(null);
+      toast({
+          title: "Call Ended",
+      });
+  }
+
 
   if (!liveClass) {
     notFound();
@@ -112,48 +144,84 @@ export default function LiveClassPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{liveClass.title}</h1>
-        <p className="text-muted-foreground">
-          Live session with Dr. Evelyn Reed
-        </p>
+        <p className="text-muted-foreground">Live session with Dr. Evelyn Reed</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 space-y-6">
-           <Card className="overflow-hidden">
-                <div className="relative aspect-video w-full bg-secondary">
-                    <Image src={liveClass.imageUrl} alt={liveClass.title} fill className="object-cover" data-ai-hint={liveClass.imageHint} />
-                    <div className="absolute bottom-4 left-4 bg-background/80 p-2 rounded-lg">
-                        <p className="font-semibold text-sm">Dr. Evelyn Reed (Host)</p>
-                    </div>
-                </div>
-                <CardContent className="p-4 flex items-center justify-center gap-2 bg-card">
-                     <Button variant={micOn ? 'secondary' : 'destructive'} size="icon" onClick={() => setMicOn(!micOn)}>
-                        {micOn ? <Mic /> : <MicOff />}
-                    </Button>
-                     <Button variant={videoOn ? 'secondary' : 'destructive'} size="icon" onClick={() => setVideoOn(!videoOn)}>
-                        {videoOn ? <Video /> : <VideoOff />}
-                    </Button>
-                    <Button variant="secondary" size="icon">
-                        <Hand />
-                    </Button>
-                    <Button variant="destructive" className="ml-auto">Leave</Button>
-                </CardContent>
-           </Card>
-           <div className="block lg:hidden">
-            <AttendeeList />
-           </div>
-           <div className="block lg:hidden h-[600px]">
-            <ClassChat />
-           </div>
-        </div>
-        <div className="lg:col-span-1 space-y-6 hidden lg:block">
-            <AttendeeList />
-            <div className="h-[400px]">
-                <ClassChat />
+      <Card>
+        <CardHeader>
+          <CardTitle>Virtual Classroom</CardTitle>
+          <CardDescription>Join the live video session below.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid md:grid-cols-2 gap-6">
+          <Card className="bg-secondary flex items-center justify-center aspect-video relative overflow-hidden">
+            <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover"></video>
+            <div className="absolute bottom-2 left-2 bg-background/70 text-xs px-2 py-1 rounded-md">
+                You
             </div>
-        </div>
-      </div>
+            {hasCameraPermission === false && (
+                <div className="absolute inset-0 bg-black/80 flex items-center justify-center text-white p-4">
+                    <Alert variant="destructive">
+                    <AlertTitle>Camera Access Required</AlertTitle>
+                    <AlertDescription>
+                        Please allow camera access to use this feature.
+                    </AlertDescription>
+                    </Alert>
+                </div>
+            )}
+          </Card>
+          <Card className="bg-secondary flex items-center justify-center aspect-video relative overflow-hidden">
+             <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
+             <div className="absolute bottom-2 left-2 bg-background/70 text-xs px-2 py-1 rounded-md">
+                Tutor
+            </div>
+            {!remoteStream && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                    <Video className="w-16 h-16" />
+                    <p>Waiting for the other user to join...</p>
+                </div>
+            )}
+          </Card>
+        </CardContent>
+        <CardContent className="space-y-4">
+            {!isCallActive ? (
+                <>
+                <div className="flex items-center gap-4">
+                    <Button onClick={handleStartCall} className="flex-1">
+                        <PhoneCall className="mr-2" /> Start New Call
+                    </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Input 
+                        value={callId}
+                        onChange={(e) => setCallId(e.target.value)}
+                        placeholder="Enter Call ID to join"
+                    />
+                    <Button onClick={handleAnswerCall}>Join Call</Button>
+                </div>
+                </>
+            ) : (
+                <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
+                        <span className="text-sm font-medium">Call ID:</span>
+                        <Input readOnly value={callId} className="flex-1 h-8 bg-background" />
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => navigator.clipboard.writeText(callId)}>
+                            <Copy className="h-4 w-4" />
+                        </Button>
+                    </div>
+                     <Button onClick={handleHangUp} variant="destructive">
+                        <PhoneOff className="mr-2" /> Hang Up
+                    </Button>
+                </div>
+            )}
 
+            {!hasCameraPermission && hasCameraPermission !== null && (
+                 <Button onClick={getCameraPermission}>
+                    Enable Camera
+                </Button>
+            )}
+
+        </CardContent>
+      </Card>
     </div>
   );
 }

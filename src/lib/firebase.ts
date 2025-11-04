@@ -4,7 +4,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, collection, doc, addDoc, getDoc, updateDoc, onSnapshot, query, where } from "firebase/firestore";
 
 // Your web app's Firebase configuration is read from environment variables
 const firebaseConfig = {
@@ -39,3 +39,4 @@ const db = app! ? getFirestore(app) : null;
 // Re-exporting auth and db, but now they can be null if initialization failed.
 // The consuming code should handle this possibility.
 export { app, auth, db };
+export { collection, doc, addDoc, getDoc, updateDoc, onSnapshot, query, where };
