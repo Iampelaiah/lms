@@ -151,13 +151,13 @@ const Hero = () => {
             transition={{ delay: 0.4, duration: 1, ease: "easeOut" }}
             className="relative z-10 origin-bottom-right"
           >
-            <div className="bg-white border border-white/20 rounded-[2.5rem] p-10 shadow-2xl shadow-black/40 min-w-[380px]">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl shadow-black/20 min-w-[380px]">
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h3 className="text-fin-green font-headline font-bold text-3xl">Academic Growth</h3>
+                  <h3 className="text-white font-headline font-bold text-3xl">Academic Growth</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="w-2 h-2 rounded-full bg-fin-lime" />
-                    <p className="text-fin-green/40 text-xs font-bold uppercase tracking-widest">Average student mastery levels</p>
+                    <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Average student mastery levels</p>
                   </div>
                 </div>
                 <div className="w-14 h-14 bg-fin-lime rounded-2xl flex items-center justify-center">
@@ -172,25 +172,25 @@ const Hero = () => {
                     initial={{ height: 0 }}
                     animate={{ height: `${h}%` }}
                     transition={{ delay: 1.2 + i * 0.1, duration: 0.8 }}
-                    className={`flex-1 ${i === 3 ? 'bg-fin-green' : 'bg-fin-green/10'} rounded-2xl relative group overflow-hidden`}
+                    className={`flex-1 ${i === 3 ? 'bg-white' : 'bg-white/10'} rounded-2xl relative group overflow-hidden`}
                   >
                     <div className="absolute inset-0 bg-fin-lime translate-y-full group-hover:translate-y-0 transition-transform" />
                   </motion.div>
                 ))}
               </div>
               
-              <div className="mt-8 pt-8 border-t border-fin-green/5 grid grid-cols-2 gap-4">
+              <div className="mt-8 pt-8 border-t border-white/5 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-fin-green/30 text-[10px] uppercase tracking-widest font-bold">Retention Rate</p>
-                  <p className="text-2xl text-fin-green font-bold mt-1">98.4%</p>
+                  <p className="text-white/30 text-[10px] uppercase tracking-widest font-bold">Retention Rate</p>
+                  <p className="text-2xl text-white font-bold mt-1">98.4%</p>
                 </div>
                 <div>
-                  <p className="text-fin-green/30 text-[10px] uppercase tracking-widest font-bold">Pass Velocity</p>
-                  <p className="text-2xl text-fin-green font-bold mt-1">+24.5%</p>
+                  <p className="text-white/30 text-[10px] uppercase tracking-widest font-bold">Pass Velocity</p>
+                  <p className="text-2xl text-white font-bold mt-1">+24.5%</p>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center gap-3 text-fin-green/40 text-[10px] font-bold italic">
+              <div className="mt-6 flex items-center gap-3 text-white/40 text-[10px] font-bold italic">
                 <Plus className="w-3 h-3" />
                 <span>Updated every semester</span>
               </div>
@@ -273,7 +273,7 @@ const Features = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[320px] translate-y-[calc(10%+20px)]"
+                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[320px] translate-y-[30%]"
             >
                 <div className="space-y-6">
                     <h3 className="text-3xl font-headline font-bold text-fin-green tracking-tight leading-tight">
