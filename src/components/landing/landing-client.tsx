@@ -273,7 +273,7 @@ const Features = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[320px]"
+                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[320px] translate-y-[10%]"
             >
                 <div className="space-y-6">
                     <h3 className="text-3xl font-headline font-bold text-fin-green tracking-tight leading-tight">
@@ -334,7 +334,7 @@ const Features = () => {
 
                 <div className="mt-20 relative z-10">
                     <h3 className="text-3xl font-headline font-bold text-fin-lime tracking-tight leading-tight">
-                        Fuel your future with <br /> expert certified <br /> tutors
+                        Fuel your future with <br /> world-class certified <br /> expert tutors
                     </h3>
                 </div>
 
