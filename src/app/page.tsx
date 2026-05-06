@@ -13,8 +13,11 @@ function Footer() {
       <div className="container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 px-4 py-12 md:px-6">
         <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex flex-col gap-4">
           <Link href="#" className="flex items-center gap-2" prefetch={false}>
-            <GraduationCap className="h-6 w-6 text-primary" />
-            <span className="text-lg font-bold">Dr max</span>
+            <GraduationCap className="h-8 w-8 text-primary" />
+            <div className="flex flex-col leading-tight">
+              <span className="text-xl font-bold">Dr Max</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Online school</span>
+            </div>
           </Link>
           <p className="text-sm text-muted-foreground">
             Empowering the next generation of learners.
@@ -63,7 +66,7 @@ function Footer() {
           </nav>
         </div>
         <div className="col-span-1 sm:col-span-2 lg:col-span-1 space-y-2">
-          <h4 className="font-semibold">Join Dr max</h4>
+          <h4 className="font-semibold">Join Dr Max</h4>
           <p className="text-sm text-muted-foreground">Start your learning journey today.</p>
           <Button asChild>
             <Link href="/login">Go to App</Link>
@@ -75,7 +78,7 @@ function Footer() {
           <Avatar className="w-6 h-6">
             <AvatarFallback className="text-xs bg-foreground text-background">D</AvatarFallback>
           </Avatar>
-          <span>© 2025 Dr max. All rights reserved.</span>
+          <span>© 2025 Dr Max. All rights reserved.</span>
         </div>
         <nav className="flex items-center gap-4 text-sm">
           <Link href="#" className="text-muted-foreground hover:text-foreground" prefetch={false}>
@@ -94,10 +97,13 @@ export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <Link href="#" className="flex items-center gap-2 font-bold" prefetch={false}>
-            <GraduationCap className="h-6 w-6 text-primary" />
-            <span className="text-lg">Dr max</span>
+        <div className="container flex h-16 items-center">
+          <Link href="#" className="flex items-center gap-2" prefetch={false}>
+            <GraduationCap className="h-8 w-8 text-primary" />
+            <div className="flex flex-col leading-tight">
+              <span className="text-xl font-bold">Dr Max</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Online school</span>
+            </div>
           </Link>
           <nav className="ml-auto hidden items-center gap-4 sm:flex">
             <Link
@@ -136,7 +142,7 @@ export default function LandingPage() {
               <div className="flex flex-col justify-center space-y-4 text-center lg:text-left">
                 <div className="space-y-4">
                   <h1 className="text-4xl font-bold tracking-tighter text-primary sm:text-5xl xl:text-6xl/none">
-                    Unlock Your Potential with Dr max
+                    Unlock Your Potential with Dr Max
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl mx-auto lg:mx-0">
                     The all-in-one learning platform designed for students, tutors, and parents. Personalized,
