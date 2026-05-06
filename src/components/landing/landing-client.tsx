@@ -273,7 +273,7 @@ const Features = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[320px] translate-y-[10%]"
+                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[320px] translate-y-[calc(10%+20px)]"
             >
                 <div className="space-y-6">
                     <h3 className="text-3xl font-headline font-bold text-fin-green tracking-tight leading-tight">
