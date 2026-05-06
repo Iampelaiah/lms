@@ -267,13 +267,13 @@ const Features = () => {
         </div>
 
         {/* Right Column: Bento Feature Cards */}
-        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
-            {/* Card 1: Control Spend Style */}
+        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-[0.8fr_1fr] gap-8 items-stretch h-full">
+            {/* Card 1: Control Spend Style - Now smaller */}
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between"
+                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between h-fit md:h-auto"
             >
                 <div className="space-y-6">
                     <h3 className="text-3xl font-headline font-bold text-fin-green tracking-tight leading-tight">
@@ -295,7 +295,7 @@ const Features = () => {
                 </Button>
             </motion.div>
 
-            {/* Card 2: Tall Dark Card */}
+            {/* Card 2: Tall Dark Card - Dominant */}
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
