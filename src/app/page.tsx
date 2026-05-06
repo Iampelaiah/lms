@@ -14,7 +14,7 @@ function Footer() {
         <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex flex-col gap-4">
           <Link href="#" className="flex items-center gap-2" prefetch={false}>
             <GraduationCap className="h-6 w-6 text-primary" />
-            <span className="text-lg font-bold">LearnetIQ</span>
+            <span className="text-lg font-bold">Dr max</span>
           </Link>
           <p className="text-sm text-muted-foreground">
             Empowering the next generation of learners.
@@ -63,7 +63,7 @@ function Footer() {
           </nav>
         </div>
         <div className="col-span-1 sm:col-span-2 lg:col-span-1 space-y-2">
-          <h4 className="font-semibold">Join LearnetIQ</h4>
+          <h4 className="font-semibold">Join Dr max</h4>
           <p className="text-sm text-muted-foreground">Start your learning journey today.</p>
           <Button asChild>
             <Link href="/login">Go to App</Link>
@@ -73,9 +73,9 @@ function Footer() {
       <div className="container flex flex-col items-center justify-between gap-4 border-t px-4 py-6 sm:flex-row md:px-6">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Avatar className="w-6 h-6">
-            <AvatarFallback className="text-xs bg-foreground text-background">N</AvatarFallback>
+            <AvatarFallback className="text-xs bg-foreground text-background">D</AvatarFallback>
           </Avatar>
-          <span>© 2025 LearnetIQ. All rights reserved.</span>
+          <span>© 2025 Dr max. All rights reserved.</span>
         </div>
         <nav className="flex items-center gap-4 text-sm">
           <Link href="#" className="text-muted-foreground hover:text-foreground" prefetch={false}>
@@ -97,7 +97,7 @@ export default function LandingPage() {
         <div className="container flex h-14 items-center">
           <Link href="#" className="flex items-center gap-2 font-bold" prefetch={false}>
             <GraduationCap className="h-6 w-6 text-primary" />
-            <span className="text-lg">LearnetIQ</span>
+            <span className="text-lg">Dr max</span>
           </Link>
           <nav className="ml-auto hidden items-center gap-4 sm:flex">
             <Link
@@ -136,7 +136,7 @@ export default function LandingPage() {
               <div className="flex flex-col justify-center space-y-4 text-center lg:text-left">
                 <div className="space-y-4">
                   <h1 className="text-4xl font-bold tracking-tighter text-primary sm:text-5xl xl:text-6xl/none">
-                    Unlock Your Potential with LearnetIQ
+                    Unlock Your Potential with Dr max
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl mx-auto lg:mx-0">
                     The all-in-one learning platform designed for students, tutors, and parents. Personalized,

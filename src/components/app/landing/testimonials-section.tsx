@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const testimonials = [
   {
-    quote: "LearnetIQ has transformed the way I study. The live classes are engaging, and the AI tutor helps me find resources I would have never found on my own!",
+    quote: "Dr max has transformed the way I study. The live classes are engaging, and the AI tutor helps me find resources I would have never found on my own!",
     author: "Sarah L.",
     role: "Student, Grade 11",
     avatar: {
@@ -23,7 +23,7 @@ const testimonials = [
     }
   },
   {
-    quote: "The course management tools are top-notch. LearnetIQ makes it easy to create high-quality content and interact with my students effectively.",
+    quote: "The course management tools are top-notch. Dr max makes it easy to create high-quality content and interact with my students effectively.",
     author: "Mr. Peterson",
     role: "Tutor",
     avatar: {
@@ -39,7 +39,7 @@ export function TestimonialsSection() {
     <div className="space-y-12">
       <div className="text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">What Our Community Says</h2>
-        <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">Real stories from students, parents, and tutors who love LearnetIQ.</p>
+        <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">Real stories from students, parents, and tutors who love Dr max.</p>
       </div>
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {testimonials.map((testimonial, index) => (
