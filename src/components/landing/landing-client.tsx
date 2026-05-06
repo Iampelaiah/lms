@@ -489,18 +489,18 @@ const ParallaxTestimonial = () => {
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="bg-fin-lime p-16 rounded-[3.5rem] max-w-4xl shadow-2xl shadow-black/40"
+          className="bg-fin-lime p-10 rounded-[2.5rem] max-w-2xl shadow-2xl shadow-black/40"
         >
-          <p className="text-4xl md:text-6xl font-headline font-bold text-fin-green leading-[0.9] tracking-tight">
+          <p className="text-2xl md:text-4xl font-headline font-bold text-fin-green leading-[1] tracking-tight">
             "Since joining Dr Max, my grade in Mathematics jumped from a C to an A+. The AI tutor changed how I study forever."
           </p>
-          <div className="mt-12 flex items-center gap-6">
-            <div className="w-16 h-16 bg-fin-green rounded-full flex items-center justify-center">
-                <Trophy className="text-fin-lime w-8 h-8" />
+          <div className="mt-8 flex items-center gap-4">
+            <div className="w-12 h-12 bg-fin-green rounded-full flex items-center justify-center">
+                <Trophy className="text-fin-lime w-6 h-6" />
             </div>
             <div>
-              <p className="font-bold text-fin-green text-xl">Sarah Jenkins</p>
-              <p className="text-fin-green/60 text-md font-bold uppercase tracking-widest">Grade 11 Student</p>
+              <p className="font-bold text-fin-green text-lg">Sarah Jenkins</p>
+              <p className="text-fin-green/60 text-xs font-bold uppercase tracking-widest">Grade 11 Student</p>
             </div>
           </div>
         </motion.div>
