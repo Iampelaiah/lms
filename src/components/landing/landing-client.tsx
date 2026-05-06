@@ -86,7 +86,7 @@ const Hero = () => {
   const words = "The future of personalized learning".split(" ");
   
   return (
-    <section className="relative min-h-screen flex items-center pt-20 px-6 md:px-12 overflow-hidden bg-fin-green">
+    <section className="relative min-h-screen flex items-end pb-24 px-6 md:px-12 overflow-hidden bg-fin-green">
       {/* Background Image Container - Fullscreen */}
       <div className="absolute inset-0 z-0">
         <Image 
@@ -101,7 +101,7 @@ const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-fin-green via-fin-green/60 to-transparent" />
       </div>
 
-      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-end relative z-10">
         <div className="max-w-2xl">
           <div className="overflow-hidden flex flex-wrap gap-x-4">
             {words.map((word, i) => (
