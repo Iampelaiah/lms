@@ -4,8 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'LearnetIQ',
-  description: 'The future of personalized learning.',
+  title: 'Dr Max online school',
+  description: 'The future of personalized digital learning.',
 };
 
 export default function RootLayout({

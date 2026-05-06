@@ -52,7 +52,7 @@ function CurrentPlanCard() {
         <Card>
             <CardHeader>
                 <CardTitle>Current Plan</CardTitle>
-                <CardDescription>This is the current active subscription for Northwood High School.</CardDescription>
+                <CardDescription>This is the current active subscription for Dr Max online school.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Card className="bg-secondary/50 border-border">

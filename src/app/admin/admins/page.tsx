@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,20 +7,20 @@ import { Search } from "lucide-react";
 
 const admins = [
     {
-        name: "Pelaiah Ngarande",
-        email: "pngarande@northwood.lq.zw",
+        name: "Dr. Max Power",
+        email: "max@drmax.online",
         role: "Super Admin",
         status: "Active",
     },
     {
-        name: "John Smith",
-        email: "jsmith@northwood.lq.zw",
+        name: "Pelaiah Ngarande",
+        email: "pngarande@drmax.online",
         role: "Admin",
         status: "Active",
     },
     {
         name: "Michael Johnson",
-        email: "mjohnson@northwood.lq.zw",
+        email: "mjohnson@drmax.online",
         role: "Admin",
         status: "Active",
     },

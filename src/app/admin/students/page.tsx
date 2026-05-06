@@ -28,7 +28,7 @@ const generateStudents = () => {
             const seed = 101 + students.length;
             students.push({
                 name: name,
-                email: `${firstName.charAt(0).toLowerCase()}${lastName.toLowerCase()}@northwood.lq.zw`,
+                email: `${firstName.charAt(0).toLowerCase()}${lastName.toLowerCase()}@drmax.online`,
                 avatarUrl: `https://picsum.photos/seed/${seed}/100/100`,
                 avatarHint: "student portrait",
                 coursesEnrolled: Math.floor(Math.random() * 8) + 1,

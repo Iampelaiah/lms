@@ -62,9 +62,9 @@ export default function AdminDashboardPage() {
     }, []);
 
     const inviteLinks = {
-        tutor: "http://northwood.edu/invite/tutor-a1b2",
-        student: "http://northwood.edu/invite/student-g7h8",
-        admin: "http://northwood.edu/invite/admin-m3n4"
+        tutor: "http://drmax.online/invite/tutor-a1b2",
+        student: "http://drmax.online/invite/student-g7h8",
+        admin: "http://drmax.online/invite/admin-m3n4"
     }
 
     return (
@@ -72,7 +72,7 @@ export default function AdminDashboardPage() {
             <SchoolHeader />
             <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">School Admin Dashboard</h1>
-                <p className="text-muted-foreground">Welcome, {userName}! Oversee operations for Northwood High School.</p>
+                <p className="text-muted-foreground">Welcome, {userName}! Oversee operations for Dr Max online school.</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

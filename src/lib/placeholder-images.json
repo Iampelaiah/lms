@@ -2,13 +2,13 @@
   "placeholderImages": [
     {
       "id": "student-avatar-1",
-      "description": "Avatar for a student",
+      "description": "Avatar for a student at Dr Max online school",
       "imageUrl": "https://picsum.photos/seed/101/100/100",
       "imageHint": "student portrait"
     },
     {
       "id": "tutor-avatar-1",
-      "description": "Avatar for a tutor",
+      "description": "Avatar for a tutor at Dr Max online school",
       "imageUrl": "https://picsum.photos/seed/102/100/100",
       "imageHint": "teacher portrait"
     },
@@ -41,6 +41,12 @@
       "description": "Image for a forum post",
       "imageUrl": "https://picsum.photos/seed/301/800/400",
       "imageHint": "discussion collaboration"
+    },
+    {
+      "id": "school-logo",
+      "description": "Logo for Dr Max online school",
+      "imageUrl": "https://picsum.photos/seed/drmax-logo/100/100",
+      "imageHint": "school logo"
     }
   ]
 }

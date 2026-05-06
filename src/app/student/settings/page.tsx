@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +40,7 @@ function ProfileSettings() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="email">Email Address</Label>
-                        <Input id="email" type="email" defaultValue="alex.j@northwood.lq.zw" />
+                        <Input id="email" type="email" defaultValue="alex.j@drmax.online" />
                     </div>
                      <Button>Update Profile</Button>
                      <p className="text-sm text-muted-foreground">Note: Profile changes must be approved by an administrator and may take up to 3 business days to reflect.</p>

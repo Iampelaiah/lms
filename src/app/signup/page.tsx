@@ -13,13 +13,13 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { GoogleAuthProvider, signInWithRedirect, getRedirectResult, User } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -67,9 +67,8 @@ export default function SignupPage() {
           }
           toast({
             title: 'Account Created!',
-            description: 'Welcome to Northwood High School.',
+            description: 'Welcome to Dr Max online school.',
           });
-          // For single-school LMS, redirect straight to the admin dashboard
           router.push('/admin');
         }
       })
@@ -101,10 +100,10 @@ export default function SignupPage() {
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
       <div className="text-center mb-12">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-primary">
-          LearnetIQ
+          Dr Max
         </h1>
         <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-          Welcome to the Northwood High School portal. Sign up to get started.
+          Welcome to the Dr Max online school portal. Sign up to get started.
         </p>
       </div>
 
@@ -112,7 +111,7 @@ export default function SignupPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Create Your Account</CardTitle>
           <CardDescription>
-            Join the Northwood High School digital community.
+            Join the Dr Max digital community.
           </CardDescription>
         </CardHeader>
         <CardContent>
