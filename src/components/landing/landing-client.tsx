@@ -10,18 +10,23 @@ import {
   Menu, 
   X, 
   BarChart3, 
-  CreditCard, 
-  ShieldCheck, 
+  BookOpen, 
+  GraduationCap, 
   Zap, 
-  Globe 
+  Globe,
+  Brain,
+  Video,
+  Library,
+  Trophy
 } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import Link from 'next/link';
 
 // --- Components ---
 
-const AnimatedNumber = ({ value }: { value: number }) => {
+const AnimatedNumber = ({ value, suffix = "" }: { value: number, suffix?: string }) => {
   const spring = useSpring(value, { mass: 0.8, stiffness: 75, damping: 15 });
   const [displayValue, setDisplayValue] = useState(value);
 
@@ -35,14 +40,13 @@ const AnimatedNumber = ({ value }: { value: number }) => {
     });
   }, [spring]);
 
-  return <span>${displayValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>;
+  return <span>{displayValue.toFixed(displayValue > 100 ? 0 : 1)}{suffix}</span>;
 };
 
 const Navbar = () => {
   const { scrollY } = useScroll();
   const backgroundColor = useTransform(scrollY, [0, 100], ['rgba(245, 245, 240, 0)', 'rgba(245, 245, 240, 0.7)']);
   const backdropBlur = useTransform(scrollY, [0, 100], ['blur(0px)', 'blur(10px)']);
-  const borderOpacity = useTransform(scrollY, [0, 100], [0, 0.1]);
 
   return (
     <motion.nav 
@@ -50,27 +54,36 @@ const Navbar = () => {
       className="fixed top-0 left-0 right-0 z-50 h-20 flex items-center px-6 md:px-12 border-b border-fin-green/10"
     >
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-fin-lime rounded-full" />
-        <span className="font-headline font-bold text-xl text-fin-green">Dr Max</span>
+        <div className="w-8 h-8 bg-fin-lime rounded-full flex items-center justify-center">
+            <GraduationCap className="w-5 h-5 text-fin-green" />
+        </div>
+        <div className="flex flex-col leading-none">
+            <span className="font-headline font-bold text-xl text-fin-green">Dr Max</span>
+            <span className="text-[10px] font-bold uppercase tracking-tighter text-fin-green/60">Online School</span>
+        </div>
       </div>
       
       <div className="hidden md:flex flex-1 justify-center gap-8 text-sm font-medium text-fin-green/70">
-        <a href="#" className="hover:text-fin-green transition-colors">Features</a>
-        <a href="#" className="hover:text-fin-green transition-colors">Solutions</a>
-        <a href="#" className="hover:text-fin-green transition-colors">Company</a>
-        <a href="#" className="hover:text-fin-green transition-colors">Pricing</a>
+        <a href="#methodology" className="hover:text-fin-green transition-colors">Methodology</a>
+        <a href="#curriculum" className="hover:text-fin-green transition-colors">Curriculum</a>
+        <a href="#ai-tools" className="hover:text-fin-green transition-colors">AI Tools</a>
+        <a href="#pricing" className="hover:text-fin-green transition-colors">Tuition</a>
       </div>
 
       <div className="flex items-center gap-4">
-        <Button variant="ghost" className="text-fin-green font-semibold">Login</Button>
-        <Button className="bg-white text-fin-green hover:bg-white/90 font-bold px-6 border border-fin-green/10">Sign up</Button>
+        <Button variant="ghost" className="text-fin-green font-semibold" asChild>
+            <Link href="/login">Login</Link>
+        </Button>
+        <Button className="bg-white text-fin-green hover:bg-white/90 font-bold px-6 border border-fin-green/10" asChild>
+            <Link href="/signup">Enroll Now</Link>
+        </Button>
       </div>
     </motion.nav>
   );
 };
 
 const Hero = () => {
-  const words = "Built for fast moving business".split(" ");
+  const words = "The future of personalized learning".split(" ");
   
   return (
     <section className="relative min-h-screen flex items-center pt-20 px-6 md:px-12 overflow-hidden bg-fin-beige">
@@ -95,16 +108,21 @@ const Hero = () => {
             transition={{ delay: 1, duration: 0.8 }}
             className="mt-8 text-lg text-fin-green/60 max-w-md leading-relaxed"
           >
-            Scale your infrastructure effortlessly with a platform designed for the speed of modern commerce. 
+            Empowering students with AI-driven paths, expert tutors, and a world-class curriculum designed for digital excellence.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 1.2, duration: 0.5 }}
-            className="mt-10"
+            className="mt-10 flex gap-4"
           >
-            <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-8 h-14 rounded-full text-lg group">
-              Get started <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+            <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-8 h-14 rounded-full text-lg group" asChild>
+              <Link href="/signup">
+                Start Learning <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="border-fin-green text-fin-green hover:bg-fin-green hover:text-white font-bold px-8 h-14 rounded-full text-lg" asChild>
+              <Link href="/login">Role Preview</Link>
             </Button>
           </motion.div>
         </div>
@@ -119,16 +137,16 @@ const Hero = () => {
             <div className="bg-white/40 backdrop-blur-xl border border-white/40 rounded-3xl p-8 shadow-2xl shadow-fin-green/5">
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h3 className="text-fin-green font-headline font-bold text-2xl">Cashflow</h3>
-                  <p className="text-fin-green/40 text-sm">Last 30 days performance</p>
+                  <h3 className="text-fin-green font-headline font-bold text-2xl">Academic Growth</h3>
+                  <p className="text-fin-green/40 text-sm">Average student mastery levels</p>
                 </div>
                 <div className="w-12 h-12 bg-fin-lime rounded-2xl flex items-center justify-center">
-                  <BarChart3 className="text-fin-green" />
+                  <Brain className="text-fin-green" />
                 </div>
               </div>
               
               <div className="flex items-end gap-3 h-48">
-                {[40, 70, 45, 90, 65, 80, 55].map((h, i) => (
+                {[60, 85, 55, 95, 75, 90, 88].map((h, i) => (
                   <motion.div
                     key={i}
                     initial={{ height: 0 }}
@@ -143,12 +161,12 @@ const Hero = () => {
               
               <div className="mt-8 pt-8 border-t border-fin-green/5 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-fin-green/40 text-xs uppercase tracking-widest font-bold">Total revenue</p>
-                  <p className="text-2xl text-fin-green font-bold mt-1">$45,231.89</p>
+                  <p className="text-fin-green/40 text-xs uppercase tracking-widest font-bold">Retention Rate</p>
+                  <p className="text-2xl text-fin-green font-bold mt-1">98.4%</p>
                 </div>
                 <div>
-                  <p className="text-fin-green/40 text-xs uppercase tracking-widest font-bold">Growth</p>
-                  <p className="text-2xl text-fin-lime font-bold mt-1">+12.5%</p>
+                  <p className="text-fin-green/40 text-xs uppercase tracking-widest font-bold">Pass Velocity</p>
+                  <p className="text-2xl text-fin-lime font-bold mt-1">+24.5%</p>
                 </div>
               </div>
             </div>
@@ -160,11 +178,12 @@ const Hero = () => {
 
       <div className="absolute top-0 right-0 w-1/2 h-full -z-0 opacity-20 lg:opacity-100">
         <Image 
-          src="https://picsum.photos/seed/fin-hero/800/1200"
-          alt="Business"
+          src="https://picsum.photos/seed/edu-hero/800/1200"
+          alt="Student learning"
           fill
           className="object-cover grayscale mix-blend-multiply"
           priority
+          data-ai-hint="student smiling"
         />
       </div>
     </section>
@@ -172,18 +191,18 @@ const Hero = () => {
 };
 
 const Marquee = () => {
-  const logos = ["Vercel", "Stripe", "Airbnb", "Nike", "Amazon", "Shopify", "Slack"];
+  const partners = ["Accredited", "AI-Powered", "Global Reach", "24/7 Access", "Expert Tutors", "Virtual Labs", "Personalized"];
   
   return (
     <div className="py-12 bg-white border-y border-fin-green/5 overflow-hidden flex whitespace-nowrap">
       <motion.div 
         animate={{ x: [0, -1000] }}
-        transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+        transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
         className="flex gap-20 items-center px-10"
       >
-        {[...logos, ...logos].map((logo, i) => (
+        {[...partners, ...partners].map((item, i) => (
           <span key={i} className="text-3xl font-headline font-bold text-fin-green/20 uppercase tracking-tighter italic">
-            {logo}
+            {item}
           </span>
         ))}
       </motion.div>
@@ -193,7 +212,7 @@ const Marquee = () => {
 
 const Features = () => {
   return (
-    <section className="py-24 px-6 md:px-12 bg-fin-beige relative">
+    <section id="methodology" className="py-24 px-6 md:px-12 bg-fin-beige relative">
       <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20">
         <div className="lg:sticky lg:top-40 h-fit">
           <motion.h2 
@@ -202,7 +221,7 @@ const Features = () => {
             viewport={{ once: true }}
             className="text-4xl md:text-6xl font-headline font-bold text-fin-green leading-tight"
           >
-            Next gen of <br /> payment solutions
+            Next gen of <br /> digital education
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -211,31 +230,31 @@ const Features = () => {
             transition={{ delay: 0.2 }}
             className="mt-6 text-lg text-fin-green/60 max-w-sm"
           >
-            Everything you need to accept payments and manage your business globally.
+            Everything you need to master any subject and prepare for your future.
           </motion.p>
-          <Button variant="outline" className="mt-8 border-fin-green text-fin-green hover:bg-fin-green hover:text-white rounded-full px-8">
-            Learn more
+          <Button variant="outline" className="mt-8 border-fin-green text-fin-green hover:bg-fin-green hover:text-white rounded-full px-8" asChild>
+            <Link href="/signup">View Methodology</Link>
           </Button>
         </div>
 
         <div className="space-y-12">
           {[
             { 
-              title: "Global Transfers", 
-              desc: "Move money across 180+ countries instantly with zero hidden fees.",
-              icon: Globe,
+              title: "Live Virtual Classes", 
+              desc: "Connect with world-class educators in real-time with peer-to-peer video classrooms.",
+              icon: Video,
               bg: "bg-fin-lime"
             },
             { 
-              title: "High-level Security", 
-              desc: "AES-256 encryption and biometric authentication for every transaction.",
-              icon: ShieldCheck,
+              title: "AI Study Buddy", 
+              desc: "Get 24/7 personalized tutoring powered by Gemini AI, tailored to your learning pace.",
+              icon: Brain,
               bg: "bg-white"
             },
             { 
-              title: "Smart Automations", 
-              desc: "Set up triggers for recurring payments and automatic reconciliation.",
-              icon: Zap,
+              title: "Global Resource Library", 
+              desc: "Access thousands of curated worksheets, video lectures, and e-books instantly.",
+              icon: Library,
               bg: "bg-fin-green",
               dark: true
             }
@@ -266,17 +285,18 @@ const Features = () => {
   );
 };
 
-const Calculator = () => {
-  const [revenue, setRevenue] = useState(50000);
-  const fee = revenue * 0.024;
-  const net = revenue - fee;
+const StudySimulator = () => {
+  const [hours, setHours] = useState(10);
+  // Simple logic: Base 60% + 2% per hour, max 99%
+  const projectedGrade = Math.min(60 + (hours * 3), 99);
+  const masteryBoost = hours * 1.5;
 
   return (
     <section className="py-24 px-6 md:px-12 bg-white">
       <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
         <div>
-          <h2 className="text-4xl md:text-6xl font-headline font-bold text-fin-green">One transparent fee.</h2>
-          <p className="mt-6 text-xl text-fin-green/60 max-w-md">No monthly minimums, no surprises. Just straightforward pricing for your growth capital.</p>
+          <h2 className="text-4xl md:text-6xl font-headline font-bold text-fin-green">Visualize your success.</h2>
+          <p className="mt-6 text-xl text-fin-green/60 max-w-md">Our algorithm projects your performance based on commitment and resource engagement.</p>
         </div>
 
         <motion.div
@@ -288,37 +308,37 @@ const Calculator = () => {
           <div className="space-y-12">
             <div>
               <div className="flex justify-between items-center mb-4">
-                <span className="font-bold text-sm uppercase tracking-widest">Monthly Revenue</span>
-                <span className="text-2xl font-bold font-headline">${revenue.toLocaleString()}</span>
+                <span className="font-bold text-sm uppercase tracking-widest">Weekly Study Hours</span>
+                <span className="text-2xl font-bold font-headline">{hours} hrs</span>
               </div>
               <input 
                 type="range" 
-                min="10000" 
-                max="500000" 
-                step="5000"
-                value={revenue}
-                onChange={(e) => setRevenue(Number(e.target.value))}
+                min="1" 
+                max="40" 
+                step="1"
+                value={hours}
+                onChange={(e) => setHours(Number(e.target.value))}
                 className="w-full h-2 bg-fin-green/10 rounded-full appearance-none cursor-pointer accent-fin-green"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-8 border-t border-fin-green/10 pt-12">
               <div>
-                <p className="text-fin-green/40 text-xs uppercase font-bold tracking-widest">Service Fee (2.4%)</p>
+                <p className="text-fin-green/40 text-xs uppercase font-bold tracking-widest">Projected Grade</p>
                 <div className="text-3xl font-headline font-bold mt-2">
-                  <AnimatedNumber value={fee} />
+                  <AnimatedNumber value={projectedGrade} suffix="%" />
                 </div>
               </div>
               <div>
-                <p className="text-fin-green/40 text-xs uppercase font-bold tracking-widest">Net Capital</p>
-                <div className="text-3xl font-headline font-bold mt-2">
-                  <AnimatedNumber value={net} />
+                <p className="text-fin-green/40 text-xs uppercase font-bold tracking-widest">Mastery Velocity</p>
+                <div className="text-3xl font-headline font-bold mt-2 text-fin-green">
+                  <AnimatedNumber value={masteryBoost} suffix="x" />
                 </div>
               </div>
             </div>
 
-            <Button className="w-full bg-fin-green text-white hover:bg-fin-green/90 h-16 rounded-2xl font-bold text-lg">
-              Apply for capital
+            <Button className="w-full bg-fin-green text-white hover:bg-fin-green/90 h-16 rounded-2xl font-bold text-lg" asChild>
+              <Link href="/signup">Unlock Full Potential</Link>
             </Button>
           </div>
         </motion.div>
@@ -353,10 +373,10 @@ const FAQ = () => {
 
         <Accordion type="single" collapsible className="space-y-4">
           {[
-            { q: "How fast can I get funding?", a: "Most applications are approved within 24 hours, and funds are disbursed to your linked account instantly after approval." },
-            { q: "What are the eligibility requirements?", a: "We look for businesses with at least 6 months of operating history and consistent monthly revenue of $10k+." },
-            { q: "Are there any hidden charges?", a: "Absolutely not. We pride ourselves on transparent, flat-fee pricing that you agree to upfront." },
-            { q: "Is my data secure?", a: "We use bank-grade AES-256 encryption and are fully compliant with SOC2 and PCI-DSS standards." }
+            { q: "Is Dr Max Online School accredited?", a: "Yes, our curriculum is fully aligned with national standards and our certificates are recognized globally for further education." },
+            { q: "How do the AI tutors work?", a: "Our AI Study Buddy uses advanced Gemini LLMs to analyze your specific learning gaps and generate personalized summaries, quizzes, and study paths." },
+            { q: "Can I switch between subjects?", a: "Absolutely. Our platform is designed for flexible learning. You can enroll in multiple courses and manage them all from a single dashboard." },
+            { q: "What role do parents play?", a: "Parents have a dedicated portal to monitor attendance, real-time progress, and academic milestones, ensuring a collaborative approach to education." }
           ].map((item, i) => (
             <AccordionItem key={i} value={`item-${i}`} className="border-b-0">
               <motion.div 
@@ -390,10 +410,11 @@ const ParallaxTestimonial = () => {
     <section ref={ref} className="relative h-[80vh] overflow-hidden">
       <motion.div style={{ y }} className="absolute inset-0">
         <Image 
-          src="https://picsum.photos/seed/testimonial-parallax/1600/900"
-          alt="Success Story"
+          src="https://picsum.photos/seed/edu-parallax/1600/900"
+          alt="Student Success"
           fill
           className="object-cover brightness-50"
+          data-ai-hint="graduated student"
         />
       </motion.div>
       
@@ -405,13 +426,15 @@ const ParallaxTestimonial = () => {
           className="bg-fin-lime p-12 rounded-[2.5rem] max-w-3xl"
         >
           <p className="text-3xl md:text-5xl font-headline font-bold text-fin-green leading-tight">
-            "Since switching to Dr Max, our revenue cycle improved by 40%. It's the partner we were looking for."
+            "Since joining Dr Max, my grade in Mathematics jumped from a C to an A+. The AI tutor changed how I study forever."
           </p>
           <div className="mt-8 flex items-center gap-4">
-            <div className="w-12 h-12 bg-fin-green rounded-full" />
+            <div className="w-12 h-12 bg-fin-green rounded-full flex items-center justify-center">
+                <Trophy className="text-fin-lime w-6 h-6" />
+            </div>
             <div>
               <p className="font-bold text-fin-green">Sarah Jenkins</p>
-              <p className="text-fin-green/60 text-sm">CEO at TechFlow</p>
+              <p className="text-fin-green/60 text-sm">Grade 11 Student</p>
             </div>
           </div>
         </motion.div>
@@ -431,29 +454,33 @@ const Footer = () => {
             viewport={{ once: true }}
             className="text-5xl md:text-8xl font-headline font-bold mb-12"
           >
-            Speak to our <br /> financing experts
+            Start your digital <br /> learning journey
           </motion.h2>
-          <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-12 h-20 rounded-full text-2xl group transition-all duration-500">
-            Book a call <ArrowRight className="ml-4 w-8 h-8 group-hover:translate-x-2 transition-transform" />
+          <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-12 h-20 rounded-full text-2xl group transition-all duration-500" asChild>
+            <Link href="/signup">
+                Enroll Today <ArrowRight className="ml-4 w-8 h-8 group-hover:translate-x-2 transition-transform" />
+            </Link>
           </Button>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 pt-24 border-t border-white/5">
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-8">
-              <div className="w-8 h-8 bg-fin-lime rounded-full" />
+              <div className="w-8 h-8 bg-fin-lime rounded-full flex items-center justify-center">
+                <GraduationCap className="w-5 h-5 text-fin-green" />
+              </div>
               <span className="font-headline font-bold text-2xl">Dr Max</span>
             </div>
             <p className="text-white/40 max-w-xs leading-relaxed">
-              Leading the way in modern business financing and payment infrastructure.
+              Pioneering the future of digital education with AI-powered personalized learning systems.
             </p>
           </div>
           
           {[
-            { title: "Product", links: ["Features", "Security", "Pricing", "Integrations"] },
-            { title: "Solutions", links: ["Startups", "Enterprise", "Ecommerce", "Global"] },
-            { title: "Resources", links: ["Blog", "Guides", "API Docs", "Community"] },
-            { title: "Company", links: ["About", "Careers", "Legal", "Contact"] }
+            { title: "Methodology", links: ["AI Tutoring", "Virtual Labs", "Hybrid Learning", "Assessment"] },
+            { title: "Portals", links: ["Students", "Tutors", "Parents", "Administrators"] },
+            { title: "Resources", links: ["Library", "Forums", "Live Archive", "Support"] },
+            { title: "Institution", links: ["About", "Faculty", "Contact", "Privacy"] }
           ].map((section, i) => (
             <div key={i}>
               <h4 className="font-bold mb-6 text-sm uppercase tracking-widest text-fin-lime">{section.title}</h4>
@@ -486,7 +513,7 @@ export const LandingClient = () => {
       <Hero />
       <Marquee />
       <Features />
-      <Calculator />
+      <StudySimulator />
       <FAQ />
       <ParallaxTestimonial />
       <Footer />
