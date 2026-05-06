@@ -266,9 +266,9 @@ const Features = () => {
           </motion.div>
         </div>
 
-        {/* Right Column: Bento Feature Cards - Card 1 Landscape, Card 2 Portrait */}
+        {/* Right Column: Bento Feature Cards - Exact Stagger and Scale */}
         <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-            {/* Card 1: Landscape (Wide/Short) */}
+            {/* Card 1: Landscape (Wide/Short) - Light Background */}
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -295,7 +295,7 @@ const Features = () => {
                 </Button>
             </motion.div>
 
-            {/* Card 2: Portrait (Narrow/Tall) */}
+            {/* Card 2: Portrait (Narrow/Tall) - Dark Background */}
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
