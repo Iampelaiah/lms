@@ -17,7 +17,9 @@ import {
   Brain,
   Video,
   Library,
-  Trophy
+  Trophy,
+  MessageCircle,
+  MoreHorizontal
 } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -63,14 +65,14 @@ const Navbar = () => {
       </div>
       
       {/* Center: Logo */}
-      <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
-        <div className="w-8 h-8 bg-fin-lime rounded-full flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-fin-green" />
-        </div>
-        <div className="flex flex-col leading-none">
+      <div className="flex flex-col items-center gap-0 absolute left-1/2 -translate-x-1/2 pointer-events-none">
+        <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                <GraduationCap className="w-5 h-5 text-fin-green" />
+            </div>
             <span className="font-headline font-bold text-2xl text-white">Dr Max</span>
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/50">Online School</span>
         </div>
+        <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/60 -mt-1 ml-10">Online School</span>
       </div>
 
       {/* Right: Auth & Menu */}
@@ -96,7 +98,7 @@ const Hero = () => {
           src="https://picsum.photos/seed/edu-hero-precise/1920/1080"
           alt="Student learning"
           fill
-          className="object-cover brightness-75"
+          className="object-cover brightness-90"
           priority
           data-ai-hint="student learning"
         />
@@ -106,13 +108,13 @@ const Hero = () => {
       </div>
 
       <div className="container mx-auto px-6 md:px-12 relative z-10 pb-20 grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
-        {/* Left Side Content */}
-        <div className="lg:col-span-8">
+        {/* Left Side Content - Shifted to absolute bottom-left */}
+        <div className="lg:col-span-8 mb-4">
           <motion.h1
             initial={{ y: 60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            className="text-6xl md:text-[100px] font-headline font-bold text-white leading-[0.85] tracking-tight"
+            className="text-6xl md:text-[105px] font-headline font-bold text-white leading-[0.85] tracking-tight"
           >
             The future of <br /> learning together
           </motion.h1>
@@ -128,31 +130,34 @@ const Hero = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8, duration: 0.5 }}
-            className="mt-10"
+            className="mt-10 flex items-center gap-4"
           >
             <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-10 h-16 rounded-full text-lg group shadow-xl shadow-black/20" asChild>
               <Link href="/signup">
-                Get started <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                Start learning <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="border-white/20 bg-white/5 backdrop-blur-md text-white hover:bg-white/10 font-bold px-10 h-16 rounded-full text-lg shadow-xl shadow-black/20" asChild>
+                <Link href="/login">Role Preview</Link>
             </Button>
           </motion.div>
         </div>
 
-        {/* Right Side Floating Card */}
+        {/* Right Side Floating Card - Resized and repositioned */}
         <div className="lg:col-span-4 flex justify-end">
           <motion.div
-            initial={{ opacity: 0, x: 50, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 0.8 }}
+            initial={{ opacity: 0, x: 50, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 0.6 }}
             transition={{ delay: 0.4, duration: 1, ease: "easeOut" }}
             className="relative z-10 origin-bottom-right"
           >
             <div className="bg-white border border-white/20 rounded-[2.5rem] p-10 shadow-2xl shadow-black/40 min-w-[380px]">
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h3 className="text-fin-green font-headline font-bold text-3xl">Progress</h3>
+                  <h3 className="text-fin-green font-headline font-bold text-3xl">Academic Growth</h3>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="w-2 h-2 rounded-full bg-fin-lime" />
-                    <p className="text-fin-green/40 text-xs font-bold uppercase tracking-widest">Active learning</p>
+                    <p className="text-fin-green/40 text-xs font-bold uppercase tracking-widest">Average student mastery levels</p>
                   </div>
                 </div>
                 <div className="w-14 h-14 bg-fin-lime rounded-2xl flex items-center justify-center">
@@ -176,11 +181,11 @@ const Hero = () => {
               
               <div className="mt-8 pt-8 border-t border-fin-green/5 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-fin-green/30 text-[10px] uppercase tracking-widest font-bold">Students</p>
-                  <p className="text-2xl text-fin-green font-bold mt-1">10,000+</p>
+                  <p className="text-fin-green/30 text-[10px] uppercase tracking-widest font-bold">Retention Rate</p>
+                  <p className="text-2xl text-fin-green font-bold mt-1">98.4%</p>
                 </div>
                 <div>
-                  <p className="text-fin-green/30 text-[10px] uppercase tracking-widest font-bold">Growth</p>
+                  <p className="text-fin-green/30 text-[10px] uppercase tracking-widest font-bold">Pass Velocity</p>
                   <p className="text-2xl text-fin-green font-bold mt-1">+24.5%</p>
                 </div>
               </div>
@@ -190,6 +195,8 @@ const Hero = () => {
                 <span>Updated every semester</span>
               </div>
             </div>
+            {/* Added shadow for better separation */}
+            <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-black/40 blur-[120px] rounded-full -z-10 pointer-events-none" />
           </motion.div>
         </div>
       </div>
@@ -198,94 +205,146 @@ const Hero = () => {
 };
 
 const Marquee = () => {
-  const partners = ["Accredited", "AI-Powered", "Global Reach", "24/7 Access", "Expert Tutors", "Virtual Labs", "Personalized"];
+  const brands = ["EduCore", "ThinkLab", "LearnGrid", "SkillPath", "StudyFlow", "EduNova", "Academiq"];
   
   return (
-    <div className="py-12 bg-white border-y border-fin-green/5 overflow-hidden flex whitespace-nowrap">
-      <motion.div 
-        animate={{ x: [0, -1000] }}
-        transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
-        className="flex gap-20 items-center px-10"
-      >
-        {[...partners, ...partners].map((item, i) => (
-          <span key={i} className="text-3xl font-headline font-bold text-fin-green/20 uppercase tracking-tighter italic">
-            {item}
-          </span>
-        ))}
-      </motion.div>
+    <div className="bg-white pt-24 pb-12 overflow-hidden">
+      <div className="container mx-auto px-6 mb-16 flex flex-col items-center">
+         <div className="inline-flex items-center gap-2 px-6 py-2 bg-fin-beige rounded-full border border-fin-green/5 text-[13px] font-semibold text-fin-green/60">
+            <span>Join over 10,000 students already learning with Dr Max.</span>
+         </div>
+      </div>
+
+      <div className="flex whitespace-nowrap">
+        <motion.div 
+            animate={{ x: [0, -1000] }}
+            transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
+            className="flex gap-20 items-center px-10"
+        >
+            {[...brands, ...brands].map((item, i) => (
+            <span key={i} className="text-2xl font-headline font-bold text-fin-green/30 uppercase tracking-tighter italic">
+                {item}
+            </span>
+            ))}
+        </motion.div>
+      </div>
     </div>
   );
 };
 
 const Features = () => {
   return (
-    <section id="methodology" className="py-32 px-6 md:px-12 bg-fin-beige relative">
-      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20">
-        <div className="lg:sticky lg:top-40 h-fit">
-          <motion.h2 
+    <section id="methodology" className="py-24 px-6 md:px-12 bg-white relative">
+      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+        {/* Left Column: Massive Headline & Text */}
+        <div className="lg:col-span-5 space-y-12">
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-5xl md:text-7xl font-headline font-bold text-fin-green leading-[0.9] tracking-tight"
           >
-            Next gen of <br /> digital education
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="mt-8 text-xl text-fin-green/60 max-w-sm leading-relaxed"
-          >
-            Everything you need to master any subject and prepare for your future.
-          </motion.p>
-          <Button variant="outline" className="mt-10 border-fin-green text-fin-green hover:bg-fin-green hover:text-white rounded-full px-10 h-14 font-bold" asChild>
-            <Link href="/signup">View Methodology</Link>
-          </Button>
+            <h2 className="text-6xl md:text-7xl font-headline font-bold text-fin-green leading-[1] tracking-tight">
+              Build for your <br /> next gen of <br /> learning
+            </h2>
+            <div className="mt-10 flex flex-wrap gap-4">
+               <Button size="lg" className="bg-fin-green text-white hover:bg-fin-green/90 font-bold px-8 h-14 rounded-full text-md group">
+                  Start learning <ArrowRight className="ml-2 w-4 h-4" />
+               </Button>
+               <Button size="lg" variant="outline" className="border-fin-green/10 text-fin-green hover:bg-fin-beige font-bold px-8 h-14 rounded-full text-md">
+                  Learn more
+               </Button>
+            </div>
+            
+            <div className="mt-16 space-y-6 max-w-md">
+              <p className="text-fin-green/60 text-lg leading-relaxed">
+                Experience seamless integration of technology and education, built for your success and convenience.
+              </p>
+              <p className="text-fin-green/60 text-lg leading-relaxed font-bold">
+                The power of an AI-driven school, with none of the legacy baggage. Dr Max gives modern learners and tutors an intuitive platform for exam-readiness and mastery.
+              </p>
+            </div>
+          </motion.div>
         </div>
 
-        <div className="space-y-12">
-          {[
-            { 
-              title: "Live Virtual Classes", 
-              desc: "Connect with world-class educators in real-time with peer-to-peer video classrooms.",
-              icon: Video,
-              bg: "bg-fin-lime"
-            },
-            { 
-              title: "AI Study Buddy", 
-              desc: "Get 24/7 personalized tutoring powered by Gemini AI, tailored to your learning pace.",
-              icon: Brain,
-              bg: "bg-white"
-            },
-            { 
-              title: "Global Resource Library", 
-              desc: "Access thousands of curated worksheets, video lectures, and e-books instantly.",
-              icon: Library,
-              bg: "bg-fin-green",
-              dark: true
-            }
-          ].map((card, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.95, y: 30 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6 }}
-              className={`p-12 rounded-[3rem] shadow-xl shadow-fin-green/5 ${card.bg} ${card.dark ? 'text-white' : 'text-fin-green'}`}
+        {/* Right Column: Bento Feature Cards */}
+        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
+            {/* Card 1: Control Spend Style */}
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between"
             >
-              <card.icon className="w-14 h-14 mb-8" />
-              <h3 className="text-4xl font-headline font-bold tracking-tight">{card.title}</h3>
-              <p className={`mt-6 text-lg ${card.dark ? 'text-white/60' : 'text-fin-green/60'} leading-relaxed`}>
-                {card.desc}
-              </p>
-              <div className="mt-10 flex justify-end">
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center border ${card.dark ? 'border-white/20' : 'border-fin-green/20'} group hover:bg-fin-green hover:text-white transition-colors cursor-pointer`}>
-                  <ArrowRight />
+                <div className="space-y-6">
+                    <h3 className="text-3xl font-headline font-bold text-fin-green tracking-tight leading-tight">
+                        Control study <br /> effortlessly at any pace
+                    </h3>
+                    <ul className="space-y-4 text-fin-green/60 font-medium">
+                        <li className="flex items-center gap-3">
+                            <ArrowRight className="w-4 h-4" /> 
+                            <span>Adaptive learning paths</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                            <ArrowRight className="w-4 h-4" /> 
+                            <span>24/7 AI tutor support</span>
+                        </li>
+                    </ul>
                 </div>
-              </div>
+                <Button variant="ghost" className="mt-10 w-fit bg-fin-green text-white hover:bg-fin-green/90 rounded-full px-6 h-12 font-bold flex gap-2">
+                    Manage studies <ArrowRight className="w-4 h-4" />
+                </Button>
             </motion.div>
-          ))}
+
+            {/* Card 2: Tall Dark Card */}
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="bg-fin-green rounded-[2.5rem] p-10 flex flex-col justify-between overflow-hidden relative"
+            >
+                <div className="space-y-8 relative z-10">
+                    {/* UI Mockup Snippets */}
+                    <div className="space-y-4">
+                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/5 w-full flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-fin-lime/20 flex items-center justify-center">
+                                    <Brain className="w-6 h-6 text-fin-lime" />
+                                </div>
+                                <span className="text-white text-sm font-bold">Ask AI Buddy</span>
+                            </div>
+                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                                <Plus className="w-4 h-4 text-white" />
+                            </div>
+                        </div>
+
+                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/5 w-fit ml-auto flex items-center gap-4">
+                             <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Ongoing session</span>
+                             <div className="flex -space-x-2">
+                                <div className="w-6 h-6 rounded-full border-2 border-fin-green bg-blue-500 overflow-hidden">
+                                    <Image src="https://picsum.photos/seed/face1/40/40" alt="user" width={40} height={40} />
+                                </div>
+                                <div className="w-6 h-6 rounded-full border-2 border-fin-green bg-green-500 overflow-hidden">
+                                    <Image src="https://picsum.photos/seed/face2/40/40" alt="user" width={40} height={40} />
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-20 relative z-10">
+                    <h3 className="text-3xl font-headline font-bold text-fin-lime tracking-tight leading-tight">
+                        Fuel your future with <br /> world-class certified <br /> expert tutors
+                    </h3>
+                </div>
+
+                {/* Abstract Palm Shadow Style Overlay */}
+                <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full scale-150">
+                        <path fill="#D1F366" d="M44.7,-76.4C58.1,-69.2,70.1,-58.5,77.4,-45.3C84.7,-32.1,87.3,-16,85.1,-0.6C82.9,14.8,75.9,29.5,67,42.5C58.1,55.5,47.3,66.8,34.4,73.5C21.5,80.2,6.5,82.3,-8.4,79.5C-23.3,76.7,-38.1,69,-50.2,58.4C-62.3,47.8,-71.7,34.3,-76.5,19.3C-81.3,4.3,-81.5,-12.3,-75.7,-26.8C-69.9,-41.3,-58.1,-53.7,-44.6,-61C-31.1,-68.3,-15.5,-70.5,-0.1,-70.3C15.3,-70.1,31.2,-83.6,44.7,-76.4Z" transform="translate(100 100)" />
+                    </svg>
+                </div>
+            </motion.div>
         </div>
       </div>
     </section>
