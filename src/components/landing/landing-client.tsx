@@ -143,10 +143,10 @@ const Hero = () => {
 
         <div className="relative hidden lg:block">
           <motion.div
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, x: 100, scale: 0.6 }}
+            animate={{ opacity: 1, x: 0, scale: 0.6 }}
             transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
-            className="relative z-10"
+            className="relative z-10 origin-bottom-right"
           >
             <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl shadow-black/20">
               <div className="flex justify-between items-center mb-8">
