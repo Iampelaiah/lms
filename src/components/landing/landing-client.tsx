@@ -108,7 +108,7 @@ const Hero = () => {
       </div>
 
       <div className="container mx-auto px-6 md:px-12 relative z-10 pb-20 grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
-        {/* Left Side Content - Shifted to absolute bottom-left */}
+        {/* Left Side Content - Bottom-aligned */}
         <div className="lg:col-span-8 mb-4">
           <motion.h1
             initial={{ y: 60, opacity: 0 }}
@@ -143,7 +143,7 @@ const Hero = () => {
           </motion.div>
         </div>
 
-        {/* Right Side Floating Card - Resized and repositioned */}
+        {/* Right Side Floating Card - Resized smaller */}
         <div className="lg:col-span-4 flex justify-end">
           <motion.div
             initial={{ opacity: 0, x: 50, scale: 0.8 }}
@@ -195,7 +195,7 @@ const Hero = () => {
                 <span>Updated every semester</span>
               </div>
             </div>
-            {/* Added shadow for better separation */}
+            {/* Shadow for separation */}
             <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-black/40 blur-[120px] rounded-full -z-10 pointer-events-none" />
           </motion.div>
         </div>
@@ -266,14 +266,14 @@ const Features = () => {
           </motion.div>
         </div>
 
-        {/* Right Column: Bento Feature Cards */}
-        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-[0.8fr_1fr] gap-8 items-stretch h-full">
-            {/* Card 1: Control Spend Style - Now smaller */}
+        {/* Right Column: Bento Feature Cards - Card 1 Landscape, Card 2 Portrait */}
+        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            {/* Card 1: Landscape (Wide/Short) */}
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between h-fit md:h-auto"
+                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[320px]"
             >
                 <div className="space-y-6">
                     <h3 className="text-3xl font-headline font-bold text-fin-green tracking-tight leading-tight">
@@ -295,13 +295,13 @@ const Features = () => {
                 </Button>
             </motion.div>
 
-            {/* Card 2: Tall Dark Card - Dominant */}
+            {/* Card 2: Portrait (Narrow/Tall) */}
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
-                className="bg-fin-green rounded-[2.5rem] p-10 flex flex-col justify-between overflow-hidden relative"
+                className="bg-fin-green rounded-[2.5rem] p-10 flex flex-col justify-between overflow-hidden relative md:col-span-3 lg:col-span-1 min-h-[500px]"
             >
                 <div className="space-y-8 relative z-10">
                     {/* UI Mockup Snippets */}
@@ -334,11 +334,11 @@ const Features = () => {
 
                 <div className="mt-20 relative z-10">
                     <h3 className="text-3xl font-headline font-bold text-fin-lime tracking-tight leading-tight">
-                        Fuel your future with <br /> world-class certified <br /> expert tutors
+                        Fuel your future with <br /> expert certified <br /> tutors
                     </h3>
                 </div>
 
-                {/* Abstract Palm Shadow Style Overlay */}
+                {/* Abstract Shadow Style Overlay */}
                 <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
                     <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full scale-150">
                         <path fill="#D1F366" d="M44.7,-76.4C58.1,-69.2,70.1,-58.5,77.4,-45.3C84.7,-32.1,87.3,-16,85.1,-0.6C82.9,14.8,75.9,29.5,67,42.5C58.1,55.5,47.3,66.8,34.4,73.5C21.5,80.2,6.5,82.3,-8.4,79.5C-23.3,76.7,-38.1,69,-50.2,58.4C-62.3,47.8,-71.7,34.3,-76.5,19.3C-81.3,4.3,-81.5,-12.3,-75.7,-26.8C-69.9,-41.3,-58.1,-53.7,-44.6,-61C-31.1,-68.3,-15.5,-70.5,-0.1,-70.3C15.3,-70.1,31.2,-83.6,44.7,-76.4Z" transform="translate(100 100)" />
@@ -353,7 +353,7 @@ const Features = () => {
 
 const StudySimulator = () => {
   const [hours, setHours] = useState(10);
-  // Simple logic: Base 60% + 2% per hour, max 99%
+  // Base 60% + 2% per hour, max 99%
   const projectedGrade = Math.min(60 + (hours * 3), 99);
   const masteryBoost = hours * 1.5;
 
