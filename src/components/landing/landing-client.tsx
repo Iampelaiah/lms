@@ -86,9 +86,23 @@ const Hero = () => {
   const words = "The future of personalized learning".split(" ");
   
   return (
-    <section className="relative min-h-screen flex items-center pt-20 px-6 md:px-12 overflow-hidden bg-fin-beige">
-      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        <div className="z-10 max-w-2xl">
+    <section className="relative min-h-screen flex items-center pt-20 px-6 md:px-12 overflow-hidden bg-fin-green">
+      {/* Background Image Container - Fullscreen */}
+      <div className="absolute inset-0 z-0">
+        <Image 
+          src="https://picsum.photos/seed/edu-hero-fs/1920/1080"
+          alt="Student learning"
+          fill
+          className="object-cover brightness-[0.4] grayscale-[0.2]"
+          priority
+          data-ai-hint="student learning"
+        />
+        {/* Gradient Overlay for Legibility */}
+        <div className="absolute inset-0 bg-gradient-to-r from-fin-green via-fin-green/60 to-transparent" />
+      </div>
+
+      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+        <div className="max-w-2xl">
           <div className="overflow-hidden flex flex-wrap gap-x-4">
             {words.map((word, i) => (
               <motion.span
@@ -96,7 +110,7 @@ const Hero = () => {
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.8, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                className="text-5xl md:text-7xl font-headline font-bold text-fin-green block"
+                className="text-5xl md:text-7xl font-headline font-bold text-white block"
               >
                 {word}
               </motion.span>
@@ -106,7 +120,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.8 }}
-            className="mt-8 text-lg text-fin-green/60 max-w-md leading-relaxed"
+            className="mt-8 text-lg text-white/70 max-w-md leading-relaxed"
           >
             Empowering students with AI-driven paths, expert tutors, and a world-class curriculum designed for digital excellence.
           </motion.p>
@@ -121,24 +135,24 @@ const Hero = () => {
                 Start Learning <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-fin-green text-fin-green hover:bg-fin-green hover:text-white font-bold px-8 h-14 rounded-full text-lg" asChild>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-fin-green font-bold px-8 h-14 rounded-full text-lg" asChild>
               <Link href="/login">Role Preview</Link>
             </Button>
           </motion.div>
         </div>
 
-        <div className="relative">
+        <div className="relative hidden lg:block">
           <motion.div
             initial={{ opacity: 0, x: 100 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
             className="relative z-10"
           >
-            <div className="bg-white/40 backdrop-blur-xl border border-white/40 rounded-3xl p-8 shadow-2xl shadow-fin-green/5">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl shadow-black/20">
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h3 className="text-fin-green font-headline font-bold text-2xl">Academic Growth</h3>
-                  <p className="text-fin-green/40 text-sm">Average student mastery levels</p>
+                  <h3 className="text-white font-headline font-bold text-2xl">Academic Growth</h3>
+                  <p className="text-white/60 text-sm">Average student mastery levels</p>
                 </div>
                 <div className="w-12 h-12 bg-fin-lime rounded-2xl flex items-center justify-center">
                   <Brain className="text-fin-green" />
@@ -152,20 +166,20 @@ const Hero = () => {
                     initial={{ height: 0 }}
                     animate={{ height: `${h}%` }}
                     transition={{ delay: 1.5 + i * 0.1, duration: 0.8 }}
-                    className="flex-1 bg-fin-green/10 rounded-t-lg relative group overflow-hidden"
+                    className="flex-1 bg-white/10 rounded-t-lg relative group overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-fin-lime translate-y-full group-hover:translate-y-0 transition-transform" />
                   </motion.div>
                 ))}
               </div>
               
-              <div className="mt-8 pt-8 border-t border-fin-green/5 grid grid-cols-2 gap-4">
+              <div className="mt-8 pt-8 border-t border-white/10 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-fin-green/40 text-xs uppercase tracking-widest font-bold">Retention Rate</p>
-                  <p className="text-2xl text-fin-green font-bold mt-1">98.4%</p>
+                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold">Retention Rate</p>
+                  <p className="text-2xl text-white font-bold mt-1">98.4%</p>
                 </div>
                 <div>
-                  <p className="text-fin-green/40 text-xs uppercase tracking-widest font-bold">Pass Velocity</p>
+                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold">Pass Velocity</p>
                   <p className="text-2xl text-fin-lime font-bold mt-1">+24.5%</p>
                 </div>
               </div>
@@ -174,17 +188,6 @@ const Hero = () => {
 
           <div className="absolute -top-20 -right-20 w-80 h-80 bg-fin-lime/20 rounded-full blur-3xl" />
         </div>
-      </div>
-
-      <div className="absolute top-0 right-0 w-1/2 h-full -z-0 opacity-20 lg:opacity-100">
-        <Image 
-          src="https://picsum.photos/seed/edu-hero/800/1200"
-          alt="Student learning"
-          fill
-          className="object-cover grayscale mix-blend-multiply"
-          priority
-          data-ai-hint="student smiling"
-        />
       </div>
     </section>
   );
@@ -469,7 +472,10 @@ const Footer = () => {
               <div className="w-8 h-8 bg-fin-lime rounded-full flex items-center justify-center">
                 <GraduationCap className="w-5 h-5 text-fin-green" />
               </div>
-              <span className="font-headline font-bold text-2xl">Dr Max</span>
+              <div className="flex flex-col leading-tight">
+                <span className="font-headline font-bold text-2xl">Dr Max</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-fin-lime/80">Online School</span>
+              </div>
             </div>
             <p className="text-white/40 max-w-xs leading-relaxed">
               Pioneering the future of digital education with AI-powered personalized learning systems.
