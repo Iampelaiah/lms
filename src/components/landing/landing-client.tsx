@@ -53,11 +53,11 @@ const Navbar = () => {
   return (
     <motion.nav 
       style={{ backgroundColor, backdropFilter: backdropBlur }}
-      className="fixed top-0 left-0 right-0 z-50 h-24 flex items-center px-6 md:px-12 transition-all"
+      className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center px-6 md:px-12 transition-all"
     >
       {/* Left: Nav Links in Pill */}
       <div className="flex-1 hidden lg:flex items-center">
-        <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-full px-6 py-2.5 flex gap-8 text-[13px] font-semibold text-white/90">
+        <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 flex gap-8 text-[10px] font-semibold text-white/90">
             <a href="#methodology" className="hover:text-white transition-colors">Methodology</a>
             <a href="#curriculum" className="hover:text-white transition-colors">Curriculum</a>
             <a href="#resources" className="hover:text-white transition-colors">Resources</a>
@@ -67,18 +67,18 @@ const Navbar = () => {
       {/* Center: Logo */}
       <div className="flex flex-col items-center gap-0 absolute left-1/2 -translate-x-1/2 pointer-events-none">
         <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-fin-green" />
+            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <GraduationCap className="w-4 h-4 text-fin-green" />
             </div>
-            <span className="font-headline font-bold text-2xl text-white">Dr Max</span>
+            <span className="font-headline font-bold text-lg text-white">Dr Max</span>
         </div>
-        <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/60 -mt-1 ml-10">Online School</span>
+        <span className="text-[7px] font-bold uppercase tracking-[0.25em] text-white/60 -mt-1 ml-7">Online School</span>
       </div>
 
       {/* Right: Auth & Menu */}
       <div className="flex-1 flex items-center justify-end gap-6">
-        <Link href="/login" className="text-white text-sm font-bold hover:opacity-80 transition-opacity">Login</Link>
-        <Button className="bg-white text-fin-green hover:bg-white/90 font-bold px-7 h-11 rounded-full text-sm" asChild>
+        <Link href="/login" className="text-white text-xs font-bold hover:opacity-80 transition-opacity">Login</Link>
+        <Button className="bg-white text-fin-green hover:bg-white/90 font-bold px-5 h-8 rounded-full text-xs" asChild>
             <Link href="/signup">Enroll now</Link>
         </Button>
         <Button variant="ghost" size="icon" className="text-white">
@@ -107,14 +107,14 @@ const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-fin-green/40 via-transparent to-transparent" />
       </div>
 
-      <div className="container mx-auto px-6 md:px-12 relative z-10 pb-20 grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+      <div className="container mx-auto px-6 md:px-12 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
         {/* Left Side Content - Bottom-aligned */}
         <div className="lg:col-span-8 mb-4">
           <motion.h1
             initial={{ y: 60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            className="text-6xl md:text-[105px] font-headline font-bold text-white leading-[0.85] tracking-tight"
+            className="text-4xl md:text-[74px] font-headline font-bold text-white leading-[0.85] tracking-tight"
           >
             The future of <br /> learning together
           </motion.h1>
@@ -122,7 +122,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="mt-8 text-lg md:text-xl text-white/80 max-w-xl leading-relaxed"
+            className="mt-8 text-base md:text-lg text-white/80 max-w-xl leading-relaxed"
           >
             Empowering students with AI-driven paths, expert tutors, and a world-class curriculum designed for digital excellence.
           </motion.p>
@@ -132,12 +132,12 @@ const Hero = () => {
             transition={{ delay: 0.8, duration: 0.5 }}
             className="mt-10 flex items-center gap-4"
           >
-            <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-10 h-16 rounded-full text-lg group shadow-xl shadow-black/20" asChild>
+            <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-7 h-11 rounded-full text-base group shadow-xl shadow-black/20" asChild>
               <Link href="/signup">
                 Start learning <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-white/20 bg-white/5 backdrop-blur-md text-white hover:bg-white/10 font-bold px-10 h-16 rounded-full text-lg shadow-xl shadow-black/20" asChild>
+            <Button size="lg" variant="outline" className="border-white/20 bg-white/5 backdrop-blur-md text-white hover:bg-white/10 font-bold px-7 h-11 rounded-full text-base shadow-xl shadow-black/20" asChild>
                 <Link href="/login">Role Preview</Link>
             </Button>
           </motion.div>
@@ -273,10 +273,10 @@ const Features = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="bg-[#E4F0F2] rounded-[2.5rem] p-10 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[320px] translate-y-[30%]"
+                className="bg-[#E4F0F2] rounded-[2.5rem] p-7 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[224px] translate-y-[150%]"
             >
                 <div className="space-y-6">
-                    <h3 className="text-3xl font-headline font-bold text-fin-green tracking-tight leading-tight">
+                    <h3 className="text-2xl font-headline font-bold text-fin-green tracking-tight leading-tight">
                         Control study <br /> effortlessly at any pace
                     </h3>
                     <ul className="space-y-4 text-fin-green/60 font-medium">
@@ -290,7 +290,7 @@ const Features = () => {
                         </li>
                     </ul>
                 </div>
-                <Button variant="ghost" className="mt-10 w-fit bg-fin-green text-white hover:bg-fin-green/90 rounded-full px-6 h-12 font-bold flex gap-2">
+                <Button variant="ghost" className="mt-7 w-fit bg-fin-green text-white hover:bg-fin-green/90 rounded-full px-5 h-9 font-bold flex gap-2 text-sm">
                     Manage studies <ArrowRight className="w-4 h-4" />
                 </Button>
             </motion.div>

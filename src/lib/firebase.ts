@@ -17,26 +17,29 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app: FirebaseApp;
-if (getApps().length === 0) {
-  if (firebaseConfig.apiKey) {
-    app = initializeApp(firebaseConfig);
-    console.log("Firebase initialized successfully with projectId:", firebaseConfig.projectId);
-  } else {
-    // In a server-side context or if env vars are not available,
-    // this can prevent the app from crashing.
-    console.error("Firebase API Key is missing. App cannot be initialized.");
-  }
-} else {
-  app = getApp();
+let app: FirebaseApp | undefined;
+let auth: any = null;
+let db: any = null;
+
+if (typeof window !== 'undefined') {
+    if (getApps().length === 0) {
+        if (firebaseConfig.apiKey) {
+            app = initializeApp(firebaseConfig);
+            console.log("Firebase initialized successfully with projectId:", firebaseConfig.projectId);
+        } else {
+            console.error("Firebase API Key is missing. App cannot be initialized.");
+        }
+    } else {
+        app = getApp();
+    }
+
+    if (app) {
+        auth = getAuth(app);
+        db = getFirestore(app);
+    }
 }
 
-// It's safer to get auth and db instances only when the app is initialized.
-// This prevents errors if initialization fails.
-const auth = app! ? getAuth(app) : null;
-const db = app! ? getFirestore(app) : null;
-
-// Re-exporting auth and db, but now they can be null if initialization failed.
-// The consuming code should handle this possibility.
+// Re-exporting auth and db, but now they can be null if initialization failed or on server.
 export { app, auth, db };
+
 export { collection, doc, addDoc, getDoc, updateDoc, onSnapshot, query, where };
