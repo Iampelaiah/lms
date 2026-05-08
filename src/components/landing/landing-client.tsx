@@ -235,7 +235,7 @@ const Marquee = () => {
 const Features = () => {
   return (
     <section id="methodology" className="py-24 px-6 md:px-12 bg-white relative">
-      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-stretch">
         {/* Left Column: Massive Headline & Text */}
         <div className="lg:col-span-5 space-y-12">
           <motion.div
@@ -267,13 +267,14 @@ const Features = () => {
         </div>
 
         {/* Right Column: Bento Feature Cards - Exact Stagger and Scale */}
-        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-3 gap-8 items-start relative h-full">
             {/* Card 1: Landscape (Wide/Short) - Light Background */}
             <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="bg-[#E4F0F2] rounded-[2.5rem] p-7 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[224px] translate-y-[150%]"
+                initial={{ opacity: 0, y: 40, scale: 0.93 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0 }}
+                className="bg-[#E4F0F2] rounded-[2.5rem] p-7 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[224px] absolute bottom-[10px] left-0 w-[57%]"
             >
                 <div className="space-y-6">
                     <h3 className="text-2xl font-headline font-bold text-fin-green tracking-tight leading-tight">
@@ -297,11 +298,11 @@ const Features = () => {
 
             {/* Card 2: Portrait (Narrow/Tall) - Dark Background */}
             <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="bg-fin-green rounded-[2.5rem] p-10 flex flex-col justify-between overflow-hidden relative md:col-span-3 lg:col-span-1 min-h-[500px]"
+                initial={{ opacity: 0, y: 40, scale: 0.93 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+                className="bg-fin-green rounded-[2.5rem] p-10 flex flex-col justify-between overflow-hidden absolute bottom-[10px] right-0 w-[40%] min-h-[380px]"
             >
                 <div className="space-y-8 relative z-10">
                     {/* UI Mockup Snippets */}
@@ -369,13 +370,13 @@ const StudySimulator = () => {
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="bg-fin-lime p-16 rounded-[4rem] text-fin-green shadow-2xl shadow-fin-lime/20"
+          className="bg-fin-lime p-12 rounded-[3rem] text-fin-green shadow-2xl shadow-fin-lime/20"
         >
-          <div className="space-y-16">
+          <div className="space-y-12">
             <div>
               <div className="flex justify-between items-center mb-6">
                 <span className="font-bold text-sm uppercase tracking-widest">Weekly Study Hours</span>
-                <span className="text-3xl font-bold font-headline">{hours} hrs</span>
+                <span className="text-2xl font-bold font-headline">{hours} hrs</span>
               </div>
               <input 
                 type="range" 
@@ -388,22 +389,22 @@ const StudySimulator = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-10 border-t border-fin-green/10 pt-16">
+            <div className="grid grid-cols-2 gap-8 border-t border-fin-green/10 pt-12">
               <div>
                 <p className="text-fin-green/40 text-xs uppercase font-bold tracking-widest">Projected Grade</p>
-                <div className="text-5xl font-headline font-bold mt-4 tracking-tighter">
+                <div className="text-4xl font-headline font-bold mt-4 tracking-tighter">
                   <AnimatedNumber value={projectedGrade} suffix="%" />
                 </div>
               </div>
               <div>
                 <p className="text-fin-green/40 text-xs uppercase font-bold tracking-widest">Mastery Velocity</p>
-                <div className="text-5xl font-headline font-bold mt-4 text-fin-green tracking-tighter">
+                <div className="text-4xl font-headline font-bold mt-4 text-fin-green tracking-tighter">
                   <AnimatedNumber value={masteryBoost} suffix="x" />
                 </div>
               </div>
             </div>
 
-            <Button className="w-full bg-fin-green text-white hover:bg-fin-green/90 h-20 rounded-3xl font-bold text-xl transition-all active:scale-95" asChild>
+            <Button className="w-full bg-fin-green text-white hover:bg-fin-green/90 h-[60px] rounded-2xl font-bold text-base transition-all active:scale-95" asChild>
               <Link href="/signup">Unlock Full Potential</Link>
             </Button>
           </div>
@@ -473,8 +474,8 @@ const ParallaxTestimonial = () => {
   const y = useTransform(scrollYProgress, [0, 1], [0, -300]);
 
   return (
-    <section ref={ref} className="relative h-[100vh] overflow-hidden">
-      <motion.div style={{ y }} className="absolute inset-0">
+    <section ref={ref} className="relative h-screen overflow-hidden">
+      <motion.div style={{ y }} className="absolute -inset-y-40 inset-x-0">
         <Image 
           src="https://picsum.photos/seed/edu-parallax-exact/1600/900"
           alt="Student Success"
