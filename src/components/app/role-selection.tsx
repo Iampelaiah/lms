@@ -53,39 +53,32 @@ const roles: Role[] = [
 
 export function RoleSelection() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
       {roles.map((role) => (
         <Card
           key={role.name}
-          className="h-full hover:border-primary transition-colors duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col"
+          className="bg-[#1A1A1A] border-[#2A2A2A] hover:border-white/20 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col rounded-3xl overflow-hidden group"
         >
-          <Link href={role.loginHref} className="block group flex-grow">
-            <CardHeader className="flex-row items-center gap-4 pb-4">
-              <div
-                className="bg-primary/10 p-3 rounded-lg"
-              >
-                <role.icon
-                  className="w-6 h-6 text-primary"
-                />
+          <Link href={role.loginHref} className="block flex-grow p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-white/5 p-3 rounded-2xl group-hover:bg-[#00FFCC]/10 transition-colors">
+                <role.icon className="w-6 h-6 text-white group-hover:text-[#00FFCC] transition-colors" />
               </div>
-              <CardTitle
-                className="text-xl"
-              >
-                {role.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription>
-                {role.description}
-              </CardDescription>
-            </CardContent>
+              <h3 className="text-xl font-bold text-white">{role.name}</h3>
+            </div>
+            <p className="text-gray-500 text-sm leading-relaxed">
+              {role.description}
+            </p>
           </Link>
           <div className="px-6 pb-4 mt-auto flex justify-end">
-              <Link href={role.previewHref} className="group/preview flex items-center justify-center gap-2 text-sm font-medium text-accent hover:text-accent-foreground transition-colors border border-accent/50 rounded-md px-3 py-1 hover:bg-accent">
-                  <Eye className="h-4 w-4" />
-                  <span>Preview</span>
-              </Link>
-            </div>
+            <Link 
+              href={role.previewHref} 
+              className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+            >
+              <Eye className="h-3 w-3" />
+              <span>Preview Portal</span>
+            </Link>
+          </div>
         </Card>
       ))}
     </div>

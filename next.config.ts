@@ -1,11 +1,16 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
+  // Disable Strict Mode to prevent Agora UID_CONFLICT errors caused by
+  // React's double-mount behavior in development.
+  reactStrictMode: false,
   /* config options here */
   experimental: {
     serverActions: {
       allowedOrigins: ['localhost:9002', '*.vercel.app'],
     },
+    // Pre-compile these routes at dev server startup to avoid first-visit delay
+    preloadEntriesOnStart: true,
   },
   typescript: {
     ignoreBuildErrors: true,

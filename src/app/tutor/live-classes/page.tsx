@@ -8,6 +8,7 @@ import { CalendarPlus, Users, Video } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { SchoolHeader } from "@/components/app/school-header";
+import { JoinClassButton } from "@/components/classroom/JoinClassButton";
 
 const liveClasses = [
     {
@@ -26,13 +27,14 @@ const liveClasses = [
         imageUrl: "https://picsum.photos/seed/live-class-2/600/400",
         imageHint: "quantum physics atom",
     },
-     {
+    {
         title: "Intro to Shakespeare",
         status: "Ongoing",
         time: "Started 15 mins ago",
         students: 35,
         imageUrl: "https://picsum.photos/seed/live-class-3/600/400",
         imageHint: "shakespeare portrait",
+        dyteMeetingId: "c748981c-d784-4861-823c-f58c74c10729",
     },
     {
         title: "Algebra Basics - Final Q&A",
@@ -84,10 +86,20 @@ function LiveClassList({ status }: { status: "Ongoing" | "Upcoming" | "Completed
                         </div>
                     </CardContent>
                      <CardFooter className="p-4 pt-0">
-                        <Button className="w-full">
-                           <Video className="mr-2 h-4 w-4" />
-                           {liveClass.status === "Upcoming" ? "Start Class" : liveClass.status === "Ongoing" ? "Join Class" : "View Recording"}
-                        </Button>
+                        {liveClass.status !== "Completed" && (liveClass as any).dyteMeetingId ? (
+                            <JoinClassButton
+                                meetingId={(liveClass as any).dyteMeetingId}
+                                participantName="Dr. Evelyn Reed"
+                                role="host"
+                                buttonText={liveClass.status === "Upcoming" ? "Start Class" : "Join Class"}
+                                className="w-full"
+                            />
+                        ) : (
+                            <Button className="w-full">
+                               <Video className="mr-2 h-4 w-4" />
+                               {liveClass.status === "Upcoming" ? "Start Class" : liveClass.status === "Ongoing" ? "Join Class" : "View Recording"}
+                            </Button>
+                        )}
                     </CardFooter>
                 </Card>
            ))}

@@ -8,10 +8,11 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { liveClasses } from '@/lib/data';
+import { liveClasses, studentData } from '@/lib/data';
 import { Users, Video } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { JoinClassButton } from '@/components/classroom/JoinClassButton';
 
 const statusVariantMap: Record<string, 'default' | 'secondary' | 'destructive'> = {
     Upcoming: 'default',
@@ -59,16 +60,24 @@ export default function StudentLiveClassesPage() {
                             </div>
                         </CardContent>
                         <CardFooter className="p-4 pt-0">
-                             <Button className="w-full" asChild>
-                                <Link href={`/student/live-classes/${liveClass.id}`}>
-                                    <Video className="mr-2 h-4 w-4" />
-                                    {liveClass.status === 'Upcoming'
-                                        ? 'View Details'
-                                        : liveClass.status === 'Ongoing'
-                                        ? 'Join Class'
-                                        : 'View Recording'}
-                                </Link>
-                            </Button>
+                            {liveClass.status === 'Ongoing' && liveClass.dyteMeetingId ? (
+                                <JoinClassButton
+                                    meetingId={liveClass.dyteMeetingId}
+                                    participantName={studentData.name}
+                                    role="participant"
+                                    buttonText="Join Class"
+                                    className="w-full"
+                                />
+                            ) : (
+                                <Button className="w-full" asChild>
+                                    <Link href={`/student/live-classes/${liveClass.id}`}>
+                                        <Video className="mr-2 h-4 w-4" />
+                                        {liveClass.status === 'Upcoming'
+                                            ? 'View Details'
+                                            : 'View Recording'}
+                                    </Link>
+                                </Button>
+                            )}
                         </CardFooter>
                     </Card>
                 ))}

@@ -474,6 +474,7 @@ export const liveClasses: LiveClass[] = [
         students: 35,
         imageUrl: "https://picsum.photos/seed/live-class-3/600/400",
         imageHint: "shakespeare portrait",
+        dyteMeetingId: "c748981c-d784-4861-823c-f58c74c10729",
     },
     {
         id: 'live-class-4',

@@ -89,4 +89,5 @@ export type LiveClass = {
   students: number;
   imageUrl: string;
   imageHint: string;
+  dyteMeetingId?: string;
 }
