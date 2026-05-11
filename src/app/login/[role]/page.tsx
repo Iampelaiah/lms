@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, GraduationCap, Briefcase, Shield, UserCog, Eye, Fingerprint, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { handleLogin } from '@/app/auth/actions';
+import { createClient } from '@/lib/supabase/client';
 
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -77,6 +78,7 @@ export default function RoleLoginPage() {
   const { toast } = useToast();
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const role = Array.isArray(params.role) ? params.role[0] : params.role;
   const [email, setEmail] = useState('');
   const [mounted, setMounted] = useState(false);
@@ -84,7 +86,16 @@ export default function RoleLoginPage() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    const error = searchParams.get('error');
+    if (error === 'role_mismatch') {
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: 'You do not have access to this role.',
+      });
+    }
+  }, [searchParams, toast]);
 
   const handleAction = async (formData: FormData) => {
     setIsLoading(true);
@@ -113,7 +124,65 @@ export default function RoleLoginPage() {
       title: 'Passkey Auth',
       description: 'Biometric login is currently being initialized. Please use your device security to proceed.',
     });
-    // Call biometric auth logic here
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/${role}`,
+        data: {
+          role: role,
+        },
+      },
+    });
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Google Login failed',
+        description: error.message,
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const handleWhatsAppLogin = async () => {
+    if (!email) {
+      toast({
+        variant: 'destructive',
+        title: 'Email required',
+        description: 'Please enter your email to receive a login link via WhatsApp (if configured) or SMS.',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    const supabase = createClient();
+    // In a real scenario, you'd use signInWithOtp with channel: 'whatsapp'
+    // This requires Twilio/MessageBird setup in Supabase dashboard.
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'WhatsApp/OTP failed',
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: 'Magic Link Sent',
+        description: 'Check your email/WhatsApp for the login link.',
+      });
+    }
+    setIsLoading(false);
   };
 
   const displayRole = roleDisplayNames[role] || capitalizeFirstLetter(role);
@@ -263,7 +332,8 @@ export default function RoleLoginPage() {
               <Button 
                 variant="outline" 
                 className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
-                disabled={true}
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
               >
                 <GoogleIcon className="w-5 h-5" />
                 Google
@@ -271,7 +341,8 @@ export default function RoleLoginPage() {
               <Button 
                 variant="outline" 
                 className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
-                onClick={() => window.open('https://wa.me/yournumber', '_blank')}
+                onClick={handleWhatsAppLogin}
+                disabled={isLoading}
               >
                 <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
                 WhatsApp

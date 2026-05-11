@@ -69,3 +69,21 @@ export async function handleLogout() {
   await supabase.auth.signOut();
   redirect('/login');
 }
+
+export async function updatePassword(formData: FormData) {
+  const supabase = await createClient();
+  const password = formData.get('password') as string;
+
+  const { error } = await supabase.auth.updateUser({
+    password: password,
+    data: {
+      password_set: true,
+    },
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { success: true };
+}

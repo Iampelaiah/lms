@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { handleSignUp } from '@/app/auth/actions';
+import { createClient } from '@/lib/supabase/client';
 
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -104,6 +105,36 @@ export default function SignupPage() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/${role}`,
+        data: {
+          role: role,
+        },
+      },
+    });
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Google Login failed',
+        description: error.message,
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const handleWhatsAppLogin = async () => {
+    toast({
+      title: 'WhatsApp Login',
+      description: 'Please use the login page for WhatsApp OTP authentication.',
+    });
+  };
+
   return (
     <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-black overflow-hidden">
       {/* Left Column - Decorative & Progress */}
@@ -119,10 +150,10 @@ export default function SignupPage() {
           
           <div className="space-y-4 max-w-md mt-6">
             <h1 className="text-4xl font-bold text-white leading-tight tracking-tight">
-              Get Started <br /> with Us
+              Welcome <br /> Back
             </h1>
             <p className="text-gray-400 text-sm">
-              Complete these easy steps to register your account.
+              The future of personalized learning, powered by AI. Select your role to access your workspace.
             </p>
           </div>
         </div>
@@ -176,7 +207,8 @@ export default function SignupPage() {
               <Button 
                 variant="outline" 
                 className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
-                disabled={true}
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
               >
                 <GoogleIcon className="w-5 h-5" />
                 Google
@@ -184,7 +216,8 @@ export default function SignupPage() {
               <Button 
                 variant="outline" 
                 className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
-                onClick={() => window.open('https://wa.me/yournumber', '_blank')}
+                onClick={handleWhatsAppLogin}
+                disabled={isLoading}
               >
                 <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
                 WhatsApp

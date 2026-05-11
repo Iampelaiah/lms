@@ -1,17 +1,16 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GraduationCap, Briefcase, Shield, UserCog, Eye, ArrowLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { useEffect } from 'react';
-import { GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { createClient } from '@/lib/supabase/client';
+import { handleLogin as handleSupabaseLogin } from '@/app/auth/actions';
 
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -78,50 +77,77 @@ const roles = [
 
 export default function LoginPage() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   const [role, setRole] = useState('student');
   const [email, setEmail] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const isFirebaseConfigured = !!auth;
 
   useEffect(() => {
     setMounted(true);
-    if (!auth) return;
 
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result) {
-          const user = result.user;
-          if (user.email) {
-            localStorage.setItem('loggedInUser', user.email);
-          }
-          const savedRole = localStorage.getItem('loginRole') || 'student';
-          router.push(`/${savedRole}`);
-        }
-      })
-      .catch((error) => {
-        console.error('Google Redirect Error: ', error);
-        toast({
-          variant: 'destructive',
-          title: 'Login Error',
-          description: error.message || 'Problem with Google Sign-In.',
-        });
+    const error = searchParams.get('error');
+    if (error === 'role_mismatch') {
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: 'You do not have access to this role.',
       });
-  }, [auth, toast, router]);
+    }
+  }, [searchParams, toast]);
 
   const handleGoogleLogin = async () => {
-    if (!auth) return;
-    localStorage.setItem('loginRole', role);
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
+    setIsLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/${role}`,
+        data: {
+          role: role,
+        },
+      },
+    });
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Google Login failed',
+        description: error.message,
+      });
+      setIsLoading(false);
+    }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('loggedInUser', email);
+    setIsLoading(true);
+    
+    const formData = new FormData(e.currentTarget);
+    formData.append('role', role);
+    
+    const result = await handleSupabaseLogin(formData);
+    
+    if (result?.error) {
+      toast({
+        variant: 'destructive',
+        title: 'Login failed',
+        description: result.error,
+      });
+      setIsLoading(false);
+    } else {
+      toast({
+        title: 'Login successful',
+        description: `Welcome back! Redirecting to your ${role} dashboard...`,
+      });
+      router.push(`/${role}`);
     }
-    router.push(`/${role}`);
+  };
+
+  const handleRoleChange = (newRole: string) => {
+    setRole(newRole);
+    router.push(`/login/${newRole}`);
   };
 
   const displayRole = roleDisplayNames[role] || capitalizeFirstLetter(role);
@@ -152,7 +178,7 @@ export default function LoginPage() {
           {roles.map((r) => (
             <button
               key={r.id}
-              onClick={() => setRole(r.id)}
+              onClick={() => handleRoleChange(r.id)}
               className={`relative rounded-[1.5rem] p-3 flex flex-col justify-between h-28 transition-all duration-200 text-left overflow-hidden ${
                 role === r.id
                   ? 'bg-[#00FFCC]/10 border border-[#00FFCC] shadow-[0_0_15px_rgba(0,255,204,0.2)] ring-1 ring-[#00FFCC] scale-105'
@@ -203,7 +229,7 @@ export default function LoginPage() {
                 variant="outline" 
                 className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
                 onClick={handleGoogleLogin}
-                disabled={!mounted || !isFirebaseConfigured}
+                disabled={!mounted}
               >
                 <GoogleIcon className="w-5 h-5" />
                 Google
@@ -263,8 +289,12 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full bg-white text-black hover:bg-white/90 h-10 rounded-full font-bold text-sm mt-4">
-                Login
+              <Button 
+                type="submit" 
+                className="w-full bg-white text-black hover:bg-white/90 h-10 rounded-full font-bold text-sm mt-4"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Logging in...' : 'Login'}
               </Button>
             </form>
 

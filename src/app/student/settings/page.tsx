@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload } from "lucide-react";
+import { SecuritySettings } from "@/components/app/security-settings";
 
 function ProfileSettings() {
     return (
@@ -48,22 +49,7 @@ function ProfileSettings() {
 
                 <Separator />
                 
-                <form className="space-y-4">
-                     <h3 className="text-lg font-semibold">Change Password</h3>
-                    <div className="space-y-2">
-                        <Label htmlFor="current-password">Current Password</Label>
-                        <Input id="current-password" type="password" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="new-password">New Password</Label>
-                        <Input id="new-password" type="password" />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirm New Password</Label>
-                        <Input id="confirm-password" type="password" />
-                    </div>
-                     <Button>Change Password</Button>
-                </form>
+                <SecuritySettings />
             </CardContent>
         </Card>
     );

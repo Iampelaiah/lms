@@ -15,6 +15,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
 } from '@/components/ui/sidebar';
+import { createClient } from '@/lib/supabase/client';
 import {
   User,
   LayoutDashboard,
@@ -47,11 +48,10 @@ function TutorSidebar() {
   const { setTheme } = useTheme();
   const router = useRouter();
 
-  const handleLogout = (e: React.MouseEvent) => {
+  const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('loggedInUser');
-    }
+    const supabase = createClient();
+    await supabase.auth.signOut();
     router.push('/login');
   };
 
@@ -64,39 +64,29 @@ function TutorSidebar() {
   ];
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const email = localStorage.getItem('loggedInUser');
-      if (email) {
-        let nameGuess = 'Tutor';
-        let initials = 'T';
-        let avatar = "https://picsum.photos/seed/tutor-avatar/100/100";
-
-        if (email.toLowerCase().startsWith('e.reed')) {
-            nameGuess = "Dr. Evelyn Reed";
-            initials = "ER";
-            avatar = "https://picsum.photos/seed/102/100/100";
-        } else {
-            const namePart = email.split('@')[0];
-            try {
-              if (namePart.includes('.')) {
-                const parts = namePart.split('.');
-                const firstName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-                const lastName = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
-                nameGuess = `${firstName} ${lastName}`;
-                initials = `${firstName.charAt(0)}${lastName.charAt(0)}`;
-              } else {
-                 nameGuess = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-                 initials = nameGuess.substring(0, 2).toUpperCase();
-              }
-            } catch (e) {
-              // fallback
-            }
-        }
-        setUserName(nameGuess);
-        setUserInitials(initials);
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const fullName = user.user_metadata?.full_name || 'Tutor';
+        const avatar = user.user_metadata?.avatar_url || "https://picsum.photos/seed/tutor-avatar/100/100";
+        
+        setUserName(fullName);
         setAvatarUrl(avatar);
+        
+        // Generate initials
+        const initials = fullName
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase()
+          .substring(0, 2);
+        setUserInitials(initials || 'T');
       }
-    }
+    };
+
+    fetchUser();
   }, []);
 
   return (

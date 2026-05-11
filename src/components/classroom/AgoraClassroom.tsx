@@ -8,11 +8,11 @@ import {
   useLocalMicrophoneTrack,
   useRemoteUsers,
   usePublish,
-  useJoin,
   LocalVideoTrack,
   RemoteUser,
 } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
+import { useAgoraManualJoin } from '@/hooks/useAgoraManualJoin';
 import { 
   Mic, 
   MicOff, 
@@ -59,19 +59,11 @@ interface AgoraClassroomProps {
 }
 
 export function AgoraClassroom(props: AgoraClassroomProps) {
-  // Create a fresh client instance for each classroom session
+  // Stable client instance for the lifetime of this component.
+  // Do NOT manually call agoraClient.leave() here — useJoin inside
+  // ClassroomInner is the sole owner of the join/leave lifecycle.
+  // A competing leave() causes UID_CONFLICT on the next join attempt.
   const [agoraClient] = useState(() => AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }));
-
-  // Ensure we leave the channel and clean up when the component unmounts
-  useEffect(() => {
-    return () => {
-      if (agoraClient) {
-        agoraClient.leave().catch(() => {
-          // Ignore leave errors on cleanup
-        });
-      }
-    };
-  }, [agoraClient]);
 
   return (
     <AgoraRTCProvider client={agoraClient}>
@@ -91,6 +83,7 @@ function ClassroomInner({
 }: AgoraClassroomProps) {
   const [micOn, setMic] = useState(false);
   const [videoOn, setVideo] = useState(false);
+  const [joined, setJoined] = useState(false);
   
   // Agora Hooks
   const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack(micOn);
@@ -113,15 +106,22 @@ function ClassroomInner({
     }
   }, [camError]);
 
-  // Join the channel
-  useJoin({
-    appid: appId,
+  // --- MANUAL JOIN WITH UID_CONFLICT RECOVERY ---
+  const { 
+    isJoined, 
+    isLoading: isJoinLoading, 
+    error: joinError, 
+    recovering, 
+    manualJoin 
+  } = useAgoraManualJoin({
+    client,
+    appId,
     channel: channelName,
-    token: token,
-    uid: uid,
+    token: token || null,
+    uid,
   });
 
-  // Publish local tracks
+  // Publish local tracks whenever they are ready
   usePublish([localMicrophoneTrack, localCameraTrack]);
 
   // Track if dual stream has been enabled to avoid redundant calls
@@ -159,6 +159,28 @@ function ClassroomInner({
     // Student users are those outside the 1000-2000 range
     return remoteUsers.filter(u => Number(u.uid) < 1000 || Number(u.uid) > 2000);
   }, [remoteUsers]);
+
+  // --- PRE-JOIN LOBBY ---
+  if (!isJoined) {
+    return (
+      <LobbyScreen
+        userName={userName}
+        channelName={channelName}
+        micOn={micOn}
+        videoOn={videoOn}
+        micError={micError}
+        camError={camError}
+        localCameraTrack={localCameraTrack}
+        onToggleMic={() => setMic(m => !m)}
+        onToggleVideo={() => setVideo(v => !v)}
+        onJoin={manualJoin}
+        onLeave={onLeave}
+        isLoading={isJoinLoading}
+        recovering={recovering}
+        error={joinError}
+      />
+    );
+  }
 
   return (
     <div className="flex h-screen bg-[#0A1A12] text-white overflow-hidden font-sans">
@@ -217,14 +239,29 @@ function ClassroomInner({
             {/* LEFT COLUMN: Video & Insights */}
             <div className="flex-1 flex flex-col gap-8">
               
-              {/* MAIN STAGE (Teacher) */}
+              {/* MAIN STAGE (Teacher / Presenter) */}
               <div className="relative aspect-video rounded-[2.5rem] overflow-hidden border border-white/5 bg-white/5 shadow-2xl group group/stage">
                 {teacherUser === 'local' ? (
-                  <LocalVideoTrack track={localCameraTrack} play className="w-full h-full object-cover scale-105 transition-transform duration-700 group-hover/stage:scale-110" />
+                  // Local tutor's video — fills the entire stage
+                  <div className="absolute inset-0 scale-105 transition-transform duration-700 group-hover/stage:scale-110">
+                    <LocalVideoTrack
+                      track={localCameraTrack}
+                      play
+                      style={{ width: '100%', height: '100%' }}
+                    />
+                  </div>
                 ) : teacherUser ? (
-                  <RemoteUser user={teacherUser} playVideo playAudio className="w-full h-full object-cover scale-105 transition-transform duration-700 group-hover/stage:scale-110" />
+                  // Remote tutor's video — fills the entire stage
+                  <div className="absolute inset-0 scale-105 transition-transform duration-700 group-hover/stage:scale-110">
+                    <RemoteUser
+                      user={teacherUser}
+                      playVideo
+                      playAudio
+                      style={{ width: '100%', height: '100%' }}
+                    />
+                  </div>
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 backdrop-blur-xl">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-xl">
                     <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
                       <VideoOff className="w-10 h-10 text-white/10" />
                     </div>
@@ -283,22 +320,37 @@ function ClassroomInner({
                  {/* Local Mini View */}
                  {uid !== teacherUid && (
                     <div className="w-44 shrink-0 aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-white/5 relative group cursor-pointer">
-                        <LocalVideoTrack track={localCameraTrack} play className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                        <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
-                           <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                           <span className="text-[10px] font-medium tracking-tight">You</span>
+                      {videoOn && localCameraTrack ? (
+                        <div className="absolute inset-0 transition-transform group-hover:scale-110">
+                          <LocalVideoTrack
+                            track={localCameraTrack}
+                            play
+                            style={{ width: '100%', height: '100%' }}
+                          />
                         </div>
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
+                          <VideoOff className="w-7 h-7 text-white/20 mb-1" />
+                          <span className="text-[9px] text-white/20 uppercase tracking-widest">Camera off</span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
+                        <div className={cn("w-1.5 h-1.5 rounded-full", micOn ? "bg-green-500" : "bg-white/20")} />
+                        <span className="text-[10px] font-medium tracking-tight">You</span>
+                      </div>
                     </div>
                  )}
 
                  {/* Remote Participants */}
                  {studentUsers.map(user => (
                    <div key={user.uid} className="w-44 shrink-0 aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-white/5 relative group cursor-pointer">
-                      <RemoteUser user={user} playVideo playAudio className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                      <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
-                           <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                           <span className="text-[10px] font-medium tracking-tight">User {user.uid}</span>
-                      </div>
+                     <div className="absolute inset-0 transition-transform group-hover:scale-110">
+                       <RemoteUser user={user} playVideo playAudio style={{ width: '100%', height: '100%' }} />
+                     </div>
+                     <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#A7C957] animate-pulse" />
+                          <span className="text-[10px] font-medium tracking-tight">User {user.uid}</span>
+                     </div>
                    </div>
                  ))}
 
@@ -445,6 +497,169 @@ function ClassroomInner({
 }
 
 // --- SUB-COMPONENTS ---
+
+function LobbyScreen({
+  userName,
+  channelName,
+  micOn,
+  videoOn,
+  micError,
+  camError,
+  localCameraTrack,
+  onToggleMic,
+  onToggleVideo,
+  onJoin,
+  onLeave,
+}: {
+  userName: string;
+  channelName: string;
+  micOn: boolean;
+  videoOn: boolean;
+  micError: any;
+  camError: any;
+  localCameraTrack: any;
+  onToggleMic: () => void;
+  onToggleVideo: () => void;
+  onJoin: () => void;
+  onLeave?: () => void;
+  isLoading?: boolean;
+  recovering?: boolean;
+  error?: string | null;
+}) {
+  return (
+    <div className="flex h-screen bg-[#0A1A12] text-white items-center justify-center relative overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#A7C957]/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#6A994E]/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="w-full max-w-xl mx-auto px-6 flex flex-col items-center">
+        {/* Logo */}
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#A7C957] to-[#6A994E] flex items-center justify-center mb-6 shadow-lg shadow-[#A7C957]/20">
+          <Sparkles className="w-7 h-7 text-[#0A1A12]" />
+        </div>
+
+        <h1 className="text-3xl font-bold mb-1 text-center">Ready to join?</h1>
+        <p className="text-white/40 text-sm mb-8 text-center">
+          <span className="text-[#A7C957] font-semibold">{channelName}</span> · Hello, {userName}
+        </p>
+
+        {/* Camera preview */}
+        <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden bg-black/40 border border-white/10 mb-6 shadow-2xl">
+          {videoOn && localCameraTrack ? (
+            <div className="absolute inset-0">
+              <LocalVideoTrack
+                track={localCameraTrack}
+                play
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-3">
+                <VideoOff className="w-8 h-8 text-white/20" />
+              </div>
+              <p className="text-white/30 text-sm">
+                {camError ? 'Camera access denied' : 'Camera is off'}
+              </p>
+              {camError && (
+                <p className="text-red-400/60 text-xs mt-1">Check your browser permissions</p>
+              )}
+            </div>
+          )}
+
+          {/* Name badge */}
+          <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full border border-white/10">
+            <div className={cn('w-2 h-2 rounded-full', micOn ? 'bg-[#A7C957] animate-pulse' : 'bg-white/20')} />
+            <span className="text-xs font-medium">{userName}</span>
+          </div>
+
+          {/* Error & Recovery badges */}
+          {(micError || camError || error) && (
+            <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+              {(micError || camError) && (
+                <div className="px-3 py-1.5 bg-red-500/20 border border-red-500/30 backdrop-blur-md rounded-full">
+                  <span className="text-[10px] text-red-400 font-medium uppercase tracking-wide">Permission needed</span>
+                </div>
+              )}
+              {error && (
+                <div className="px-3 py-1.5 bg-red-500/20 border border-red-500/30 backdrop-blur-md rounded-full">
+                  <span className="text-[10px] text-red-400 font-medium uppercase tracking-wide">{error}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {recovering && (
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+              <div className="w-12 h-12 border-4 border-[#A7C957] border-t-transparent rounded-full animate-spin mb-4" />
+              <p className="text-[#A7C957] font-bold text-lg animate-pulse">Recovering Connection...</p>
+              <p className="text-white/40 text-xs mt-2">Resolving UID conflict, please wait</p>
+            </div>
+          )}
+        </div>
+
+        {/* Mic + Camera toggles */}
+        <div className="flex items-center gap-4 mb-8">
+          <button
+            onClick={onToggleMic}
+            className={cn(
+              'flex flex-col items-center gap-2 w-24 py-4 rounded-2xl border transition-all',
+              micOn
+                ? 'bg-[#A7C957]/10 border-[#A7C957]/30 text-[#A7C957]'
+                : 'bg-white/5 border-white/10 text-white/40 hover:text-white/70 hover:bg-white/10',
+              micError && 'border-red-500/30 text-red-400'
+            )}
+          >
+            {micOn ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+            <span className="text-[10px] uppercase tracking-widest font-semibold">
+              {micError ? 'Denied' : micOn ? 'Mic On' : 'Mic Off'}
+            </span>
+          </button>
+
+          <button
+            onClick={onToggleVideo}
+            className={cn(
+              'flex flex-col items-center gap-2 w-24 py-4 rounded-2xl border transition-all',
+              videoOn
+                ? 'bg-[#A7C957]/10 border-[#A7C957]/30 text-[#A7C957]'
+                : 'bg-white/5 border-white/10 text-white/40 hover:text-white/70 hover:bg-white/10',
+              camError && 'border-red-500/30 text-red-400'
+            )}
+          >
+            {videoOn ? <VideoIcon className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+            <span className="text-[10px] uppercase tracking-widest font-semibold">
+              {camError ? 'Denied' : videoOn ? 'Cam On' : 'Cam Off'}
+            </span>
+          </button>
+        </div>
+
+        {/* Join button */}
+        <button
+          onClick={onJoin}
+          disabled={isLoading || recovering}
+          className={cn(
+            "w-full py-5 bg-gradient-to-r from-[#A7C957] to-[#6A994E] hover:from-[#B5E48C] hover:to-[#A7C957] text-[#0A1A12] font-bold rounded-2xl text-base transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#A7C957]/20 mb-4 flex items-center justify-center gap-3",
+            (isLoading || recovering) && "opacity-50 cursor-not-allowed scale-100"
+          )}
+        >
+          {(isLoading || recovering) && <div className="w-5 h-5 border-2 border-[#0A1A12] border-t-transparent rounded-full animate-spin" />}
+          {recovering ? 'Recovering...' : isLoading ? 'Joining...' : 'Join Class'}
+        </button>
+
+        {/* Leave link */}
+        {onLeave && (
+          <button
+            onClick={onLeave}
+            className="text-white/30 hover:text-white/60 text-sm transition-colors flex items-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            Leave
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function SidebarIcon({ icon: Icon, active = false }: { icon: any, active?: boolean }) {
   return (

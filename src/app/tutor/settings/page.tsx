@@ -1,5 +1,9 @@
-import { PlaceholderDashboard } from "@/components/app/placeholder-dashboard";
+import { SecuritySettings } from "@/components/app/security-settings";
 
 export default function TutorSettingsPage() {
-    return <PlaceholderDashboard role="Tutor Settings" />;
+    return (
+        <div className="p-8">
+            <SecuritySettings />
+        </div>
+    );
 }

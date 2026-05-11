@@ -91,13 +91,14 @@ function LiveClassList({ status }: { status: "Ongoing" | "Upcoming" | "Completed
                                 meetingId={(liveClass as any).dyteMeetingId}
                                 participantName="Dr. Evelyn Reed"
                                 role="host"
-                                buttonText={liveClass.status === "Upcoming" ? "Start Class" : "Join Class"}
+                                buttonText={(liveClass.status === "Upcoming" || liveClass.status === "Ongoing") ? "Start Class" : "Join Class"}
+                                courseTitle={liveClass.title}
                                 className="w-full"
                             />
                         ) : (
                             <Button className="w-full">
                                <Video className="mr-2 h-4 w-4" />
-                               {liveClass.status === "Upcoming" ? "Start Class" : liveClass.status === "Ongoing" ? "Join Class" : "View Recording"}
+                               {(liveClass.status === "Upcoming" || liveClass.status === "Ongoing") ? "Start Class" : liveClass.status === "Completed" ? "View Recording" : "Join Class"}
                             </Button>
                         )}
                     </CardFooter>

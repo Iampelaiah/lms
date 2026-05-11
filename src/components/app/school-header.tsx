@@ -1,12 +1,50 @@
 'use client';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import React from "react";
+import React, { useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { useRouter } from "next/navigation";
+import { Video } from "lucide-react";
 
 export function SchoolHeader() {
   const schoolName = "Dr Max online school";
   const schoolMantra = "Empowering minds through digital excellence and personalized learning.";
   const avatarFallback = "DM";
+  const { toast } = useToast();
+  const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createClient();
+    
+    // Subscribe to class notifications
+    const channel = supabase.channel('notifications')
+      .on('broadcast', { event: 'class_started' }, (payload) => {
+        const { title, meetingId, tutorName } = payload.payload;
+        
+        toast({
+          title: "🚀 Class Started!",
+          description: `${tutorName} has started "${title}".`,
+          action: (
+            <ToastAction 
+              altText="Join Now" 
+              onClick={() => router.push(`/classroom/${meetingId}?name=Student&role=student`)}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Video className="w-4 h-4 mr-1" />
+              Join Now
+            </ToastAction>
+          ),
+          duration: 10000,
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast, router]);
 
   return (
     <Card className="border-none shadow-none bg-transparent">

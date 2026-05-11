@@ -36,6 +36,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { createClient } from '@/lib/supabase/client';
 import React from 'react';
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -57,60 +58,34 @@ export function StudentSidebar() {
   const { setTheme } = useTheme();
   const router = useRouter();
 
-  const handleLogout = (e: React.MouseEvent) => {
+  const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('loggedInUser');
-    }
+    const supabase = createClient();
+    await supabase.auth.signOut();
     router.push('/login');
   };
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const email = localStorage.getItem('loggedInUser');
-      if (email) {
-        const namePart = email.split('@')[0]; // e.g., 'pngarande'
-        try {
-          // Attempt to construct a name
-          const initial = namePart.charAt(0).toUpperCase();
-          const rest = namePart.slice(1);
-          let lastName = '';
-          // simple logic to find separation of first and last name
-          for(let i=0; i<rest.length; i++) {
-              if (rest.charCodeAt(i) >= 65 && rest.charCodeAt(i) <= 90) { // is uppercase
-                  lastName = rest.slice(i);
-                  break;
-              }
-          }
-          if (!lastName) { // find numbers
-              for(let i=0; i<rest.length; i++) {
-                  if (rest.charCodeAt(i) >= 48 && rest.charCodeAt(i) <= 57) { // is number
-                      lastName = rest.slice(i);
-                      break;
-                  }
-              }
-          }
-
-          let firstName = rest.replace(lastName, '');
-          firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
-          lastName = lastName.charAt(0).toUpperCase() + lastName.slice(1);
-          
-          if (firstName && lastName) {
-            setUserName(`${firstName} ${lastName}`);
-            setUserInitials(`${firstName.charAt(0)}${lastName.charAt(0)}`);
-          } else {
-             const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-             setUserName(formattedName);
-             setUserInitials(formattedName.substring(0,2).toUpperCase());
-          }
-          
-        } catch (e) {
-          // Fallback if name parsing fails
-          setUserName('Student');
-          setUserInitials('S');
-        }
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const fullName = user.user_metadata?.full_name || 'Student';
+        setUserName(fullName);
+        
+        // Generate initials
+        const initials = fullName
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase()
+          .substring(0, 2);
+        setUserInitials(initials || 'S');
       }
-    }
+    };
+
+    fetchUser();
   }, []);
 
   return (

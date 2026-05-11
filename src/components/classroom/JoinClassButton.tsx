@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Video, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { createClient } from '@/lib/supabase/client';
 
 interface JoinClassButtonProps {
   meetingId: string;
   participantName: string;
   role?: 'host' | 'participant';
   buttonText: string;
+  courseTitle?: string;
   className?: string;
 }
 
@@ -19,6 +21,7 @@ export function JoinClassButton({
   participantName,
   role = 'participant',
   buttonText,
+  courseTitle = 'Live Class',
   className,
 }: JoinClassButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -38,8 +41,21 @@ export function JoinClassButton({
       return;
     }
 
+    // If host, notify students via Supabase Realtime Broadcast
+    if (role === 'host') {
+      const supabase = createClient();
+      await supabase.channel('notifications').send({
+        type: 'broadcast',
+        event: 'class_started',
+        payload: { 
+          title: courseTitle,
+          meetingId,
+          tutorName: participantName 
+        },
+      });
+    }
+
     // Navigate to the Agora classroom page
-    // Parameters are handled by the classroom page component
     const roleParam = role === 'host' ? 'tutor' : 'student';
     router.push(`/classroom/${meetingId}?name=${encodeURIComponent(participantName)}&role=${roleParam}`);
   };
