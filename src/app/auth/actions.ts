@@ -20,32 +20,45 @@ export async function login(formData: FormData) {
   }
 
   // Fetch role to verify it matches the login attempt
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', data.user.id)
     .single()
 
-  if (profile && profile.role !== role) {
+  // FALLBACK: If profile record is missing, use metadata from Auth
+  const userRole = profile?.role || data.user.user_metadata?.role || 'student'
+
+  if (userRole !== role) {
     // Sign out immediately if role mismatch
     await supabase.auth.signOut()
-    return { error: `This account is registered as a ${profile.role}. Please log in through the correct portal.` }
+    return { error: `This account is registered as a ${userRole}. Please log in through the correct portal.` }
+  }
+
+  // Ensure profile exists if it was missing (healing)
+  if (!profile) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      full_name: data.user.user_metadata?.full_name || '',
+      role: userRole,
+      updated_at: new Date().toISOString(),
+    })
   }
 
   revalidatePath('/', 'layout')
   
-  // Explicitly redirect based on registered role
-  if (profile?.role === 'tutor') {
+  // Explicitly redirect based on determined role
+  if (userRole === 'tutor') {
     return redirect('/tutor')
   }
-  if (profile?.role === 'admin') {
+  if (userRole === 'admin') {
     return redirect('/admin')
   }
-  if (profile?.role === 'parent') {
+  if (userRole === 'parent') {
     return redirect('/parent')
   }
   
-  // Default for students or if no specific role-path exists
+  // Default for students
   redirect('/student')
 }
 
@@ -57,7 +70,7 @@ export async function signup(formData: FormData) {
   const fullName = formData.get('fullName') as string
   const role = (formData.get('role') as string) || 'student'
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -72,7 +85,28 @@ export async function signup(formData: FormData) {
     return { error: error.message }
   }
 
+  // If user is created successfully, ensure profile record exists
+  if (data.user) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      full_name: fullName,
+      role: role,
+      updated_at: new Date().toISOString(),
+    })
+  }
+
   revalidatePath('/', 'layout')
+  
+  // If a session exists, the user is already logged in (email confirmation disabled)
+  // Redirect them directly to their dashboard
+  if (data.session) {
+    if (role === 'tutor') return redirect('/tutor')
+    if (role === 'admin') return redirect('/admin')
+    if (role === 'parent') return redirect('/parent')
+    return redirect('/student')
+  }
+
+  // Fallback: email confirmation required
   redirect('/login?message=' + encodeURIComponent('Check your email to confirm your account.'))
 }
 

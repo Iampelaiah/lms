@@ -1,20 +1,17 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarPlus, Users, Video } from "lucide-react";
+import { CalendarPlus, Users, Video, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { SchoolHeader } from "@/components/app/school-header";
-import { JoinClassButton } from "@/components/classroom/JoinClassButton";
-
 import { createClient } from "@/utils/supabase/client";
 import { useUser } from "@/components/providers/user-context";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { ScheduleClassDialog } from "@/components/app/tutor/schedule-class-dialog";
 
 const statusVariantMap: Record<string, "default" | "secondary" | "destructive"> = {
     "upcoming": "default",
@@ -27,41 +24,42 @@ function LiveClassList({ status, classes }: { status: string, classes: any[] }) 
 
     if (filteredClasses.length === 0) {
         return (
-            <div className="text-center py-16 bg-white/5 border border-dashed rounded-3xl">
+            <div className="text-center py-16 bg-muted/20 border border-dashed rounded-3xl">
                 <p className="text-muted-foreground">No {status} classes found.</p>
             </div>
         )
     }
 
     return (
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
            {filteredClasses.map(liveClass => (
-                <Card key={liveClass.id} className="overflow-hidden flex flex-col bg-white/5 border-white/10 hover:border-white/20 transition-all">
+                <Card key={liveClass.id} className="overflow-hidden flex flex-col hover:border-primary/50 transition-all shadow-sm">
                     <CardHeader className="p-0 relative">
                         <Badge variant={statusVariantMap[liveClass.status]} className="absolute top-4 right-4 z-10 capitalize">
                             {liveClass.status}
                         </Badge>
-                        <div className="relative aspect-[3/2] w-full bg-black/20">
+                        <div className="relative aspect-[3/2] w-full bg-muted">
                             {liveClass.imageUrl ? (
                                 <Image src={liveClass.imageUrl} alt={liveClass.title} fill className="object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <Video className="w-12 h-12 text-white/10" />
+                                    <Video className="w-12 h-12 text-muted-foreground/20" />
                                 </div>
                             )}
                         </div>
                     </CardHeader>
-                    <CardContent className="p-4 flex-grow">
-                        <h3 className="text-lg font-bold text-white/90">{liveClass.title}</h3>
-                        <p className="text-sm text-white/40">
+                    <CardContent className="p-4 flex-grow space-y-2">
+                        <h3 className="text-lg font-bold truncate">{liveClass.title}</h3>
+                        <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            <CalendarPlus className="w-4 h-4" />
                             {liveClass.schedule ? new Date(liveClass.schedule).toLocaleString() : 'TBD'}
                         </p>
                     </CardContent>
                      <CardFooter className="p-4 pt-0">
-                         <Button className="w-full bg-white/5 hover:bg-white/10 text-white border-white/10 rounded-xl py-6" asChild>
+                         <Button className="w-full rounded-xl py-6" asChild variant={liveClass.status === "ongoing" ? "destructive" : "default"}>
                             <Link href={`/classroom/${liveClass.id}?role=host`}>
                                <Video className="mr-2 h-4 w-4" />
-                               {liveClass.status === "completed" ? "View Recording" : "Start Class"}
+                               {liveClass.status === "completed" ? "View Recording" : liveClass.status === "ongoing" ? "Join Now" : "Start Class"}
                             </Link>
                         </Button>
                     </CardFooter>
@@ -71,16 +69,16 @@ function LiveClassList({ status, classes }: { status: string, classes: any[] }) 
     )
 }
 
-
 export default function TutorLiveClassesPage() {
     const [classes, setClasses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const { profile } = useUser();
     const supabase = createClient();
 
-    useEffect(() => {
-        const fetchClasses = async () => {
-            if (!profile?.id) return;
+    const fetchClasses = async () => {
+        if (!profile?.id) return;
+        setLoading(true);
+        try {
             const { data, error } = await supabase
                 .from('classes')
                 .select('*')
@@ -90,26 +88,35 @@ export default function TutorLiveClassesPage() {
             if (data && !error) {
                 setClasses(data);
             }
+        } catch (err) {
+            console.error(err);
+        } finally {
             setLoading(false);
-        };
+        }
+    };
 
+    useEffect(() => {
         fetchClasses();
     }, [profile?.id]);
 
     return (
-        <div className="p-4 sm:p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
             <SchoolHeader />
              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                  <div>
                     <h1 className="text-3xl font-bold tracking-tight">Live Classes</h1>
-                    <p className="text-muted-foreground">Schedule and manage your live classes.</p>
+                    <p className="text-muted-foreground">Schedule and manage your live sessions for students.</p>
                 </div>
-                <Button asChild className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black font-bold">
-                    <Link href="#">
-                        <CalendarPlus className="mr-2 h-4 w-4" />
-                        Schedule New Class
-                    </Link>
-                </Button>
+                <ScheduleClassDialog 
+                    tutorId={profile?.id || ''} 
+                    onClassScheduled={fetchClasses}
+                    trigger={
+                        <Button className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black font-bold h-12 px-6">
+                            <CalendarPlus className="mr-2 h-5 w-5" />
+                            Schedule New Class
+                        </Button>
+                    }
+                />
             </div>
             
             {loading ? (
@@ -117,19 +124,19 @@ export default function TutorLiveClassesPage() {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
             ) : (
-                <Tabs defaultValue="upcoming">
-                    <TabsList className="bg-white/5 border-white/10">
-                        <TabsTrigger value="ongoing">On going</TabsTrigger>
+                <Tabs defaultValue="upcoming" className="w-full">
+                    <TabsList className="grid grid-cols-3 w-full max-w-md bg-muted/50 p-1">
+                        <TabsTrigger value="ongoing">Ongoing</TabsTrigger>
                         <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
                         <TabsTrigger value="completed">Completed</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="ongoing" className="mt-6">
+                    <TabsContent value="ongoing" className="mt-8">
                         <LiveClassList status="ongoing" classes={classes} />
                     </TabsContent>
-                    <TabsContent value="upcoming" className="mt-6">
+                    <TabsContent value="upcoming" className="mt-8">
                         <LiveClassList status="upcoming" classes={classes} />
                     </TabsContent>
-                    <TabsContent value="completed" className="mt-6">
+                    <TabsContent value="completed" className="mt-8">
                         <LiveClassList status="completed" classes={classes} />
                     </TabsContent>
                 </Tabs>

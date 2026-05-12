@@ -228,43 +228,51 @@ export default function StudentDashboardPage() {
   const supabase = createClient();
   const userName = profile?.full_name || 'Student';
 
-  React.useEffect(() => {
+    React.useEffect(() => {
     const fetchProgress = async () => {
-      if (!profile?.id) return;
-
-      // Fetch enrolled courses for this student with lesson/progress data
-      const { data: enrollments } = await supabase
-        .from('enrollments')
-        .select(`
-          course:courses (
-            id,
-            title,
-            lessons (id),
-            student_progress (completed)
-          )
-        `)
-        .eq('student_id', profile.id);
-
-      if (enrollments) {
-        const formatted = enrollments
-          .map(e => e.course)
-          .filter(Boolean)
-          .map((course: any) => {
-            const totalLessons = course.lessons?.length || 0;
-            const completedLessons = course.student_progress?.filter((p: any) => p.completed).length || 0;
-            const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-            return {
-              name: course.title,
-              overallProgress: progress,
-              topics: [] // Clear mock topics
-            };
-          });
-        setCourses(formatted);
+      if (!profile?.id) {
+        setLoadingCourses(false);
+        return;
       }
-      setLoadingCourses(false);
+
+      try {
+        // Fetch enrolled courses for this student with lesson/progress data
+        const { data: enrollments } = await supabase
+          .from('enrollments')
+          .select(`
+            course:courses (
+              id,
+              title,
+              lessons (id),
+              student_progress (completed)
+            )
+          `)
+          .eq('student_id', profile.id);
+
+        if (enrollments) {
+          const formatted = enrollments
+            .map(e => e.course)
+            .filter(Boolean)
+            .map((course: any) => {
+              const totalLessons = course.lessons?.length || 0;
+              const completedLessons = course.student_progress?.filter((p: any) => p.completed).length || 0;
+              const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+              return {
+                name: course.title,
+                overallProgress: progress,
+                topics: [] // Clear mock topics
+              };
+            });
+          setCourses(formatted);
+        }
+      } catch (err) {
+        console.error('Error fetching student progress:', err);
+      } finally {
+        setLoadingCourses(false);
+      }
     };
 
-    if (profile?.id) fetchProgress();
+    fetchProgress();
   }, [profile?.id]);
   return (
     <div className="space-y-6">

@@ -22,6 +22,7 @@ import {
   LogOut, 
   Users,
   Maximize2,
+  Minimize2,
   Settings,
   Search,
   Bell,
@@ -37,8 +38,22 @@ import {
   CheckCircle2,
   Clock,
   ArrowUpRight,
-  Hand
+  Hand,
+  Monitor,
+  MonitorOff,
+  Presentation,
+  AlertTriangle
 } from 'lucide-react';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -64,6 +79,7 @@ interface AgoraClassroomProps {
   token: string;
   uid: number;
   userName: string;
+  role?: string;
   teacherUid?: number;
   onLeave?: () => void;
 }
@@ -88,6 +104,7 @@ function ClassroomInner({
   token,
   uid,
   userName,
+  role,
   teacherUid,
   onLeave,
 }: AgoraClassroomProps) {
@@ -97,6 +114,32 @@ function ClassroomInner({
   const { profile, loading: loadingProfile } = useUser();
   const { messages, sendMessage } = useChat(channelName);
   const [msgInput, setMsgInput] = useState('');
+  const [spotlightedUid, setSpotlightedUid] = useState<number | null>(null);
+  const [screenTrack, setScreenTrack] = useState<any>(null);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [classData, setClassData] = useState<any>(null);
+  const [showFinalizeDialog, setShowFinalizeDialog] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  
+  const supabase = createClient();
+
+  // Determine if the CURRENT user is the tutor/host using ALL available signals
+  const iAmTutor = useMemo(() => {
+    const fromProp = role === 'tutor';
+    const fromProfile = profile?.role === 'tutor';
+    const fromUid = uid >= 1000 && uid <= 2000;
+    const result = fromProp || fromProfile || fromUid;
+    console.log('[Stage] Tutor detection:', { role, profileRole: profile?.role, uid, fromProp, fromProfile, fromUid, result });
+    return result;
+  }, [role, profile?.role, uid]);
+  
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [messages]);
   
   // Agora Hooks
   const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack(micOn);
@@ -134,8 +177,75 @@ function ClassroomInner({
     uid,
   });
 
-  // Publish local tracks whenever they are ready
-  usePublish([localMicrophoneTrack, localCameraTrack]);
+  // Fetch Class Data
+  useEffect(() => {
+    if (!channelName) return;
+    async function fetchClass() {
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .eq('id', channelName)
+        .single();
+      
+      if (data) setClassData(data);
+    }
+    fetchClass();
+  }, [channelName, supabase]);
+
+  // Handle Classroom Events (like Class Ended)
+  useEffect(() => {
+    const channel = supabase.channel(`classroom:${channelName}`)
+      .on('broadcast', { event: 'CLASS_ENDED' }, () => {
+        if (!iAmTutor) {
+          // Notify students and leave
+          onLeave();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [channelName, supabase, iAmTutor, onLeave]);
+
+  const handleFinalize = async () => {
+    setIsEnding(true);
+    try {
+      // 1. Update database
+      const { error } = await supabase
+        .from('classes')
+        .update({ status: 'completed' })
+        .eq('id', channelName);
+
+      if (error) throw error;
+
+      // 2. Broadcast end event to all students
+      await supabase.channel(`classroom:${channelName}`).send({
+        type: 'broadcast',
+        event: 'CLASS_ENDED',
+        payload: { endedAt: new Date().toISOString() }
+      });
+
+      // 3. Leave
+      onLeave();
+    } catch (err) {
+      console.error("Failed to finalize class:", err);
+    } finally {
+      setIsEnding(false);
+      setShowFinalizeDialog(false);
+    }
+  };
+
+  const handleLeaveClick = () => {
+    if (iAmTutor) {
+      setShowFinalizeDialog(true);
+    } else {
+      onLeave();
+    }
+  };
+
+  // Publish local tracks whenever they are ready and joined
+  usePublish(isJoined ? [localMicrophoneTrack, localCameraTrack] : []);
 
   // Track if dual stream has been enabled to avoid redundant calls
   const dualStreamEnabledRef = useRef(false);
@@ -161,17 +271,145 @@ function ClassroomInner({
     tryEnable();
   }, [client]);
 
+  // Handle Spotlight Synchronization
+  useEffect(() => {
+    if (!channelName) return;
+
+    const channel = supabase.channel(`classroom:${channelName}`)
+      .on('broadcast', { event: 'spotlight' }, (payload) => {
+        setSpotlightedUid(payload.payload.uid);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [channelName, supabase]);
+
+  const toggleSpotlight = (targetUid: number | null) => {
+    // Only tutors can spotlight
+    const isTutor = role === 'tutor' || (uid >= 1000 && uid <= 2000);
+    if (!isTutor) return;
+
+    setSpotlightedUid(targetUid);
+    supabase.channel(`classroom:${channelName}`).send({
+      type: 'broadcast',
+      event: 'spotlight',
+      payload: { uid: targetUid },
+    });
+  };
+
   const teacherUser = useMemo(() => {
-    // If I am in the tutor range (1000-2000), I am the teacher
-    if (uid >= 1000 && uid <= 2000) return 'local';
-    // If I am a student, the teacher is any remote user in the 1000-2000 range
+    if (iAmTutor) return 'local';
+    // Find remote tutor among participants
     return remoteUsers.find(u => Number(u.uid) >= 1000 && Number(u.uid) <= 2000);
-  }, [remoteUsers, uid]);
+  }, [remoteUsers, iAmTutor]);
+
+  const spotlightedUser = useMemo(() => {
+    if (spotlightedUid === null) return null;
+    if (spotlightedUid === uid) return 'local';
+    return remoteUsers.find(u => Number(u.uid) === spotlightedUid);
+  }, [remoteUsers, spotlightedUid, uid]);
 
   const studentUsers = useMemo(() => {
-    // Student users are those outside the 1000-2000 range
-    return remoteUsers.filter(u => Number(u.uid) < 1000 || Number(u.uid) > 2000);
+    return remoteUsers.filter(u => {
+      const isTeacher = Number(u.uid) >= 1000 && Number(u.uid) <= 2000;
+      return !isTeacher;
+    });
   }, [remoteUsers]);
+
+  // --- SCREEN SHARING ---
+  const [handRaised, setHandRaised] = useState(false);
+  const [raisedHands, setRaisedHands] = useState<{uid: number; name: string}[]>([]);
+  const screenVideoRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Fullscreen toggle
+  const toggleFullscreen = () => {
+    if (!stageRef.current) return;
+    if (!document.fullscreenElement) {
+      stageRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(console.error);
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(console.error);
+    }
+  };
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const startScreenShare = async () => {
+    try {
+      const track = await AgoraRTC.createScreenVideoTrack({}, 'disable');
+      const videoTrack = Array.isArray(track) ? track[0] : track;
+      if (client && isJoined) {
+        await client.publish(videoTrack);
+      }
+      setScreenTrack(videoTrack);
+      setIsScreenSharing(true);
+      // Notify others
+      supabase.channel(`classroom:${channelName}`).send({
+        type: 'broadcast', event: 'screen-share',
+        payload: { uid, sharing: true },
+      });
+      // Auto-stop when user clicks browser "Stop sharing"
+      videoTrack.on('track-ended', () => stopScreenShare(videoTrack));
+    } catch (err) {
+      console.error('Screen share failed:', err);
+    }
+  };
+
+  const stopScreenShare = async (track?: any) => {
+    const t = track || screenTrack;
+    if (t) {
+      try {
+        if (client && isJoined) await client.unpublish(t);
+        t.close();
+      } catch (e) { console.error(e); }
+    }
+    setScreenTrack(null);
+    setIsScreenSharing(false);
+    supabase.channel(`classroom:${channelName}`).send({
+      type: 'broadcast', event: 'screen-share',
+      payload: { uid, sharing: false },
+    });
+  };
+
+  // Play screen track into the ref div
+  useEffect(() => {
+    if (screenTrack && screenVideoRef.current) {
+      screenTrack.play(screenVideoRef.current);
+    }
+  }, [screenTrack]);
+
+  // --- HAND RAISE ---
+  const toggleHandRaise = () => {
+    const newState = !handRaised;
+    setHandRaised(newState);
+    supabase.channel(`classroom:${channelName}`).send({
+      type: 'broadcast', event: 'hand-raise',
+      payload: { uid, name: profile?.full_name || userName, raised: newState },
+    });
+  };
+
+  // Listen for hand raise broadcasts (tutor sees notifications)
+  useEffect(() => {
+    if (!channelName) return;
+    const channel = supabase.channel(`classroom-hands:${channelName}`)
+      .on('broadcast', { event: 'hand-raise' }, (payload) => {
+        const { uid: raiserUid, name, raised } = payload.payload;
+        if (raised) {
+          setRaisedHands(prev => [...prev.filter(h => h.uid !== raiserUid), { uid: raiserUid, name }]);
+        } else {
+          setRaisedHands(prev => prev.filter(h => h.uid !== raiserUid));
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [channelName, supabase]);
 
   // --- LOADING STATE ---
   if (loadingProfile) {
@@ -202,9 +440,11 @@ function ClassroomInner({
         recovering={recovering}
         error={joinError}
         profile={profile}
+        classBanner={classData?.imageUrl}
       />
     );
   }
+
 
   return (
     <div className="flex h-screen bg-[#0A1A12] text-white overflow-hidden font-sans">
@@ -239,7 +479,7 @@ function ClassroomInner({
         <header className="px-8 py-6 flex items-center justify-between z-20">
           <div>
             <h1 className="text-2xl font-bold text-white/90">Hello, {profile?.full_name || userName}!</h1>
-            <p className="text-sm text-white/40">{channelName} | {profile?.role ? (profile.role.charAt(0).toUpperCase() + profile.role.slice(1)) : 'Participant'}</p>
+            <p className="text-sm text-white/40">{channelName} | {profile?.role ? (profile.role.charAt(0).toUpperCase() + profile.role.slice(1)) : (role === 'tutor' ? 'Tutor' : 'Participant')}</p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -263,110 +503,183 @@ function ClassroomInner({
             {/* LEFT COLUMN: Video & Insights */}
             <div className="flex-1 flex flex-col gap-8">
               
-              {/* MAIN STAGE (Teacher / Presenter) */}
-              <div className="relative aspect-video rounded-[2.5rem] overflow-hidden border border-white/5 bg-white/5 shadow-2xl group group/stage">
-                {teacherUser === 'local' ? (
-                  // Local tutor's video — fills the entire stage
-                  <div className="absolute inset-0 scale-105 transition-transform duration-700 group-hover/stage:scale-110">
-                    <LocalVideoTrack
-                      track={localCameraTrack}
-                      play
-                      style={{ width: '100%', height: '100%' }}
-                    />
-                  </div>
-                ) : teacherUser ? (
-                  // Remote tutor's video — fills the entire stage
-                  <div className="absolute inset-0 scale-105 transition-transform duration-700 group-hover/stage:scale-110">
-                    <RemoteUser
-                      user={teacherUser}
-                      playVideo
-                      playAudio
-                      style={{ width: '100%', height: '100%' }}
-                    />
-                  </div>
+              {/* PRESENTATION STAGE (Screen Share / Present) */}
+              <div ref={stageRef} className={cn("relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-white/5 shadow-2xl group group/stage", isFullscreen ? 'rounded-none' : 'aspect-video')}>
+                {isScreenSharing && screenTrack ? (
+                  <div ref={screenVideoRef} className="absolute inset-0" style={{ width: '100%', height: '100%' }} />
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-xl">
-                    <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-                      <VideoOff className="w-10 h-10 text-white/10" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0A1A12] to-[#132E1B]">
+                    <div className="w-28 h-28 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover/stage:scale-110 transition-transform duration-500">
+                      <Presentation className="w-14 h-14 text-white/10" />
                     </div>
-                    <p className="text-white/20 font-medium tracking-wide uppercase text-xs">Waiting for host...</p>
+                    <p className="text-white/30 font-bold tracking-widest uppercase text-xs mb-2">Presentation Area</p>
+                    <p className="text-white/15 text-[10px] tracking-wide max-w-xs text-center">
+                      {iAmTutor
+                        ? 'Click the screen share button below to present your screen'
+                        : 'The tutor will share their screen here'}
+                    </p>
+                    {iAmTutor && (
+                      <button
+                        onClick={startScreenShare}
+                        className="mt-6 px-6 py-3 bg-[#A7C957]/20 hover:bg-[#A7C957]/30 border border-[#A7C957]/30 rounded-full text-[#A7C957] text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                      >
+                        <Monitor className="w-4 h-4" />
+                        Start Presenting
+                      </button>
+                    )}
                   </div>
                 )}
 
                 {/* Stage Overlays */}
-                <div className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10">
-                   <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-                   <span className="text-[10px] font-bold uppercase tracking-widest">Live</span>
+                <div className="absolute top-6 left-6 flex flex-col gap-2">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10">
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Live</span>
+                  </div>
+                  {isScreenSharing && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-[#A7C957]/20 backdrop-blur-md rounded-full border border-[#A7C957]/30">
+                      <Monitor className="w-3 h-3 text-[#A7C957]" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#A7C957]">Presenting</span>
+                      {iAmTutor && (
+                        <button
+                          onClick={() => stopScreenShare()}
+                          className="ml-2 text-white/40 hover:text-white transition-colors"
+                        >
+                          <MonitorOff className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                {/* Hand Raise Notifications (Tutor only) */}
+                {iAmTutor && raisedHands.length > 0 && (
+                  <div className="absolute top-6 right-6 flex flex-col gap-2">
+                    {raisedHands.map(h => (
+                      <div key={h.uid} className="flex items-center gap-2 px-4 py-2 bg-amber-500/20 backdrop-blur-md rounded-full border border-amber-500/30 animate-pulse">
+                        <Hand className="w-3 h-3 text-amber-400" />
+                        <span className="text-[10px] font-bold text-amber-300">{h.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div className="absolute top-6 right-6">
-                   <Button variant="ghost" size="icon" className="bg-black/60 backdrop-blur-md hover:bg-black/80 rounded-xl w-10 h-10 border border-white/10">
-                      <Maximize2 className="w-5 h-5 text-white/80" />
-                   </Button>
-                </div>
-
-                {/* Floating Volume Indicator */}
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-4 py-6 px-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10">
-                    <div className="h-24 w-1.5 bg-white/10 rounded-full relative overflow-hidden">
-                        <div className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-[#A7C957] to-[#F2E8CF] rounded-full shadow-[0_0_8px_rgba(167,201,87,0.5)]" />
-                    </div>
-                    <Volume2 className="w-4 h-4 text-white/60" />
+                  <Button variant="ghost" size="icon" className="bg-black/60 backdrop-blur-md hover:bg-black/80 rounded-xl w-10 h-10 border border-white/10" onClick={toggleFullscreen}>
+                    {isFullscreen ? <Minimize2 className="w-5 h-5 text-white/80" /> : <Maximize2 className="w-5 h-5 text-white/80" />}
+                  </Button>
                 </div>
 
                 {/* MAIN CONTROLS */}
                 <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-4 bg-black/60 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-2xl transition-transform hover:scale-105 duration-300">
-                    <ControlButton 
-                      active={micOn} 
+                    <ControlButton
+                      active={micOn}
                       isError={!!micError}
-                      icon={micOn ? Mic : MicOff} 
-                      onClick={() => setMic(!micOn)} 
+                      icon={micOn ? Mic : MicOff}
+                      onClick={() => setMic(!micOn)}
                     />
-                    <ControlButton 
-                      active={videoOn} 
+                    <ControlButton
+                      active={videoOn}
                       isError={!!camError}
-                      icon={videoOn ? VideoIcon : VideoOff} 
-                      onClick={() => setVideo(!videoOn)} 
+                      icon={videoOn ? VideoIcon : VideoOff}
+                      onClick={() => setVideo(!videoOn)}
                     />
-                    <ControlButton icon={LayoutGrid} />
-                    <ControlButton icon={Hand} />
-                    <Button 
-                      variant="destructive" 
+                    <ControlButton
+                      active={isScreenSharing}
+                      icon={isScreenSharing ? MonitorOff : Monitor}
+                      onClick={isScreenSharing ? () => stopScreenShare() : startScreenShare}
+                    />
+                    <ControlButton
+                      active={handRaised}
+                      icon={Hand}
+                      onClick={toggleHandRaise}
+                    />
+                    <Button
+                      variant="destructive"
                       className="w-14 h-14 rounded-2xl bg-red-500/80 hover:bg-red-600 transition-all flex items-center justify-center border border-white/10"
-                      onClick={onLeave}
+                      onClick={handleLeaveClick}
                     >
                       <LogOut className="w-6 h-6" />
                     </Button>
                 </div>
+
+                {/* Finalize Dialog for Tutor */}
+                <AlertDialog open={showFinalizeDialog} onOpenChange={setShowFinalizeDialog}>
+                  <AlertDialogContent className="bg-[#0A1A12] border-white/10 text-white rounded-[2rem] p-8 max-w-md">
+                    <AlertDialogHeader className="flex flex-col items-center text-center gap-4">
+                      <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                        <AlertTriangle className="w-10 h-10 text-red-500 animate-pulse" />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <AlertDialogTitle className="text-2xl font-bold">End Class Session?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-white/40 text-sm">
+                          This will end the meeting for all participants and mark this class as <span className="text-[#A7C957] font-bold">Completed</span> in the system.
+                        </AlertDialogDescription>
+                      </div>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="flex flex-col sm:flex-row gap-3 mt-6">
+                      <AlertDialogCancel className="flex-1 h-12 rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white mt-0">
+                        Stay in Class
+                      </AlertDialogCancel>
+                      <Button 
+                        onClick={handleFinalize} 
+                        disabled={isEnding}
+                        className="flex-1 h-12 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-all hover:scale-105 active:scale-95"
+                      >
+                        {isEnding ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                            Finalize Class
+                          </>
+                        )}
+                      </Button>
+                    </AlertDialogFooter>
+                    <button 
+                      onClick={() => onLeave()}
+                      className="w-full text-center mt-4 text-[10px] uppercase tracking-widest text-white/20 hover:text-white/40 transition-colors"
+                    >
+                      Just leave without ending for all
+                    </button>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
 
-              {/* PARTICIPANT GRID */}
+              {/* PARTICIPANT GRID — ALL users including tutor */}
               <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
-                 {/* Local Mini View */}
-                 {uid !== teacherUid && (
-                    <div className="w-44 shrink-0 aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-white/5 relative group cursor-pointer">
-                      {videoOn && localCameraTrack ? (
-                        <div className="absolute inset-0 transition-transform group-hover:scale-110">
-                          <LocalVideoTrack
-                            track={localCameraTrack}
-                            play
-                            style={{ width: '100%', height: '100%' }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
-                          <VideoOff className="w-7 h-7 text-white/20 mb-1" />
-                          <span className="text-[9px] text-white/20 uppercase tracking-widest">Camera off</span>
-                        </div>
-                      )}
-                      <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
-                        <div className={cn("w-1.5 h-1.5 rounded-full", micOn ? "bg-green-500" : "bg-white/20")} />
-                        <span className="text-[10px] font-medium tracking-tight">{profile?.full_name || userName}</span>
-                      </div>
-                    </div>
-                 )}
+                 {/* Local user (always visible) */}
+                 <div className="w-44 shrink-0 aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-white/5 relative group cursor-pointer">
+                   {videoOn && localCameraTrack ? (
+                     <div className="absolute inset-0 transition-transform group-hover:scale-110">
+                       <LocalVideoTrack
+                         track={localCameraTrack}
+                         play
+                         style={{ width: '100%', height: '100%' }}
+                       />
+                     </div>
+                   ) : (
+                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
+                       <Avatar className="w-16 h-16 border-2 border-white/10 mb-2">
+                         <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || userName}`} />
+                         <AvatarFallback className="text-lg">{(profile?.full_name || userName)[0]}</AvatarFallback>
+                       </Avatar>
+                       <span className="text-[9px] text-white/20 uppercase tracking-widest">Camera off</span>
+                     </div>
+                   )}
+                   <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
+                     <div className={cn("w-1.5 h-1.5 rounded-full", micOn ? "bg-green-500" : "bg-white/20")} />
+                     <span className="text-[10px] font-medium tracking-tight">{profile?.full_name || userName}</span>
+                   </div>
+                   {iAmTutor && (
+                     <div className="absolute top-2 right-2 px-2 py-0.5 bg-[#A7C957]/20 rounded-full border border-[#A7C957]/30">
+                       <span className="text-[8px] font-bold text-[#A7C957] uppercase tracking-widest">Host</span>
+                     </div>
+                   )}
+                 </div>
 
-                 {/* Remote Participants */}
-                 {studentUsers.map(user => (
+                 {/* All Remote Participants */}
+                 {remoteUsers.map(user => (
                    <div key={user.uid} className="w-44 shrink-0 aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-white/5 relative group cursor-pointer">
                      <div className="absolute inset-0 transition-transform group-hover:scale-110">
                        <RemoteUser user={user} playVideo playAudio style={{ width: '100%', height: '100%' }} />
@@ -375,6 +688,12 @@ function ClassroomInner({
                           <div className="w-1.5 h-1.5 rounded-full bg-[#A7C957] animate-pulse" />
                           <span className="text-[10px] font-medium tracking-tight">User {user.uid}</span>
                      </div>
+                     {/* Hand raised indicator */}
+                     {raisedHands.find(h => h.uid === Number(user.uid)) && (
+                       <div className="absolute top-2 right-2 w-7 h-7 bg-amber-500/30 rounded-full flex items-center justify-center border border-amber-500/40 animate-bounce">
+                         <Hand className="w-3.5 h-3.5 text-amber-400" />
+                       </div>
+                     )}
                    </div>
                  ))}
 
@@ -385,29 +704,29 @@ function ClassroomInner({
                  <MockParticipant name="Marta E." img="4" status="talking" />
               </div>
 
-              {/* MEETING INSIGHTS */}
+              {/* CLASSROOM INSIGHTS & KPIs */}
               <div className="flex flex-col gap-6">
                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-white/80">Meeting Insights</h2>
-                    <Button variant="link" className="text-[#A7C957] text-sm font-medium p-0 h-auto">View all</Button>
+                    <h2 className="text-xl font-bold text-white/80">Classroom KPIs</h2>
+                    <Button variant="link" className="text-[#A7C957] text-sm font-medium p-0 h-auto">Goal Progress</Button>
                  </div>
                  
                  <div className="flex flex-col gap-4">
                     <InsightCard 
-                      title="PM & Designers Sync Meeting" 
-                      time="30 min" 
-                      tasks={5} 
-                      accomplished="8/9" 
-                      progress={85}
-                      icon={Users}
+                      title="Assignment Submissions" 
+                      time="Due today" 
+                      tasks="12 Pending" 
+                      accomplished="28/40" 
+                      progress={70}
+                      icon={FileText}
                     />
                     <InsightCard 
-                      title="Strategic Planning Meeting" 
-                      time="1h" 
-                      tasks={8} 
-                      accomplished="4/10" 
-                      progress={40}
-                      icon={LayoutGrid}
+                      title="Course Objectives" 
+                      time="Current Module" 
+                      tasks="3 Remaining" 
+                      accomplished="7/10" 
+                      progress={70}
+                      icon={Sparkles}
                     />
                  </div>
               </div>
@@ -423,7 +742,10 @@ function ClassroomInner({
                     <Button variant="link" className="text-[#A7C957] text-xs font-medium p-0 h-auto">View all</Button>
                  </div>
 
-                 <div className="flex-1 overflow-y-auto px-8 py-4 flex flex-col gap-6 custom-scrollbar">
+                 <div 
+                    ref={chatScrollRef}
+                    className="flex-1 overflow-y-auto px-8 py-4 flex flex-col gap-6 custom-scrollbar"
+                  >
                     {messages.length === 0 ? (
                       <div className="flex-1 flex flex-col items-center justify-center opacity-20">
                         <Sparkles className="w-12 h-12 mb-4" />
@@ -448,7 +770,10 @@ function ClassroomInner({
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (msgInput.trim() && profile?.id) {
-                          sendMessage(msgInput, profile.id);
+                          sendMessage(msgInput, profile.id, { 
+                            full_name: profile.full_name, 
+                            avatar_url: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.full_name}`
+                          });
                           setMsgInput('');
                         }
                       }}
@@ -522,23 +847,7 @@ function ClassroomInner({
 
 // --- SUB-COMPONENTS ---
 
-function LobbyScreen({
-  userName,
-  channelName,
-  micOn,
-  videoOn,
-  micError,
-  camError,
-  localCameraTrack,
-  onToggleMic,
-  onToggleVideo,
-  onJoin,
-  onLeave,
-  isLoading,
-  recovering,
-  error,
-  profile,
-}: {
+function LobbyScreen(props: {
   userName: string;
   channelName: string;
   micOn: boolean;
@@ -554,17 +863,60 @@ function LobbyScreen({
   recovering?: boolean;
   error?: string | null;
   profile?: UserProfile | null;
+  classBanner?: string;
 }) {
+  const {
+    userName,
+    channelName,
+    micOn,
+    videoOn,
+    micError,
+    camError,
+    localCameraTrack,
+    onToggleMic,
+    onToggleVideo,
+    onJoin,
+    onLeave,
+    isLoading,
+    recovering,
+    error,
+    profile,
+    classBanner,
+  } = props;
   return (
     <div className="flex h-screen bg-[#0A1A12] text-white items-center justify-center relative overflow-hidden">
       {/* Ambient background glows */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#A7C957]/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#6A994E]/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-xl mx-auto px-6 flex flex-col items-center">
-        {/* Logo */}
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#A7C957] to-[#6A994E] flex items-center justify-center mb-6 shadow-lg shadow-[#A7C957]/20">
-          <Sparkles className="w-7 h-7 text-[#0A1A12]" />
+      <div className="w-full max-w-xl mx-auto px-6 flex flex-col items-center z-10">
+        {/* Class Banner / Logo Area */}
+        <div className="w-full aspect-video rounded-[2rem] overflow-hidden mb-8 relative border border-white/10 shadow-2xl group">
+          {classBanner ? (
+            <>
+              <img src={classBanner} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Class Banner" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute bottom-6 left-6 flex items-center gap-3">
+                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A7C957] to-[#6A994E] flex items-center justify-center shadow-lg shadow-[#A7C957]/20">
+                   <Sparkles className="w-5 h-5 text-[#0A1A12]" />
+                 </div>
+                 <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-[#A7C957] uppercase tracking-widest">Live Class</span>
+                    <h2 className="text-lg font-bold text-white leading-none">Class Session</h2>
+                 </div>
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#0A1A12] to-[#132E1B] flex flex-col items-center justify-center gap-4">
+               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#A7C957] to-[#6A994E] flex items-center justify-center shadow-lg shadow-[#A7C957]/20 transition-transform group-hover:scale-110 duration-500">
+                 <Sparkles className="w-8 h-8 text-[#0A1A12]" />
+               </div>
+               <div className="flex flex-col items-center">
+                  <p className="text-xs font-bold text-white/40 uppercase tracking-[0.2em]">Dr Max Online School</p>
+                  <div className="w-8 h-0.5 bg-[#A7C957]/30 mt-2 rounded-full" />
+               </div>
+            </div>
+          )}
         </div>
 
         <h1 className="text-3xl font-bold mb-1 text-center">Ready to join?</h1>

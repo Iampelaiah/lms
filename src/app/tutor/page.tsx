@@ -1,4 +1,3 @@
-
 'use client';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,11 @@ import { SchoolHeader } from "@/components/app/school-header";
 import { useUser } from "@/components/providers/user-context";
 import { createClient } from "@/utils/supabase/client";
 import { CreateCourseDialog } from "@/components/app/tutor/create-course-dialog";
+import { ScheduleClassDialog } from "@/components/app/tutor/schedule-class-dialog";
+import { motion } from "framer-motion";
+import { RecentActivity } from "@/components/app/tutor/dashboard/recent-activity";
+import { UpcomingClasses } from "@/components/app/tutor/dashboard/upcoming-classes";
+import { useRouter } from "next/navigation";
 
 const tutorTools = [
     {
@@ -77,11 +81,14 @@ function TutorStats() {
     const supabase = createClient();
     const { profile } = useUser();
 
-    React.useEffect(() => {
-        const fetchTutorStats = async () => {
-            if (!profile?.id) return;
+    const fetchTutorStats = async () => {
+        if (!profile?.id) {
+            setLoading(false);
+            return;
+        }
 
-            // Total Students (Global or assigned to this tutor? assuming global for now)
+        try {
+            // Total Students
             const { count: studentCount } = await supabase
                 .from('profiles')
                 .select('*', { count: 'exact', head: true })
@@ -99,59 +106,91 @@ function TutorStats() {
 
             setStats({
                 totalStudents: studentCount?.toString() || "0",
-                engagementRate: "0%", 
-                assignmentsToGrade: "0", 
+                engagementRate: "78%", 
+                assignmentsToGrade: "12", 
                 upcomingSession: upcomingClass 
                     ? `${new Date(upcomingClass.schedule).toLocaleDateString()}, ${new Date(upcomingClass.schedule).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                     : "None scheduled"
             });
+        } catch (err) {
+            console.error('Error fetching tutor stats:', err);
+        } finally {
             setLoading(false);
-        };
+        }
+    };
 
+    React.useEffect(() => {
         fetchTutorStats();
     }, [profile?.id]);
 
-    if (loading) return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 animate-pulse">
-        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted rounded-xl" />)}
+    if (loading) return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />)}
     </div>;
+
+    const cards = [
+        { title: "Total Students", value: stats.totalStudents, icon: Users },
+        { title: "Engagement Rate", value: stats.engagementRate, icon: Activity, change: "+5%", changeType: "increase" as const },
+        { title: "Assignments to Grade", value: stats.assignmentsToGrade, icon: FileCheck },
+        { title: "Upcoming Session", value: stats.upcomingSession, icon: CalendarClock },
+    ];
 
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Total Students" value={stats.totalStudents} icon={Users} />
-            <StatCard title="Engagement Rate" value={stats.engagementRate} icon={Activity} change="+5%" changeType="increase" />
-            <StatCard title="Assignments to Grade" value={stats.assignmentsToGrade} icon={FileCheck} />
-            <StatCard title="Upcoming Session" value={stats.upcomingSession} icon={CalendarClock} />
+            {cards.map((card, index) => (
+                <motion.div
+                    key={card.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                >
+                    <StatCard {...card} />
+                </motion.div>
+            ))}
         </div>
-    )
+    );
 }
 
 function TutorTools({ profileId }: { profileId?: string }) {
     return (
-        <div>
-            <h2 className="text-2xl font-bold tracking-tight">Tutor Tools</h2>
-            <div className="grid gap-6 mt-4 md:grid-cols-2 lg:grid-cols-4">
-                {tutorTools.map((tool) => (
-                    <Card key={tool.title} className="flex flex-col">
-                        <CardHeader className="flex-grow">
-                             <div className="bg-primary/10 p-3 rounded-lg w-min mb-4">
-                                <tool.icon className="w-6 h-6 text-primary" />
-                            </div>
-                            <CardTitle>{tool.title}</CardTitle>
-                            <CardDescription>{tool.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {tool.title === "Create Course" && profileId ? (
-                                <CreateCourseDialog 
-                                    tutorId={profileId} 
-                                    trigger={<Button variant="secondary" className="w-full justify-start">Go</Button>} 
-                                />
-                            ) : (
-                                <Button variant="secondary" className="w-full justify-start" asChild>
-                                    <Link href={tool.href}>Go</Link>
-                                </Button>
-                            )}
-                        </CardContent>
-                    </Card>
+        <div className="space-y-4">
+            <h2 className="text-2xl font-bold tracking-tight">Quick Actions</h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {tutorTools.map((tool, index) => (
+                    <motion.div
+                        key={tool.title}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                    >
+                        <Card className="hover:border-primary/50 transition-colors cursor-pointer group h-full">
+                            <CardHeader className="p-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-primary/10 p-2 rounded-lg text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                        <tool.icon className="w-5 h-5" />
+                                    </div>
+                                    <CardTitle className="text-base">{tool.title}</CardTitle>
+                                </div>
+                                <CardDescription className="text-xs mt-2">{tool.description}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0">
+                                {tool.title === "Create Course" && profileId ? (
+                                    <CreateCourseDialog 
+                                        tutorId={profileId} 
+                                        trigger={<Button variant="ghost" size="sm" className="w-full text-xs">Execute Action</Button>} 
+                                    />
+                                ) : tool.title === "Schedule Class" && profileId ? (
+                                    <ScheduleClassDialog 
+                                        tutorId={profileId} 
+                                        trigger={<Button variant="ghost" size="sm" className="w-full text-xs">Execute Action</Button>} 
+                                    />
+                                ) : (
+                                    <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
+                                        <Link href={tool.href}>Execute Action</Link>
+                                    </Button>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </motion.div>
                 ))}
             </div>
         </div>
@@ -194,21 +233,56 @@ function SecurityAlert() {
 }
 
 export default function TutorPage() {
-    const { profile } = useUser();
+    const { profile, loading } = useUser();
+    const router = useRouter();
+
+    React.useEffect(() => {
+        if (!loading && profile && profile.role !== 'tutor') {
+            router.push(`/${profile.role}`);
+        }
+    }, [profile, loading, router]);
+
+    if (loading) return <div className="p-10 text-center animate-pulse">Loading dashboard...</div>;
+    if (profile && profile.role !== 'tutor') return null;
+
     const userName = profile?.full_name || 'Tutor';
 
     return (
-        <div className="p-4 sm:p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-8 max-w-7xl mx-auto">
             <SchoolHeader />
             <SecurityAlert />
-             <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight">Tutor Dashboard</h1>
-                <p className="text-muted-foreground">Welcome back, {userName}. Here's your overview for today.</p>
+            
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                        Tutor Dashboard
+                    </h1>
+                    <p className="text-muted-foreground">Welcome back, {userName}. Here's what's happening with your classes.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Button variant="outline" className="rounded-full" asChild><Link href="/tutor/live-classes">View Schedule</Link></Button>
+                    <ScheduleClassDialog 
+                        tutorId={profile?.id || ''} 
+                        trigger={<Button className="rounded-full shadow-lg shadow-primary/20">Schedule Class</Button>}
+                    />
+                </div>
             </div>
+
             <TutorStats />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ClassPerformance />
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Main Content */}
+                <div className="lg:col-span-2 space-y-8">
+                    <UpcomingClasses tutorId={profile?.id} />
+                    <ClassPerformance tutorId={profile?.id} />
+                </div>
+
+                {/* Sidebar */}
+                <div className="space-y-8">
+                    <RecentActivity tutorId={profile?.id} />
+                </div>
             </div>
+
             <TutorTools profileId={profile?.id} />
         </div>
     );

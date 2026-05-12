@@ -28,7 +28,7 @@ function ClassroomContent() {
         // Wider ranges prevent UID_CONFLICT on refreshes.
         const uid = role === 'tutor' 
           ? Math.floor(Math.random() * 1000) + 1000 
-          : Math.floor(Math.random() * 60000) + 2001;
+          : Math.floor(Math.random() * 5000) + 3000;
         const response = await fetch('/api/agora', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -86,6 +86,7 @@ function ClassroomContent() {
       token={agoraData.token}
       uid={agoraData.uid}
       userName={userName}
+      role={role}
       onLeave={() => router.push('/')}
     />
   );
