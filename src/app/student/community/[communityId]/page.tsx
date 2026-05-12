@@ -28,8 +28,6 @@ import { useUser } from '@/components/providers/user-context';
 import { CreatePostDialog } from '@/components/app/community/create-post-dialog';
 
 function AboutCommunity({ community }: { community: any }) {
-
-function AboutCommunity({ community }: { community: any }) {
   return (
     <Card>
       <CardHeader>
