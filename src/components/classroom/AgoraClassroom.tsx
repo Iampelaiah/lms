@@ -110,126 +110,141 @@ function ClassroomInner({
 }: AgoraClassroomProps) {
   const [micOn, setMic] = useState(false);
   const [videoOn, setVideo] = useState(false);
-  const [joined, setJoined] = useState(false);
   const { profile, loading: loadingProfile } = useUser();
   const { messages, sendMessage } = useChat(channelName);
   const [msgInput, setMsgInput] = useState('');
   const [spotlightedUid, setSpotlightedUid] = useState<number | null>(null);
   const [screenTrack, setScreenTrack] = useState<any>(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  // UID of the remote participant currently sharing screen
+  const [remoteScreenUid, setRemoteScreenUid] = useState<number | null>(null);
   const [classData, setClassData] = useState<any>(null);
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
+  // Map of uid -> { name, role } for showing real names on tiles
+  const [participantMap, setParticipantMap] = useState<Record<number, { name: string; role: string }>>({});
   const chatScrollRef = useRef<HTMLDivElement>(null);
-  
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   // Determine if the CURRENT user is the tutor/host using ALL available signals
   const iAmTutor = useMemo(() => {
     const fromProp = role === 'tutor';
     const fromProfile = profile?.role === 'tutor';
     const fromUid = uid >= 1000 && uid <= 2000;
-    const result = fromProp || fromProfile || fromUid;
-    console.log('[Stage] Tutor detection:', { role, profileRole: profile?.role, uid, fromProp, fromProfile, fromUid, result });
-    return result;
+    return fromProp || fromProfile || fromUid;
   }, [role, profile?.role, uid]);
-  
+
   // Auto-scroll chat to bottom
   useEffect(() => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
   }, [messages]);
-  
-  // Agora Hooks
-  const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack(micOn);
-  const { localCameraTrack, error: camError } = useLocalCameraTrack(videoOn);
+
+  // Agora Hooks — explicit encoder config for low latency
+  const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack(micOn, {
+    AEC: true, ANS: true, AGC: true,
+  });
+  const { localCameraTrack, error: camError } = useLocalCameraTrack(videoOn, {
+    encoderConfig: { width: 640, height: 360, frameRate: 24, bitrateMin: 200, bitrateMax: 600 },
+    optimizationMode: 'motion',
+  });
   const remoteUsers = useRemoteUsers();
   const client = useRTCClient();
 
   // Handle permission errors
-  useEffect(() => {
-    if (micError) {
-      console.error('Microphone access failed:', micError);
-      setMic(false);
-    }
-  }, [micError]);
-
-  useEffect(() => {
-    if (camError) {
-      console.error('Camera access failed:', camError);
-      setVideo(false);
-    }
-  }, [camError]);
+  useEffect(() => { if (micError) { console.error('Mic:', micError); setMic(false); } }, [micError]);
+  useEffect(() => { if (camError) { console.error('Cam:', camError); setVideo(false); } }, [camError]);
 
   // --- MANUAL JOIN WITH UID_CONFLICT RECOVERY ---
-  const { 
-    isJoined, 
-    isLoading: isJoinLoading, 
-    error: joinError, 
-    recovering, 
-    manualJoin 
-  } = useAgoraManualJoin({
-    client,
-    appId,
-    channel: channelName,
-    token: token || null,
-    uid,
+  const { isJoined, isLoading: isJoinLoading, error: joinError, recovering, manualJoin } = useAgoraManualJoin({
+    client, appId, channel: channelName, token: token || null, uid,
   });
 
   // Fetch Class Data
   useEffect(() => {
     if (!channelName) return;
-    async function fetchClass() {
-      const { data, error } = await supabase
-        .from('classes')
-        .select('*')
-        .eq('id', channelName)
-        .single();
-      
-      if (data) setClassData(data);
-    }
-    fetchClass();
+    supabase.from('classes').select('*').eq('id', channelName).single()
+      .then(({ data }) => { if (data) setClassData(data); });
   }, [channelName, supabase]);
 
-  // Handle Classroom Events (like Class Ended)
+  // ─── SINGLE unified Supabase broadcast channel ─────────────────────────────
+  // All real-time events (class end, spotlight, screen share, hand raise,
+  // participant identity) go through one channel to minimise WS connections.
   useEffect(() => {
-    const channel = supabase.channel(`classroom:${channelName}`)
+    if (!channelName) return;
+    const ch = supabase.channel(`classroom:${channelName}`, {
+      config: { broadcast: { self: false } },
+    })
+      // Class ended — kick students out
       .on('broadcast', { event: 'CLASS_ENDED' }, () => {
-        if (!iAmTutor) {
-          // Notify students and leave
-          onLeave();
+        if (!iAmTutor) onLeave?.();
+      })
+      // Spotlight sync
+      .on('broadcast', { event: 'spotlight' }, ({ payload }) => {
+        setSpotlightedUid(payload.uid);
+      })
+      // Screen share: track which remote UID is sharing
+      .on('broadcast', { event: 'screen-share' }, ({ payload }) => {
+        if (payload.sharing) {
+          setRemoteScreenUid(Number(payload.uid));
+        } else if (Number(payload.uid) === remoteScreenUid) {
+          setRemoteScreenUid(null);
         }
+      })
+      // Hand raise
+      .on('broadcast', { event: 'hand-raise' }, ({ payload }) => {
+        const { uid: raiserUid, name, raised } = payload;
+        setRaisedHands(prev =>
+          raised
+            ? [...prev.filter(h => h.uid !== raiserUid), { uid: raiserUid, name }]
+            : prev.filter(h => h.uid !== raiserUid)
+        );
+      })
+      // Identity announcement — who just joined
+      .on('broadcast', { event: 'identity' }, ({ payload }) => {
+        setParticipantMap(prev => ({ ...prev, [payload.uid]: { name: payload.name, role: payload.role } }));
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
+    return () => { supabase.removeChannel(ch); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelName]);
+
+  // Announce our own identity when we join the Agora channel
+  useEffect(() => {
+    if (!isJoined || !profile) return;
+    supabase.channel(`classroom:${channelName}`).send({
+      type: 'broadcast',
+      event: 'identity',
+      payload: { uid, name: profile.full_name || userName, role: iAmTutor ? 'tutor' : 'student' },
+    });
+  }, [isJoined, profile, uid, userName, iAmTutor, channelName, supabase]);
+
+  // Auto-clear raise hand when a remote user leaves the Agora channel
+  useEffect(() => {
+    if (!client) return;
+    const onUserLeft = (user: any) => {
+      setRaisedHands(prev => prev.filter(h => h.uid !== Number(user.uid)));
+      // Also clear remote screen share if that user was sharing
+      setRemoteScreenUid(prev => (prev === Number(user.uid) ? null : prev));
     };
-  }, [channelName, supabase, iAmTutor, onLeave]);
+    client.on('user-left', onUserLeft);
+    return () => { client.off('user-left', onUserLeft); };
+  }, [client]);
 
   const handleFinalize = async () => {
     setIsEnding(true);
     try {
-      // 1. Update database
-      const { error } = await supabase
-        .from('classes')
-        .update({ status: 'completed' })
-        .eq('id', channelName);
-
-      if (error) throw error;
-
-      // 2. Broadcast end event to all students
+      await supabase.from('classes').update({ status: 'completed' }).eq('id', channelName);
       await supabase.channel(`classroom:${channelName}`).send({
-        type: 'broadcast',
-        event: 'CLASS_ENDED',
-        payload: { endedAt: new Date().toISOString() }
+        type: 'broadcast', event: 'CLASS_ENDED',
+        payload: { endedAt: new Date().toISOString() },
       });
-
-      // 3. Leave
-      onLeave();
+      onLeave?.();
     } catch (err) {
-      console.error("Failed to finalize class:", err);
+      console.error('Failed to finalize class:', err);
     } finally {
       setIsEnding(false);
       setShowFinalizeDialog(false);
@@ -237,95 +252,54 @@ function ClassroomInner({
   };
 
   const handleLeaveClick = () => {
-    if (iAmTutor) {
-      setShowFinalizeDialog(true);
-    } else {
-      onLeave();
-    }
+    if (iAmTutor) setShowFinalizeDialog(true);
+    else onLeave?.();
   };
 
-  // Publish local tracks whenever they are ready and joined
-  usePublish(isJoined ? [localMicrophoneTrack, localCameraTrack] : []);
+  // Publish tracks — filter out null so Agora doesn't choke
+  const tracksToPublish = useMemo(
+    () => [localMicrophoneTrack, localCameraTrack].filter(Boolean) as any[],
+    [localMicrophoneTrack, localCameraTrack]
+  );
+  usePublish(isJoined ? tracksToPublish : []);
 
   // Track if dual stream has been enabled to avoid redundant calls
   const dualStreamEnabledRef = useRef(false);
 
-  // Enable Dual Stream Mode
+  // Enable Dual Stream Mode for adaptive bitrate (reduces latency under poor network)
   useEffect(() => {
     if (!client || dualStreamEnabledRef.current) return;
-    
-    const tryEnable = async () => {
-      try {
-        dualStreamEnabledRef.current = true;
-        await client.enableDualStream();
-      } catch (err: any) {
-        const msg = err?.message || String(err);
-        if (msg.includes('already enabled') || err?.code === 'DUAL_STREAM_ALREADY_ENABLED') {
-          return;
-        }
-        dualStreamEnabledRef.current = false;
-        console.error('Failed to enable dual stream:', err);
-      }
-    };
-
-    tryEnable();
+    dualStreamEnabledRef.current = true;
+    client.enableDualStream().catch((err: any) => {
+      if (!err?.message?.includes('already enabled')) console.error('Dual stream:', err);
+    });
   }, [client]);
 
-  // Handle Spotlight Synchronization
-  useEffect(() => {
-    if (!channelName) return;
-
-    const channel = supabase.channel(`classroom:${channelName}`)
-      .on('broadcast', { event: 'spotlight' }, (payload) => {
-        setSpotlightedUid(payload.payload.uid);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [channelName, supabase]);
-
   const toggleSpotlight = (targetUid: number | null) => {
-    // Only tutors can spotlight
-    const isTutor = role === 'tutor' || (uid >= 1000 && uid <= 2000);
-    if (!isTutor) return;
-
+    if (!iAmTutor) return;
     setSpotlightedUid(targetUid);
     supabase.channel(`classroom:${channelName}`).send({
-      type: 'broadcast',
-      event: 'spotlight',
+      type: 'broadcast', event: 'spotlight',
       payload: { uid: targetUid },
     });
   };
 
   const teacherUser = useMemo(() => {
     if (iAmTutor) return 'local';
-    // Find remote tutor among participants
     return remoteUsers.find(u => Number(u.uid) >= 1000 && Number(u.uid) <= 2000);
   }, [remoteUsers, iAmTutor]);
 
-  const spotlightedUser = useMemo(() => {
-    if (spotlightedUid === null) return null;
-    if (spotlightedUid === uid) return 'local';
-    return remoteUsers.find(u => Number(u.uid) === spotlightedUid);
-  }, [remoteUsers, spotlightedUid, uid]);
-
   const studentUsers = useMemo(() => {
-    return remoteUsers.filter(u => {
-      const isTeacher = Number(u.uid) >= 1000 && Number(u.uid) <= 2000;
-      return !isTeacher;
-    });
+    return remoteUsers.filter(u => !(Number(u.uid) >= 1000 && Number(u.uid) <= 2000));
   }, [remoteUsers]);
 
-  // --- SCREEN SHARING ---
+  // --- SCREEN SHARING & UI STATE ---
   const [handRaised, setHandRaised] = useState(false);
   const [raisedHands, setRaisedHands] = useState<{uid: number; name: string}[]>([]);
   const screenVideoRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Fullscreen toggle
   const toggleFullscreen = () => {
     if (!stageRef.current) return;
     if (!document.fullscreenElement) {
@@ -343,19 +317,18 @@ function ClassroomInner({
 
   const startScreenShare = async () => {
     try {
-      const track = await AgoraRTC.createScreenVideoTrack({}, 'disable');
+      const track = await AgoraRTC.createScreenVideoTrack(
+        { encoderConfig: { width: 1920, height: 1080, frameRate: 15, bitrateMax: 2000 } },
+        'disable'
+      );
       const videoTrack = Array.isArray(track) ? track[0] : track;
-      if (client && isJoined) {
-        await client.publish(videoTrack);
-      }
+      if (client && isJoined) await client.publish(videoTrack);
       setScreenTrack(videoTrack);
       setIsScreenSharing(true);
-      // Notify others
       supabase.channel(`classroom:${channelName}`).send({
         type: 'broadcast', event: 'screen-share',
         payload: { uid, sharing: true },
       });
-      // Auto-stop when user clicks browser "Stop sharing"
       videoTrack.on('track-ended', () => stopScreenShare(videoTrack));
     } catch (err) {
       console.error('Screen share failed:', err);
@@ -365,10 +338,7 @@ function ClassroomInner({
   const stopScreenShare = async (track?: any) => {
     const t = track || screenTrack;
     if (t) {
-      try {
-        if (client && isJoined) await client.unpublish(t);
-        t.close();
-      } catch (e) { console.error(e); }
+      try { if (client && isJoined) await client.unpublish(t); t.close(); } catch (e) { console.error(e); }
     }
     setScreenTrack(null);
     setIsScreenSharing(false);
@@ -378,11 +348,9 @@ function ClassroomInner({
     });
   };
 
-  // Play screen track into the ref div
+  // Play LOCAL screen track into the ref div
   useEffect(() => {
-    if (screenTrack && screenVideoRef.current) {
-      screenTrack.play(screenVideoRef.current);
-    }
+    if (screenTrack && screenVideoRef.current) screenTrack.play(screenVideoRef.current);
   }, [screenTrack]);
 
   // --- HAND RAISE ---
@@ -394,22 +362,6 @@ function ClassroomInner({
       payload: { uid, name: profile?.full_name || userName, raised: newState },
     });
   };
-
-  // Listen for hand raise broadcasts (tutor sees notifications)
-  useEffect(() => {
-    if (!channelName) return;
-    const channel = supabase.channel(`classroom-hands:${channelName}`)
-      .on('broadcast', { event: 'hand-raise' }, (payload) => {
-        const { uid: raiserUid, name, raised } = payload.payload;
-        if (raised) {
-          setRaisedHands(prev => [...prev.filter(h => h.uid !== raiserUid), { uid: raiserUid, name }]);
-        } else {
-          setRaisedHands(prev => prev.filter(h => h.uid !== raiserUid));
-        }
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [channelName, supabase]);
 
   // --- LOADING STATE ---
   if (loadingProfile) {
@@ -503,29 +455,62 @@ function ClassroomInner({
             {/* LEFT COLUMN: Video & Insights */}
             <div className="flex-1 flex flex-col gap-8">
               
-              {/* PRESENTATION STAGE (Screen Share / Present) */}
-              <div ref={stageRef} className={cn("relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-white/5 shadow-2xl group group/stage", isFullscreen ? 'rounded-none' : 'aspect-video')}>
+              {/* PRESENTATION STAGE — screen share takes priority, then tutor camera */}
+              <div ref={stageRef} className={cn("relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-[#07120C] shadow-2xl group group/stage", isFullscreen ? 'rounded-none' : 'aspect-video')}>
+                {/* Priority 1: LOCAL screen share (tutor sharing their screen) */}
                 {isScreenSharing && screenTrack ? (
                   <div ref={screenVideoRef} className="absolute inset-0" style={{ width: '100%', height: '100%' }} />
+                ) : remoteScreenUid ? (
+                  /* Priority 2: REMOTE screen share (someone else sharing) */
+                  (() => {
+                    const sharingUser = remoteUsers.find(u => Number(u.uid) === remoteScreenUid);
+                    return sharingUser ? (
+                      <div className="absolute inset-0">
+                        <RemoteUser user={sharingUser} playVideo playAudio style={{ width: '100%', height: '100%' }} />
+                      </div>
+                    ) : null;
+                  })()
+                ) : iAmTutor && videoOn && localCameraTrack ? (
+                  /* Priority 3: TUTOR's own camera (they see themselves in stage) */
+                  <div className="absolute inset-0">
+                    <LocalVideoTrack track={localCameraTrack} play style={{ width: '100%', height: '100%' }} />
+                  </div>
+                ) : !iAmTutor && teacherUser && teacherUser !== 'local' ? (
+                  /* Priority 3 (student view): Show REMOTE tutor's camera in the stage */
+                  <div className="absolute inset-0">
+                    <RemoteUser user={teacherUser as any} playVideo playAudio style={{ width: '100%', height: '100%' }} />
+                  </div>
                 ) : (
+                  /* Fallback: idle state */
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0A1A12] to-[#132E1B]">
                     <div className="w-28 h-28 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover/stage:scale-110 transition-transform duration-500">
                       <Presentation className="w-14 h-14 text-white/10" />
                     </div>
-                    <p className="text-white/30 font-bold tracking-widest uppercase text-xs mb-2">Presentation Area</p>
+                    <p className="text-white/30 font-bold tracking-widest uppercase text-xs mb-2">
+                      {iAmTutor ? 'You are Live' : 'Waiting for Tutor'}
+                    </p>
                     <p className="text-white/15 text-[10px] tracking-wide max-w-xs text-center">
                       {iAmTutor
-                        ? 'Click the screen share button below to present your screen'
-                        : 'The tutor will share their screen here'}
+                        ? 'Turn on your camera or share your screen to begin'
+                        : 'The tutor will appear here when they turn on their camera'}
                     </p>
                     {iAmTutor && (
-                      <button
-                        onClick={startScreenShare}
-                        className="mt-6 px-6 py-3 bg-[#A7C957]/20 hover:bg-[#A7C957]/30 border border-[#A7C957]/30 rounded-full text-[#A7C957] text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
-                      >
-                        <Monitor className="w-4 h-4" />
-                        Start Presenting
-                      </button>
+                      <div className="flex gap-3 mt-6">
+                        <button
+                          onClick={() => setVideo(true)}
+                          className="px-5 py-2.5 bg-[#A7C957]/20 hover:bg-[#A7C957]/30 border border-[#A7C957]/30 rounded-full text-[#A7C957] text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                        >
+                          <VideoIcon className="w-4 h-4" />
+                          Camera
+                        </button>
+                        <button
+                          onClick={startScreenShare}
+                          className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/60 text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                        >
+                          <Monitor className="w-4 h-4" />
+                          Present
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -679,29 +664,36 @@ function ClassroomInner({
                  </div>
 
                  {/* All Remote Participants */}
-                 {remoteUsers.map(user => (
-                   <div key={user.uid} className="w-44 shrink-0 aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-white/5 relative group cursor-pointer">
-                     <div className="absolute inset-0 transition-transform group-hover:scale-110">
-                       <RemoteUser user={user} playVideo playAudio style={{ width: '100%', height: '100%' }} />
-                     </div>
-                     <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#A7C957] animate-pulse" />
-                          <span className="text-[10px] font-medium tracking-tight">User {user.uid}</span>
-                     </div>
-                     {/* Hand raised indicator */}
-                     {raisedHands.find(h => h.uid === Number(user.uid)) && (
-                       <div className="absolute top-2 right-2 w-7 h-7 bg-amber-500/30 rounded-full flex items-center justify-center border border-amber-500/40 animate-bounce">
-                         <Hand className="w-3.5 h-3.5 text-amber-400" />
-                       </div>
-                     )}
-                   </div>
-                 ))}
+                 {remoteUsers.map(user => {
+                   const info = participantMap[Number(user.uid)];
+                   const isUserTutor = info?.role === 'tutor' ||
+                     (Number(user.uid) >= 1000 && Number(user.uid) <= 2000);
+                   const displayName = info?.name || `User ${user.uid}`;
+                   const hasHandRaised = !!raisedHands.find(h => h.uid === Number(user.uid));
+                   return (
+                    <div key={user.uid} className="w-44 shrink-0 aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-white/5 relative group cursor-pointer">
+                      <div className="absolute inset-0 transition-transform group-hover:scale-110">
+                        <RemoteUser user={user} playVideo playAudio style={{ width: '100%', height: '100%' }} />
+                      </div>
+                      <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
+                        <div className={cn("w-1.5 h-1.5 rounded-full", user.hasAudio ? 'bg-green-500 animate-pulse' : 'bg-white/20')} />
+                        <span className="text-[10px] font-medium tracking-tight">{displayName}</span>
+                      </div>
+                      {isUserTutor && (
+                        <div className="absolute top-2 left-2 px-2 py-0.5 bg-[#A7C957]/20 rounded-full border border-[#A7C957]/30">
+                          <span className="text-[8px] font-bold text-[#A7C957] uppercase tracking-widest">Host</span>
+                        </div>
+                      )}
+                      {hasHandRaised && (
+                        <div className="absolute top-2 right-2 w-7 h-7 bg-amber-500/30 rounded-full flex items-center justify-center border border-amber-500/40 animate-bounce">
+                          <Hand className="w-3.5 h-3.5 text-amber-400" />
+                        </div>
+                      )}
+                    </div>
+                   );
+                 })}
 
-                 {/* Mock Participants */}
-                 <MockParticipant name="Ethan C." img="1" status="muted" />
-                 <MockParticipant name="Andy T." img="2" status="active" />
-                 <MockParticipant name="Jordan K." img="3" status="muted" />
-                 <MockParticipant name="Marta E." img="4" status="talking" />
+               {/* No mock participants - only real ones from Agora */}
               </div>
 
               {/* CLASSROOM INSIGHTS & KPIs */}
