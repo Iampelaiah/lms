@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   description: 'The future of personalized digital learning.',
 };
 
+// Force all pages to render dynamically (at request time), never statically.
+// This prevents Supabase from being called during `next build` when env vars
+// are not available in the build environment.
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: Readonly<{

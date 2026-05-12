@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Prevent Next.js from statically pre-rendering pages that use Supabase
+  // (which requires runtime env vars). All pages are rendered on-demand.
+  output: 'standalone',
   images: {
     remotePatterns: [
       {
