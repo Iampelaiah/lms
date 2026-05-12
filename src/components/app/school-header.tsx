@@ -2,16 +2,18 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import React, { useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
 import { Video } from "lucide-react";
+import { useUser } from "@/components/providers/user-context";
 
 export function SchoolHeader() {
   const schoolName = "Dr Max online school";
   const schoolMantra = "Empowering minds through digital excellence and personalized learning.";
   const avatarFallback = "DM";
+  const { profile } = useUser();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -29,7 +31,7 @@ export function SchoolHeader() {
           action: (
             <ToastAction 
               altText="Join Now" 
-              onClick={() => router.push(`/classroom/${meetingId}?name=Student&role=student`)}
+              onClick={() => router.push(`/classroom/${meetingId}?name=${profile?.full_name || 'Student'}&role=student`)}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Video className="w-4 h-4 mr-1" />

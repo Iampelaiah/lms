@@ -8,8 +8,8 @@ import Link from 'next/link';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { handleLogin } from '@/app/auth/actions';
-import { createClient } from '@/lib/supabase/client';
+import { login } from '@/app/auth/actions';
+import { createClient } from '@/utils/supabase/client';
 
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -101,7 +101,7 @@ export default function RoleLoginPage() {
     setIsLoading(true);
     formData.append('role', role);
     
-    const result = await handleLogin(formData);
+    const result = await login(formData);
     
     if (result?.error) {
       toast({
@@ -110,12 +110,6 @@ export default function RoleLoginPage() {
         description: result.error,
       });
       setIsLoading(false);
-    } else {
-      toast({
-        title: 'Login successful',
-        description: `Welcome back! Redirecting to your ${role} dashboard...`,
-      });
-      router.push(`/${role}`);
     }
   };
 

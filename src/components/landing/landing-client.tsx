@@ -547,16 +547,18 @@ const Footer = () => {
           </div>
           
           {[
-            { title: "Methodology", links: ["AI Tutoring", "Virtual Labs", "Hybrid Learning", "Assessment"] },
-            { title: "Portals", links: ["Students", "Tutors", "Parents", "Administrators"] },
-            { title: "Resources", links: ["Library", "Forums", "Live Archive", "Support"] },
-            { title: "Institution", links: ["About", "Faculty", "Contact", "Privacy"] }
+            { title: "Methodology", links: [{label: "AI Tutoring", href: "#"}, {label: "Virtual Labs", href: "#"}, {label: "Hybrid Learning", href: "#"}, {label: "Assessment", href: "#"}] },
+            { title: "Portals", links: [{label: "Students", href: "/login/student"}, {label: "Tutors", href: "/login/tutor"}, {label: "Parents", href: "/login/parent"}, {label: "Administrators", href: "/login/admin"}] },
+            { title: "Resources", links: [{label: "Library", href: "#"}, {label: "Forums", href: "#"}, {label: "Live Archive", href: "#"}, {label: "Support", href: "#"}] },
+            { title: "Institution", links: [{label: "About", href: "#"}, {label: "Faculty", href: "#"}, {label: "Contact", href: "#"}, {label: "Privacy", href: "#"}] }
           ].map((section, i) => (
             <div key={i}>
               <h4 className="font-bold mb-8 text-xs uppercase tracking-[0.2em] text-fin-lime">{section.title}</h4>
               <ul className="space-y-5 text-white/50 font-medium">
                 {section.links.map((link, j) => (
-                  <li key={j}><a href="#" className="hover:text-white transition-colors">{link}</a></li>
+                  <li key={j}>
+                    <Link href={link.href} className="hover:text-white transition-colors">{link.label}</Link>
+                  </li>
                 ))}
               </ul>
             </div>

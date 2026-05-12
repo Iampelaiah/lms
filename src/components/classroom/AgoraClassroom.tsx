@@ -13,6 +13,7 @@ import {
 } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAgoraManualJoin } from '@/hooks/useAgoraManualJoin';
+import { useChat } from '@/hooks/use-chat';
 import { 
   Mic, 
   MicOff, 
@@ -42,6 +43,15 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { createClient } from '@/utils/supabase/client';
+import { useUser } from '@/components/providers/user-context';
+
+interface UserProfile {
+  id: string;
+  full_name: string;
+  role: string;
+  avatar_url?: string;
+}
 
 // Set Agora log level to Warning to suppress non-critical internal traffic_stats errors
 if (typeof window !== 'undefined') {
@@ -84,6 +94,9 @@ function ClassroomInner({
   const [micOn, setMic] = useState(false);
   const [videoOn, setVideo] = useState(false);
   const [joined, setJoined] = useState(false);
+  const { profile, loading: loadingProfile } = useUser();
+  const { messages, sendMessage } = useChat(channelName);
+  const [msgInput, setMsgInput] = useState('');
   
   // Agora Hooks
   const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack(micOn);
@@ -160,6 +173,16 @@ function ClassroomInner({
     return remoteUsers.filter(u => Number(u.uid) < 1000 || Number(u.uid) > 2000);
   }, [remoteUsers]);
 
+  // --- LOADING STATE ---
+  if (loadingProfile) {
+    return (
+      <div className="h-screen bg-[#0A1A12] flex flex-col items-center justify-center">
+        <div className="w-16 h-16 border-4 border-[#A7C957] border-t-transparent rounded-full animate-spin mb-6" />
+        <p className="text-white/40 text-lg animate-pulse font-medium">Verifying identity...</p>
+      </div>
+    );
+  }
+
   // --- PRE-JOIN LOBBY ---
   if (!isJoined) {
     return (
@@ -178,6 +201,7 @@ function ClassroomInner({
         isLoading={isJoinLoading}
         recovering={recovering}
         error={joinError}
+        profile={profile}
       />
     );
   }
@@ -202,8 +226,8 @@ function ClassroomInner({
            <SidebarIcon icon={Bell} />
            <SidebarIcon icon={Settings} />
            <Avatar className="w-10 h-10 border-2 border-white/10">
-              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
-              <AvatarFallback>{userName[0]}</AvatarFallback>
+              <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || userName}`} />
+              <AvatarFallback>{(profile?.full_name || userName)[0]}</AvatarFallback>
            </Avatar>
         </div>
       </aside>
@@ -214,8 +238,8 @@ function ClassroomInner({
         {/* Header */}
         <header className="px-8 py-6 flex items-center justify-between z-20">
           <div>
-            <h1 className="text-2xl font-bold text-white/90">Hello, {userName}!</h1>
-            <p className="text-sm text-white/40">{channelName} | Live Now</p>
+            <h1 className="text-2xl font-bold text-white/90">Hello, {profile?.full_name || userName}!</h1>
+            <p className="text-sm text-white/40">{channelName} | {profile?.role ? (profile.role.charAt(0).toUpperCase() + profile.role.slice(1)) : 'Participant'}</p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -336,7 +360,7 @@ function ClassroomInner({
                       )}
                       <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10">
                         <div className={cn("w-1.5 h-1.5 rounded-full", micOn ? "bg-green-500" : "bg-white/20")} />
-                        <span className="text-[10px] font-medium tracking-tight">You</span>
+                        <span className="text-[10px] font-medium tracking-tight">{profile?.full_name || userName}</span>
                       </div>
                     </div>
                  )}
@@ -400,51 +424,51 @@ function ClassroomInner({
                  </div>
 
                  <div className="flex-1 overflow-y-auto px-8 py-4 flex flex-col gap-6 custom-scrollbar">
-                    <ChatMessage 
-                      user="Jonathan Milton" 
-                      time="2:30 pm" 
-                      msg="Does anyone have the updated presentation? @ai_assistant" 
-                    />
-                    <ChatMessage 
-                      user="You" 
-                      time="2:31 pm" 
-                      msg="I'll share it shortly. 👍" 
-                      isMe
-                    />
-                    <ChatMessage 
-                      user="AI Assistant" 
-                      time="2:31 pm" 
-                      msg="📄 Q1 Strategy.pptx" 
-                      isAI
-                    />
-                    <ChatMessage 
-                      user="Jonathan Milton" 
-                      time="2:33 pm" 
-                      msg="Thanks! Let's review slide 5 together." 
-                    />
-                    <ChatMessage 
-                      user="You" 
-                      time="2:34 pm" 
-                      msg="We need to update the sales figures." 
-                      isMe
-                    />
-                    <ChatMessage 
-                      user="Marta E." 
-                      time="2:34 pm" 
-                      msg="Agreed. I'll provide the updated data by tomorrow." 
-                    />
+                    {messages.length === 0 ? (
+                      <div className="flex-1 flex flex-col items-center justify-center opacity-20">
+                        <Sparkles className="w-12 h-12 mb-4" />
+                        <p className="text-sm font-medium">No messages yet. Be the first to say hi!</p>
+                      </div>
+                    ) : (
+                      messages.map((msg) => (
+                        <ChatMessage 
+                          key={msg.id}
+                          user={msg.profiles?.full_name || 'Unknown'} 
+                          time={new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
+                          msg={msg.content} 
+                          isMe={msg.sender_id === profile?.id}
+                          avatar={msg.profiles?.avatar_url}
+                        />
+                      ))
+                    )}
                  </div>
 
                  <div className="p-8 pt-4">
-                    <div className="relative">
+                    <form 
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (msgInput.trim() && profile?.id) {
+                          sendMessage(msgInput, profile.id);
+                          setMsgInput('');
+                        }
+                      }}
+                      className="relative"
+                    >
                        <Input 
+                         value={msgInput}
+                         onChange={(e) => setMsgInput(e.target.value)}
                          placeholder="Type your message..." 
                          className="bg-white/5 border-none rounded-2xl py-7 pl-6 pr-14 text-sm focus-visible:ring-1 focus-visible:ring-white/20 transition-all placeholder:text-white/10"
                        />
-                       <Button size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 bg-[#A7C957] hover:bg-[#6A994E] rounded-xl w-10 h-10 transition-transform active:scale-95">
+                       <Button 
+                         type="submit"
+                         size="icon" 
+                         disabled={!msgInput.trim()}
+                         className="absolute right-3 top-1/2 -translate-y-1/2 bg-[#A7C957] hover:bg-[#6A994E] rounded-xl w-10 h-10 transition-transform active:scale-95 disabled:opacity-50"
+                       >
                           <Send className="w-4 h-4 text-[#0A1A12]" />
                        </Button>
-                    </div>
+                    </form>
                  </div>
               </div>
 
@@ -510,6 +534,10 @@ function LobbyScreen({
   onToggleVideo,
   onJoin,
   onLeave,
+  isLoading,
+  recovering,
+  error,
+  profile,
 }: {
   userName: string;
   channelName: string;
@@ -525,6 +553,7 @@ function LobbyScreen({
   isLoading?: boolean;
   recovering?: boolean;
   error?: string | null;
+  profile?: UserProfile | null;
 }) {
   return (
     <div className="flex h-screen bg-[#0A1A12] text-white items-center justify-center relative overflow-hidden">
@@ -540,7 +569,7 @@ function LobbyScreen({
 
         <h1 className="text-3xl font-bold mb-1 text-center">Ready to join?</h1>
         <p className="text-white/40 text-sm mb-8 text-center">
-          <span className="text-[#A7C957] font-semibold">{channelName}</span> · Hello, {userName}
+          <span className="text-[#A7C957] font-semibold">{profile?.id || channelName}</span> · Hello, {profile?.full_name || userName} {profile?.role && <span className="opacity-50 text-[10px] ml-1 uppercase tracking-tighter">({profile.role})</span>}
         </p>
 
         {/* Camera preview */}
@@ -570,7 +599,7 @@ function LobbyScreen({
           {/* Name badge */}
           <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full border border-white/10">
             <div className={cn('w-2 h-2 rounded-full', micOn ? 'bg-[#A7C957] animate-pulse' : 'bg-white/20')} />
-            <span className="text-xs font-medium">{userName}</span>
+            <span className="text-xs font-medium">{profile?.full_name || userName}</span>
           </div>
 
           {/* Error & Recovery badges */}
@@ -751,12 +780,12 @@ function InsightCard({ title, time, tasks, accomplished, progress, icon: Icon }:
   );
 }
 
-function ChatMessage({ user, time, msg, isMe = false, isAI = false }: any) {
+function ChatMessage({ user, time, msg, avatar, isMe = false, isAI = false }: any) {
   return (
     <div className={cn("flex flex-col gap-2", isMe && "items-end")}>
        <div className={cn("flex items-center gap-3", isMe && "flex-row-reverse")}>
           <Avatar className="w-8 h-8 border border-white/10">
-             <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user}`} />
+             <AvatarImage src={avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user}`} />
              <AvatarFallback>{user[0]}</AvatarFallback>
           </Avatar>
           <div className={cn("flex items-center gap-2", isMe && "flex-row-reverse")}>

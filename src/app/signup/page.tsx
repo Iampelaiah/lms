@@ -25,8 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { handleSignUp } from '@/app/auth/actions';
-import { createClient } from '@/lib/supabase/client';
+import { signup } from '@/app/auth/actions';
+import { createClient } from '@/utils/supabase/client';
 
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -85,9 +85,12 @@ export default function SignupPage() {
 
   const handleAction = async (formData: FormData) => {
     setIsLoading(true);
+    const firstName = formData.get('first-name') as string;
+    const lastName = formData.get('last-name') as string;
+    formData.append('fullName', `${firstName} ${lastName}`);
     formData.append('role', role);
     
-    const result = await handleSignUp(formData);
+    const result = await signup(formData);
     
     if (result?.error) {
       toast({
@@ -96,12 +99,6 @@ export default function SignupPage() {
         description: result.error,
       });
       setIsLoading(false);
-    } else {
-      toast({
-        title: 'Account Created!',
-        description: `Welcome to Dr Max online school as a ${role}. Please check your email for verification.`,
-      });
-      router.push(`/${role}`);
     }
   };
 
@@ -111,10 +108,8 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
+        // Role is passed via the `next` param — the callback reads it and upserts the profile
         redirectTo: `${window.location.origin}/auth/callback?next=/${role}`,
-        data: {
-          role: role,
-        },
       },
     });
 
@@ -205,6 +200,7 @@ export default function SignupPage() {
             {/* Social Buttons */}
             <div className="grid grid-cols-2 gap-4">
               <Button 
+                type="button"
                 variant="outline" 
                 className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
                 onClick={handleGoogleLogin}

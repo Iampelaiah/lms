@@ -3,6 +3,7 @@ import './globals.css';
 import '@/lib/server-polyfill';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
+import { UserProvider } from '@/components/providers/user-context';
 
 export const metadata: Metadata = {
   title: 'Dr Max online school',
@@ -35,8 +36,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
         >
+          <UserProvider>
             {children}
             <Toaster />
+          </UserProvider>
         </ThemeProvider>
       </body>
     </html>

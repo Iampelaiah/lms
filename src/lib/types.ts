@@ -84,10 +84,16 @@ export type ResourceSubject = {
 export type LiveClass = {
   id: string;
   title: string;
-  status: 'Upcoming' | 'Ongoing' | 'Completed';
-  time: string;
-  students: number;
-  imageUrl: string;
-  imageHint: string;
-  dyteMeetingId?: string;
+  status: 'upcoming' | 'ongoing' | 'completed';
+  time?: string;
+  schedule?: string;
+  students?: number;
+  imageUrl?: string;
+  imageHint?: string;
+  agora_channel_name?: string;
+  dyteMeetingId?: string; // Legacy
+  tutor?: {
+    full_name: string;
+    avatar_url?: string;
+  };
 }

@@ -39,7 +39,7 @@ import { Button } from '@/components/ui/button';
 import React from 'react';
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { studentData } from '@/lib/data';
+import { useUser } from '@/components/providers/user-context';
 
 const navItems = [
   { href: '/student', icon: LayoutDashboard, label: 'Dashboard' },
@@ -52,42 +52,29 @@ const navItems = [
 
 export function StudentSidebar() {
   const pathname = usePathname();
-  const [userName, setUserName] = React.useState('Student');
-  const [userInitials, setUserInitials] = React.useState('S');
+  const { profile, loading } = useUser();
   const { setTheme } = useTheme();
   const router = useRouter();
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('loggedInUser');
-    }
+    // In a real Supabase app, we'd use supabase.auth.signOut()
+    // For now, keeping the router push but we should ideally clear auth session
     router.push('/login');
   };
 
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const email = localStorage.getItem('loggedInUser');
-      // For this prototype, we'll assume a login email of 'alex.j@...' corresponds to Alex Johnson.
-      if (email && email.toLowerCase().startsWith('alex.j')) {
-        setUserName(studentData.name);
-        setUserInitials(studentData.name.split(' ').map(n => n[0]).join(''));
-      } else if (email) {
-          const namePart = email.split('@')[0];
-          const name = namePart.replace('.', ' ');
-          const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
-          setUserName(formattedName);
-          setUserInitials(formattedName.substring(0, 2).toUpperCase());
-      }
-    }
-  }, []);
+  const userName = profile?.full_name || 'Student';
+  const userInitials = profile?.full_name 
+    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
+    : 'S';
+  const avatarUrl = profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.id || 'default'}`;
 
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-                <AvatarImage src="https://picsum.photos/seed/101/100/100" alt={userName} data-ai-hint="student portrait" />
+                <AvatarImage src={avatarUrl} alt={userName} />
                 <AvatarFallback>{userInitials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">

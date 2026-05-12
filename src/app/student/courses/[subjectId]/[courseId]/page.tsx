@@ -1,80 +1,84 @@
-import { subjects } from '@/lib/data';
-import { notFound } from 'next/navigation';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+'use client';
+
+import { createClient } from '@/utils/supabase/client';
+import { notFound, useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-import { BookUser, Clock, PlayCircle, FileText, HelpCircle } from 'lucide-react';
+import { BookUser, Clock, PlayCircle, FileText, HelpCircle, ChevronLeft, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
 
-const lessonIcons = {
-  video: PlayCircle,
-  reading: FileText,
-  quiz: HelpCircle,
-};
+export default function LessonViewPage() {
+  const params = useParams();
+  const courseId = Array.isArray(params.subjectId) ? params.subjectId[0] : params.subjectId;
+  const lessonId = Array.isArray(params.courseId) ? params.courseId[0] : params.courseId;
+  const [lesson, setLesson] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
-export default function CourseDetailsPage({
-  params,
-}: {
-  params: { subjectId: string; courseId: string };
-}) {
-  const subject = subjects.find((s) => s.id === params.subjectId);
-  const course = subject?.courses.find((c) => c.id === params.courseId);
+  useEffect(() => {
+    const fetchLesson = async () => {
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('*')
+        .eq('id', lessonId)
+        .single();
+      
+      if (data) setLesson(data);
+      setLoading(false);
+    };
 
-  if (!course) {
+    if (lessonId) fetchLesson();
+  }, [lessonId]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Loading lesson...</p>
+      </div>
+    );
+  }
+
+  if (!lesson) {
     notFound();
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{course.name}</h1>
-        <p className="text-muted-foreground">{course.description}</p>
-        <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center">
-                <BookUser className="mr-2 h-4 w-4" />
-                <span>Tutor: {course.tutor}</span>
-            </div>
-            <div className="flex items-center">
-                <Clock className="mr-2 h-4 w-4" />
-                <span>Duration: {course.duration}</span>
-            </div>
-        </div>
+      <Button asChild variant="ghost" className="-ml-4">
+        <Link href={`/student/courses/${courseId}`}>
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back to Course
+        </Link>
+      </Button>
+
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">{lesson.title}</h1>
+        <Badge variant="outline">{lesson.video_url ? 'Video Lesson' : 'Reading Lesson'}</Badge>
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Curriculum</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {course.curriculum.length > 0 ? (
-            <Accordion type="single" collapsible className="w-full">
-              {course.curriculum.map((lesson, index) => {
-                const Icon = lessonIcons[lesson.type];
-                return (
-                  <AccordionItem value={`item-${index}`} key={lesson.id}>
-                    <AccordionTrigger>
-                        <div className="flex items-center gap-4">
-                            <Icon className="h-5 w-5 text-primary" />
-                            <span>{lesson.title}</span>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pl-11">
-                      <div className="flex items-center justify-between">
-                        <p>Lesson content will appear here.</p>
-                        <Badge variant="secondary">{lesson.duration} min</Badge>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
-            </Accordion>
-          ) : (
-            <p className="text-muted-foreground">The curriculum for this course is not yet available.</p>
-          )}
+      {lesson.video_url && (
+        <div className="aspect-video w-full overflow-hidden rounded-xl bg-black shadow-lg">
+           {/* Replace with a real video player later */}
+           <div className="w-full h-full flex flex-col items-center justify-center text-white/40">
+              <PlayCircle className="w-16 h-16 mb-4" />
+              <p>Video Player Placeholder</p>
+              <p className="text-xs">{lesson.video_url}</p>
+           </div>
+        </div>
+      )}
+
+      <Card className="border-none shadow-none bg-transparent">
+        <CardContent className="p-0 prose prose-lg dark:prose-invert max-w-none">
+          <div className="bg-card p-8 rounded-2xl border shadow-sm">
+            {lesson.content ? (
+              <p className="whitespace-pre-wrap">{lesson.content}</p>
+            ) : (
+              <p className="text-muted-foreground italic">This lesson has no written content yet.</p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

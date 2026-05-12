@@ -1,6 +1,6 @@
 'use client';
 
-import { communities } from '@/lib/data';
+import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import {
@@ -18,12 +18,18 @@ import {
   ArrowBigUp,
   ArrowBigDown,
   Book,
+  Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
 import { SchoolHeader } from '@/components/app/school-header';
 import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useUser } from '@/components/providers/user-context';
+import { CreatePostDialog } from '@/components/app/community/create-post-dialog';
 
-function AboutCommunity({ community }: { community: (typeof communities)[0] }) {
+function AboutCommunity({ community }: { community: any }) {
+
+function AboutCommunity({ community }: { community: any }) {
   return (
     <Card>
       <CardHeader>
@@ -34,7 +40,7 @@ function AboutCommunity({ community }: { community: (typeof communities)[0] }) {
         <div className="flex items-center gap-2">
           <Book className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">
-            {community.members} members
+            Active Forum
           </span>
         </div>
         <Button className="w-full">Join Community</Button>
@@ -46,7 +52,91 @@ function AboutCommunity({ community }: { community: (typeof communities)[0] }) {
 export default function CommunityPostsPage() {
   const params = useParams();
   const communityId = Array.isArray(params.communityId) ? params.communityId[0] : params.communityId;
-  const community = communities.find((c) => c.id === communityId);
+  const [community, setCommunity] = useState<any>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { profile } = useUser();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchCommunityData = async () => {
+      // Fetch Community
+      const { data: commData } = await supabase
+        .from('communities')
+        .select('*')
+        .eq('id', communityId)
+        .single();
+      
+      if (commData) {
+        setCommunity(commData);
+        // Fetch Posts
+        const { data: postData } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            author:profiles!posts_author_id_fkey (
+              full_name,
+              avatar_url
+            )
+          `)
+          .eq('community_id', communityId)
+          .order('created_at', { ascending: false });
+        
+        if (postData) setPosts(postData);
+      }
+      setLoading(false);
+    };
+
+    if (communityId) {
+        fetchCommunityData();
+
+        // Real-time subscription
+        const channel = supabase
+            .channel(`community-${communityId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'posts',
+                filter: `community_id=eq.${communityId}`
+            }, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    // Fetch the full post with author info to append
+                    supabase
+                        .from('posts')
+                        .select(`
+                            *,
+                            author:profiles!posts_author_id_fkey (
+                                full_name,
+                                avatar_url
+                            )
+                        `)
+                        .eq('id', payload.new.id)
+                        .single()
+                        .then(({ data }) => {
+                            if (data) setPosts(current => [data, ...current]);
+                        });
+                } else if (payload.eventType === 'DELETE') {
+                    setPosts(current => current.filter(p => p.id !== payload.old.id));
+                } else if (payload.eventType === 'UPDATE') {
+                    setPosts(current => current.map(p => p.id === payload.new.id ? { ...p, ...payload.new } : p));
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }
+  }, [communityId]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Loading discussion...</p>
+      </div>
+    );
+  }
 
   if (!community) {
     return (
@@ -66,25 +156,13 @@ export default function CommunityPostsPage() {
     );
   }
 
-  const iconMap: Record<string, React.ElementType> = {
-    'math-club': () => <span className="text-2xl font-bold">∑</span>,
-    'history-buffs': () => (
-      <span className="text-2xl font-bold">🏛️</span>
-    ),
-    'science-explorers': () => (
-      <span className="text-2xl font-bold">🔬</span>
-    ),
-    'book-worms': () => <span className="text-2xl font-bold">📚</span>,
-  };
-  const Icon = iconMap[community.id] || (() => <span />);
-
   return (
     <div className="space-y-6">
       <SchoolHeader />
       <div className="relative">
         <div className="h-48 md:h-72 w-full overflow-hidden rounded-lg">
           <Image
-            src="https://picsum.photos/seed/community-banner/1200/300"
+            src={community.image_url || "https://picsum.photos/seed/community-banner/1200/300"}
             alt={`${community.name} banner`}
             width={1200}
             height={300}
@@ -94,8 +172,10 @@ export default function CommunityPostsPage() {
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background to-transparent">
           <div className="container mx-auto px-6 flex items-end gap-4">
-            <div className="-mb-8 h-20 w-20 rounded-full bg-secondary border-4 border-background flex items-center justify-center">
-              <Icon />
+            <div className="-mb-8 h-20 w-20 rounded-full bg-secondary border-4 border-background flex items-center justify-center overflow-hidden">
+               <Avatar className="w-full h-full">
+                  <AvatarFallback className="text-2xl font-bold">{community.name[0]}</AvatarFallback>
+               </Avatar>
             </div>
             <div className="flex-grow">
               <h1 className="text-2xl md:text-3xl font-bold">
@@ -104,9 +184,9 @@ export default function CommunityPostsPage() {
               <p className="text-muted-foreground">{community.description}</p>
             </div>
             <div className="hidden sm:flex items-center gap-2">
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Create Post
-              </Button>
+              {profile?.id && (
+                <CreatePostDialog communityId={communityId} authorId={profile.id} />
+              )}
               <Button variant="outline">Join</Button>
               <Button variant="ghost" size="icon">
                 <MoreHorizontal className="h-4 w-4" />
@@ -118,16 +198,20 @@ export default function CommunityPostsPage() {
 
       <div className="pt-10 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-4">
-           <Button className="w-full sm:hidden">
-                <PlusCircle className="mr-2 h-4 w-4" /> Create Post
-            </Button>
-          {community.posts.map((post) => (
+           {profile?.id && (
+                <CreatePostDialog 
+                    communityId={communityId} 
+                    authorId={profile.id} 
+                    trigger={<Button className="w-full sm:hidden mb-4"><PlusCircle className="mr-2 h-4 w-4" /> Create Post</Button>}
+                />
+            )}
+          {posts.map((post) => (
             <Card key={post.id} className="flex gap-2 p-2">
               <div className="flex flex-col items-center p-2 bg-muted/50 rounded-md">
                 <Button variant="ghost" size="icon">
                   <ArrowBigUp />
                 </Button>
-                <span className="font-bold text-sm">256</span>
+                <span className="font-bold text-sm">0</span>
                 <Button variant="ghost" size="icon">
                   <ArrowBigDown />
                 </Button>
@@ -142,30 +226,42 @@ export default function CommunityPostsPage() {
                       <div className="flex items-center gap-1">
                         <Avatar className="h-5 w-5">
                           <AvatarImage
-                            src={post.author.avatarUrl}
-                            alt={post.author.name}
-                            data-ai-hint={post.author.avatarHint}
+                            src={post.author?.avatar_url}
+                            alt={post.author?.full_name}
                           />
                           <AvatarFallback>
-                            {post.author.name.charAt(0)}
+                            {post.author?.full_name?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-semibold text-foreground">Posted by {post.author.name}</span>
+                        <span className="font-semibold text-foreground">Posted by {post.author?.full_name || 'Unknown'}</span>
                       </div>
                       <span>&middot;</span>
-                      <span>{post.createdAt}</span>
+                      <span>{new Date(post.created_at).toLocaleDateString()}</span>
                     </CardDescription>
                      <CardTitle className="text-lg pt-1">{post.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MessageSquare className="h-4 w-4" />
-                    <span>{post.commentCount} comments</span>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm line-clamp-3">{post.content}</p>
+                    {post.image_url && (
+                        <div className="relative aspect-video w-full rounded-md overflow-hidden border bg-muted">
+                            <Image 
+                                src={post.image_url} 
+                                alt={post.title} 
+                                fill 
+                                className="object-contain" 
+                            />
+                        </div>
+                    )}
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+                        <MessageSquare className="h-4 w-4" />
+                        <span>0 comments</span>
+                    </div>
                   </CardContent>
                 </Card>
               </Link>
             </Card>
           ))}
-          {community.posts.length === 0 && (
+          {posts.length === 0 && (
             <div className="text-center py-16 text-muted-foreground border rounded-lg">
               <p>No posts yet. Be the first to start a discussion!</p>
             </div>

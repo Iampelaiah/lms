@@ -9,14 +9,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { studentData, liveClasses } from '@/lib/data';
-import { BrainCircuit, Lightbulb, Video, Calendar, Clock } from 'lucide-react';
+import { BrainCircuit, Lightbulb, Video, Calendar, Clock, Loader2, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { DetailedProgressCard } from "@/components/app/student/dashboard/subject-progress-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import { SchoolHeader } from '@/components/app/school-header';
-import React from 'react';
+import { useUser } from '@/components/providers/user-context';
+import { createClient } from '@/utils/supabase/client';
+import { LiveClass } from '@/lib/types';
+import React, { useEffect, useState } from 'react';
 
 function AiStudyPanel() {
   return (
@@ -37,7 +39,7 @@ function AiStudyPanel() {
   )
 }
 
-function AiTutorAssistant() {
+function AiTutorAssistant({ courses }: { courses: any[] }) {
   return (
     <Card>
       <CardHeader>
@@ -55,30 +57,23 @@ function AiTutorAssistant() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Select>
             <SelectTrigger>
-              <SelectValue placeholder="Select Grade Level" />
+              <SelectValue placeholder="Select Subject" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="form-1">Form 1</SelectItem>
-              <SelectItem value="form-2">Form 2</SelectItem>
-              <SelectItem value="form-3">Form 3</SelectItem>
-              <SelectItem value="form-4">Form 4</SelectItem>
-              <SelectItem value="form-5">Form 5</SelectItem>
-              <SelectItem value="form-6">Form 6</SelectItem>
-              <SelectItem value="9">Grade 9</SelectItem>
-              <SelectItem value="10">Grade 10</SelectItem>
-              <SelectItem value="11">Grade 11</SelectItem>
-              <SelectItem value="12">Grade 12</SelectItem>
+              {courses.map(course => (
+                <SelectItem key={course.name} value={course.name.toLowerCase()}>{course.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select>
             <SelectTrigger>
-              <SelectValue placeholder="Select Subject" />
+              <SelectValue placeholder="Focus Area" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="math">Mathematics</SelectItem>
-              <SelectItem value="physics">Physics</SelectItem>
-              <SelectItem value="history">History</SelectItem>
-              <SelectItem value="english">English</SelectItem>
+              <SelectItem value="conceptual">Conceptual Understanding</SelectItem>
+              <SelectItem value="problem-solving">Problem Solving</SelectItem>
+              <SelectItem value="revision">Revision</SelectItem>
+              <SelectItem value="exam-prep">Exam Preparation</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -92,7 +87,42 @@ function AiTutorAssistant() {
 }
 
 function UpcomingLiveClass() {
-  const upcomingClass = liveClasses.find(c => c.status === "Ongoing") || liveClasses.find(c => c.status === "Upcoming");
+  const [upcomingClass, setUpcomingClass] = useState<LiveClass | null>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchUpcoming = async () => {
+      const { data, error } = await supabase
+        .from('classes')
+        .select(`
+          *,
+          tutor:profiles!classes_tutor_id_fkey (
+            full_name
+          )
+        `)
+        .or('status.eq.ongoing,status.eq.upcoming')
+        .order('schedule', { ascending: true })
+        .limit(1)
+        .single();
+
+      if (data && !error) {
+        setUpcomingClass(data as any);
+      }
+      setLoading(false);
+    };
+
+    fetchUpcoming();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card className="animate-pulse">
+        <CardHeader><div className="h-6 w-32 bg-muted rounded" /></CardHeader>
+        <CardContent><div className="aspect-[3/2] bg-muted rounded mb-4" /></CardContent>
+      </Card>
+    );
+  }
 
   if (!upcomingClass) {
     return (
@@ -123,72 +153,123 @@ function UpcomingLiveClass() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="aspect-[3/2] rounded-lg overflow-hidden">
-          <Image src={upcomingClass.imageUrl} alt="Live class thumbnail" width={600} height={400} className="object-cover w-full h-full" data-ai-hint={upcomingClass.imageHint} />
+        <div className="aspect-[3/2] rounded-lg overflow-hidden relative">
+          {upcomingClass.imageUrl ? (
+            <Image src={upcomingClass.imageUrl} alt="Live class thumbnail" fill className="object-cover" />
+          ) : (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <Video className="w-12 h-12 text-muted-foreground/20" />
+            </div>
+          )}
         </div>
         <div>
           <h3 className="font-bold text-lg">{upcomingClass.title}</h3>
-          <p className="text-sm text-muted-foreground">with Prof. Alistair Finch</p>
+          <p className="text-sm text-muted-foreground">with {upcomingClass.tutor?.full_name || 'Tutor'}</p>
         </div>
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="w-4 h-4" />
-            <span>{upcomingClass.time.split(' at ')[0]}</span>
+            <span>{upcomingClass.schedule ? new Date(upcomingClass.schedule).toLocaleDateString() : 'TBD'}</span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Clock className="w-4 h-4" />
-            <span>{upcomingClass.time.split(' at ')[1]}</span>
+            <span>{upcomingClass.schedule ? new Date(upcomingClass.schedule).toLocaleTimeString() : 'TBD'}</span>
           </div>
         </div>
         <Button className="w-full" asChild>
-          <Link href={`/student/live-classes/${upcomingClass.id}`}>Join Class</Link>
+          <Link href={`/classroom/${upcomingClass.id}`}>Join Classroom</Link>
         </Button>
       </CardContent>
     </Card>
   )
 }
 
+function SecurityAlert() {
+  const { user } = useUser();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Check if user is logged in via Google (OAuth)
+    // Most OAuth users won't have a local password set initially
+    if (user?.app_metadata?.provider === 'google' || user?.app_metadata?.providers?.includes('google')) {
+      setIsVisible(true);
+    }
+  }, [user]);
+
+  if (!isVisible) return null;
+
+  return (
+    <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 mb-6">
+      <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-full">
+            <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">Secure Your Account</p>
+            <p className="text-xs text-muted-foreground">Since you signed in with Google, we recommend setting up a permanent password for extra security.</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+           <Button variant="outline" size="sm" onClick={() => setIsVisible(false)}>Later</Button>
+           <Button size="sm" asChild>
+             <Link href="/student/settings?tab=security">Set Password</Link>
+           </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function StudentDashboardPage() {
-  const [userName, setUserName] = React.useState(studentData.name);
+  const { profile } = useUser();
+  const [courses, setCourses] = React.useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = React.useState(true);
+  const supabase = createClient();
+  const userName = profile?.full_name || 'Student';
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const email = localStorage.getItem('loggedInUser');
-      if (email && email.toLowerCase().startsWith('alex.j')) {
-        setUserName(studentData.name);
-      } else {
-        setUserName('Student');
-      }
-    }
-  }, []);
+    const fetchProgress = async () => {
+      if (!profile?.id) return;
 
-  const subjectsWithProgress = [
-    { name: 'Mathematics', overallProgress: 75, icon: 'BookOpen', topics: [
-        { name: 'Algebra II', progress: 90 },
-        { name: 'Geometry Proofs', progress: 60 },
-        { name: 'Intro to Calculus', progress: 75 },
-        { name: 'Advanced Trigonometry', progress: 80 },
-        { name: 'Probability & Statistics', progress: 65 }
-    ]},
-    { name: 'Physics', overallProgress: 60, icon: 'BookOpen', topics: [
-        { name: 'Kinematics', progress: 70 },
-        { name: 'Thermodynamics', progress: 50 },
-        { name: 'Electromagnetism', progress: 65 },
-        { name: 'Quantum Mechanics', progress: 45 },
-        { name: 'Optics', progress: 75 }
-    ]},
-    { name: 'History', overallProgress: 88, icon: 'BookOpen', topics: [
-        { name: 'The American Revolution', progress: 95 },
-        { name: 'The Roman Empire', progress: 88 },
-        { name: 'The Renaissance Period', progress: 85 },
-        { name: 'World War I', progress: 92 },
-        { name: 'The Cold War Era', progress: 80 }
-    ]},
-  ]
+      // Fetch enrolled courses for this student with lesson/progress data
+      const { data: enrollments } = await supabase
+        .from('enrollments')
+        .select(`
+          course:courses (
+            id,
+            title,
+            lessons (id),
+            student_progress (completed)
+          )
+        `)
+        .eq('student_id', profile.id);
+
+      if (enrollments) {
+        const formatted = enrollments
+          .map(e => e.course)
+          .filter(Boolean)
+          .map((course: any) => {
+            const totalLessons = course.lessons?.length || 0;
+            const completedLessons = course.student_progress?.filter((p: any) => p.completed).length || 0;
+            const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+            return {
+              name: course.title,
+              overallProgress: progress,
+              topics: [] // Clear mock topics
+            };
+          });
+        setCourses(formatted);
+      }
+      setLoadingCourses(false);
+    };
+
+    if (profile?.id) fetchProgress();
+  }, [profile?.id]);
   return (
     <div className="space-y-6">
         <SchoolHeader />
+        <SecurityAlert />
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
           Welcome back, {userName}!
@@ -201,20 +282,42 @@ export default function StudentDashboardPage() {
      <AiStudyPanel />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {subjectsWithProgress.map((subject, index) => (
-            <DetailedProgressCard 
-                key={subject.name} 
-                subject={subject.name}
-                overallProgress={subject.overallProgress}
-                topics={subject.topics}
-                autoplayDelay={2000 + index * 500}
-            />
-        ))}
+        {loadingCourses ? (
+          [1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader><div className="h-6 w-32 bg-muted rounded" /></CardHeader>
+              <CardContent><div className="h-32 bg-muted rounded" /></CardContent>
+            </Card>
+          ))
+        ) : courses.length > 0 ? (
+          courses.map((course, index) => (
+              <DetailedProgressCard 
+                  key={course.name} 
+                  subject={course.name}
+                  overallProgress={course.overallProgress}
+                  topics={course.topics}
+                  autoplayDelay={2000 + index * 500}
+              />
+          ))
+        ) : (
+          <Card className="md:col-span-2 lg:col-span-3 p-12 text-center bg-muted/10 border-dashed border-2 flex flex-col items-center gap-4">
+             <div className="bg-muted p-4 rounded-full">
+                <Lightbulb className="w-8 h-8 text-muted-foreground/40" />
+             </div>
+             <div className="space-y-1">
+                <h3 className="font-bold text-lg">No Courses Enrolled</h3>
+                <p className="text-muted-foreground text-sm">Enroll in a course to track your progress and access AI study tools.</p>
+             </div>
+             <Button asChild variant="outline">
+                <Link href="/student/courses">Browse Courses</Link>
+             </Button>
+          </Card>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-            <AiTutorAssistant />
+            <AiTutorAssistant courses={courses} />
         </div>
         <div>
             <UpcomingLiveClass />

@@ -28,10 +28,11 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from '@/components/ui/chart';
-import { studentData } from '@/lib/data';
-import type { PieSectorDataItem } from 'recharts/types/polar/Pie';
+import { createClient } from '@/utils/supabase/client';
+import { useUser } from '@/components/providers/user-context';
+import React, { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
-const gradeData = studentData.progress;
 const chartConfig = {
   grade: {
     label: 'Grade',
@@ -43,21 +44,72 @@ const chartConfig = {
   }
 };
 
-const progressOverTimeData = [
-    { month: 'Jan', grade: 75 },
-    { month: 'Feb', grade: 78 },
-    { month: 'Mar', grade: 85 },
-    { month: 'Apr', grade: 82 },
-    { month: 'May', grade: 88 },
-];
-
-const assignmentStatusData = [
-    { status: 'Completed', value: 42, fill: 'hsl(var(--chart-1))' },
-    { status: 'In Progress', value: 15, fill: 'hsl(var(--chart-2))' },
-    { status: 'Not Started', value: 8, fill: 'hsl(var(--chart-5))' },
-]
-
 export function ProgressCharts() {
+  const { profile } = useUser();
+  const [gradeData, setGradeData] = useState<any[]>([]);
+  const [assignmentStatusData, setAssignmentStatusData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchProgressData = async () => {
+      if (!profile?.id) return;
+
+      const { data: progressData } = await supabase
+        .from('student_progress')
+        .select(`
+          score,
+          completed,
+          course:courses (name)
+        `)
+        .eq('student_id', profile.id);
+
+      if (progressData) {
+        // Group by course
+        const coursesMap: Record<string, { total: number, count: number, completed: number, notStarted: number }> = {};
+        
+        progressData.forEach((p: any) => {
+          const name = p.course?.name || 'Unknown';
+          if (!coursesMap[name]) {
+            coursesMap[name] = { total: 0, count: 0, completed: 0, notStarted: 0 };
+          }
+          if (p.score !== null) {
+            coursesMap[name].total += p.score;
+            coursesMap[name].count += 1;
+          }
+          if (p.completed) coursesMap[name].completed += 1;
+          else coursesMap[name].notStarted += 1;
+        });
+
+        const formattedGrades = Object.entries(coursesMap).map(([name, stats]) => ({
+          subject: name,
+          grade: stats.count > 0 ? Math.round(stats.total / stats.count) : 0
+        }));
+
+        setGradeData(formattedGrades);
+
+        const totalCompleted = progressData.filter((p: any) => p.completed).length;
+        const totalPending = progressData.filter((p: any) => !p.completed).length;
+
+        setAssignmentStatusData([
+          { status: 'Completed', value: totalCompleted, fill: 'hsl(var(--chart-1))' },
+          { status: 'In Progress', value: totalPending, fill: 'hsl(var(--chart-2))' },
+          { status: 'Not Started', value: 0, fill: 'hsl(var(--chart-5))' },
+        ]);
+      }
+      setLoading(false);
+    };
+
+    fetchProgressData();
+  }, [profile?.id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
@@ -66,60 +118,53 @@ export function ProgressCharts() {
           <CardDescription>A comparison of your current grades.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={gradeData}>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="subject" tickLine={false} axisLine={false} />
-                <YAxis />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="dashed" />}
-                />
-                <Bar dataKey="grade" fill="var(--color-grade)" radius={4} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+          {gradeData.length > 0 ? (
+            <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={gradeData}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="subject" tickLine={false} axisLine={false} />
+                  <YAxis />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dashed" />}
+                  />
+                  <Bar dataKey="grade" fill="var(--color-grade)" radius={4} />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground bg-muted/5 rounded-lg border border-dashed">
+              <p>No grade data available.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
       
       <Card>
         <CardHeader>
-          <CardTitle>Progress Over Time</CardTitle>
-          <CardDescription>Your average grade trend this semester.</CardDescription>
+          <CardTitle>Assignment Completion</CardTitle>
+          <CardDescription>A breakdown of your lesson completion.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={progressOverTimeData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <RechartsTooltip content={<ChartTooltipContent />} />
-                <Line type="monotone" dataKey="grade" stroke="var(--color-grade)" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+        <CardContent className="flex items-center justify-center">
+            {assignmentStatusData.some(d => d.value > 0) ? (
+              <ChartContainer config={{}} className="min-h-[250px] w-full max-w-sm">
+                   <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                      <RechartsTooltip content={<ChartTooltipContent nameKey="status" hideLabel />} />
+                      <Pie data={assignmentStatusData} dataKey="value" nameKey="status" innerRadius={60} />
+                      <ChartLegend content={<ChartLegendContent nameKey="status"/>} />
+                      </PieChart>
+                  </ResponsiveContainer>
+              </ChartContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[250px] w-full text-muted-foreground bg-muted/5 rounded-lg border border-dashed">
+                <p>No completion data.</p>
+              </div>
+            )}
         </CardContent>
       </Card>
 
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle>Assignment Status</CardTitle>
-          <CardDescription>A breakdown of your current assignments.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center">
-            <ChartContainer config={{}} className="min-h-[250px] w-full max-w-sm">
-                 <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                    <RechartsTooltip content={<ChartTooltipContent nameKey="status" hideLabel />} />
-                    <Pie data={assignmentStatusData} dataKey="value" nameKey="status" innerRadius={60} />
-                    <ChartLegend content={<ChartLegendContent nameKey="status"/>} />
-                    </PieChart>
-                </ResponsiveContainer>
-            </ChartContainer>
-        </CardContent>
-      </Card>
     </div>
   );
 }

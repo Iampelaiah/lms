@@ -15,7 +15,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
 } from '@/components/ui/sidebar';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/utils/supabase/client';
 import {
   User,
   LayoutDashboard,
@@ -39,12 +39,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useUser } from '@/components/providers/user-context';
 
 function TutorSidebar() {
   const pathname = usePathname();
-  const [userName, setUserName] = React.useState('Tutor');
-  const [userInitials, setUserInitials] = React.useState('T');
-  const [avatarUrl, setAvatarUrl] = React.useState("https://picsum.photos/seed/tutor-avatar/100/100");
+  const { profile, loading } = useUser();
   const { setTheme } = useTheme();
   const router = useRouter();
 
@@ -63,31 +62,13 @@ function TutorSidebar() {
     { href: '/tutor/live-classes', icon: Video, label: 'Live Classes' },
   ];
 
-  React.useEffect(() => {
-    const fetchUser = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const fullName = user.user_metadata?.full_name || 'Tutor';
-        const avatar = user.user_metadata?.avatar_url || "https://picsum.photos/seed/tutor-avatar/100/100";
-        
-        setUserName(fullName);
-        setAvatarUrl(avatar);
-        
-        // Generate initials
-        const initials = fullName
-          .split(' ')
-          .map((n: string) => n[0])
-          .join('')
-          .toUpperCase()
-          .substring(0, 2);
-        setUserInitials(initials || 'T');
-      }
-    };
-
-    fetchUser();
-  }, []);
+  const userName = profile?.full_name || 'Tutor';
+  const userInitials = userName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2) || 'T';
 
   return (
     <Sidebar variant="floating" collapsible="icon">
@@ -95,7 +76,7 @@ function TutorSidebar() {
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10">
             <AvatarImage
-              src={avatarUrl}
+              src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || 'Tutor'}`}
               alt="Tutor"
               data-ai-hint="teacher portrait"
             />

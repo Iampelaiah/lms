@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { createClient } from '@/lib/supabase/client';
-import { handleLogin as handleSupabaseLogin } from '@/app/auth/actions';
+import { createClient } from '@/utils/supabase/client';
+import { login } from '@/app/auth/actions';
 
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -75,6 +76,13 @@ const roles = [
   { id: 'admin', name: 'Admin', icon: UserCog },
 ];
 
+const roleImagePositions: Record<string, string> = {
+  tutor: '0%',
+  parent: '33.33%',
+  admin: '66.66%',
+  student: '100%',
+};
+
 export default function LoginPage() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -88,11 +96,20 @@ export default function LoginPage() {
     setMounted(true);
 
     const error = searchParams.get('error');
-    if (error === 'role_mismatch') {
+    const message = searchParams.get('message');
+
+    if (error) {
       toast({
         variant: 'destructive',
-        title: 'Access Denied',
-        description: 'You do not have access to this role.',
+        title: 'Error',
+        description: error,
+      });
+    }
+
+    if (message) {
+      toast({
+        title: 'Success',
+        description: message,
       });
     }
   }, [searchParams, toast]);
@@ -127,7 +144,7 @@ export default function LoginPage() {
     const formData = new FormData(e.currentTarget);
     formData.append('role', role);
     
-    const result = await handleSupabaseLogin(formData);
+    const result = await login(formData);
     
     if (result?.error) {
       toast({
@@ -136,12 +153,6 @@ export default function LoginPage() {
         description: result.error,
       });
       setIsLoading(false);
-    } else {
-      toast({
-        title: 'Login successful',
-        description: `Welcome back! Redirecting to your ${role} dashboard...`,
-      });
-      router.push(`/${role}`);
     }
   };
 
@@ -181,27 +192,42 @@ export default function LoginPage() {
               onClick={() => handleRoleChange(r.id)}
               className={`relative rounded-[1.5rem] p-3 flex flex-col justify-between h-28 transition-all duration-200 text-left overflow-hidden ${
                 role === r.id
-                  ? 'bg-[#00FFCC]/10 border border-[#00FFCC] shadow-[0_0_15px_rgba(0,255,204,0.2)] ring-1 ring-[#00FFCC] scale-105'
-                  : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                  ? 'bg-[#00FFCC]/10 border border-[#00FFCC] shadow-[0_0_15px_rgba(0,255,204,0.2)] ring-1 ring-[#00FFCC] scale-105 z-20'
+                  : 'bg-white/5 border border-white/10 hover:bg-white/10 opacity-60 hover:opacity-100'
               }`}
             >
-              <div className="flex flex-col h-full justify-between">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+              <div className="absolute inset-0 pointer-events-none">
+                <Image
+                  src="/roles-composite.png"
+                  alt={r.name}
+                  fill
+                  className="object-cover"
+                  style={{ objectPosition: `${roleImagePositions[r.id]} 0%` }}
+                  priority
+                />
+                {/* Overlay to ensure text readability or active state tint */}
+                <div className={`absolute inset-0 transition-opacity duration-200 ${
+                  role === r.id ? 'bg-[#00FFCC]/10' : 'bg-black/40'
+                }`} />
+              </div>
+
+              <div className="relative z-10 flex flex-col h-full justify-between">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-lg ${
                   role === r.id ? 'bg-[#00FFCC] text-black' : 'bg-white/20 text-white'
                 }`}>
                   <r.icon className="w-4 h-4" />
                 </div>
                 <div className="space-y-2">
-                  <p className={`font-bold text-sm leading-snug ${
-                    role === r.id ? 'text-white' : 'text-white/40'
+                  <p className={`font-bold text-sm leading-snug drop-shadow-md ${
+                    role === r.id ? 'text-white' : 'text-white/60'
                   }`}>
                     Sign in as <br /> {r.name}
                   </p>
                   <Link
                     href={`/${r.id}`}
                     onClick={(e) => e.stopPropagation()}
-                    className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                      role === r.id ? 'text-[#00FFCC] hover:text-white' : 'text-gray-500 hover:text-white'
+                    className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors drop-shadow-sm ${
+                      role === r.id ? 'text-[#00FFCC] hover:text-white' : 'text-gray-400 hover:text-white'
                     }`}
                   >
                     <Eye className="h-3 w-3" />

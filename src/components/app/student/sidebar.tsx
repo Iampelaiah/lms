@@ -36,10 +36,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/utils/supabase/client';
 import React from 'react';
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useUser } from '@/components/providers/user-context';
 
 const navItems = [
   { href: '/student', icon: LayoutDashboard, label: 'Dashboard' },
@@ -53,8 +54,7 @@ const navItems = [
 
 export function StudentSidebar() {
   const pathname = usePathname();
-  const [userName, setUserName] = React.useState('Student');
-  const [userInitials, setUserInitials] = React.useState('S');
+  const { profile, loading } = useUser();
   const { setTheme } = useTheme();
   const router = useRouter();
 
@@ -65,35 +65,20 @@ export function StudentSidebar() {
     router.push('/login');
   };
 
-  React.useEffect(() => {
-    const fetchUser = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const fullName = user.user_metadata?.full_name || 'Student';
-        setUserName(fullName);
-        
-        // Generate initials
-        const initials = fullName
-          .split(' ')
-          .map((n: string) => n[0])
-          .join('')
-          .toUpperCase()
-          .substring(0, 2);
-        setUserInitials(initials || 'S');
-      }
-    };
-
-    fetchUser();
-  }, []);
+  const userName = profile?.full_name || 'Student';
+  const userInitials = userName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2) || 'S';
 
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-                <AvatarImage src="https://picsum.photos/seed/101/100/100" alt="Alex Johnson" data-ai-hint="student portrait" />
+                <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || 'Student'}`} alt={userName} data-ai-hint="student portrait" />
                 <AvatarFallback>{userInitials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
