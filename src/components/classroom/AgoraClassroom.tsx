@@ -42,7 +42,8 @@ import {
   Monitor,
   MonitorOff,
   Presentation,
-  AlertTriangle
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import { 
   AlertDialog,
@@ -126,6 +127,11 @@ function ClassroomInner({
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
+  // Stable ref to the subscribed Supabase broadcast channel.
+  // IMPORTANT: supabase.channel(name).send() creates a NEW ephemeral channel
+  // each call — it does NOT reuse the already-subscribed one. Every .send()
+  // must go through this ref instead.
+  const broadcastChannelRef = useRef<any>(null);
 
   // Determine if the CURRENT user is the tutor/host using ALL available signals
   const iAmTutor = useMemo(() => {
@@ -208,19 +214,29 @@ function ClassroomInner({
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(ch); };
+    broadcastChannelRef.current = ch;
+
+    return () => {
+      broadcastChannelRef.current = null;
+      supabase.removeChannel(ch);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelName]);
 
-  // Announce our own identity when we join the Agora channel
+  // Announce our own identity when we join the Agora channel.
+  // Small delay ensures the broadcast channel subscription is fully active.
   useEffect(() => {
     if (!isJoined || !profile) return;
-    supabase.channel(`classroom:${channelName}`).send({
-      type: 'broadcast',
-      event: 'identity',
-      payload: { uid, name: profile.full_name || userName, role: iAmTutor ? 'tutor' : 'student' },
-    });
-  }, [isJoined, profile, uid, userName, iAmTutor, channelName, supabase]);
+    const t = setTimeout(() => {
+      broadcastChannelRef.current?.send({
+        type: 'broadcast',
+        event: 'identity',
+        payload: { uid, name: profile.full_name || userName, role: iAmTutor ? 'tutor' : 'student' },
+      });
+    }, 600);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isJoined, profile]);
 
   // Auto-clear raise hand when a remote user leaves the Agora channel
   useEffect(() => {
@@ -238,7 +254,7 @@ function ClassroomInner({
     setIsEnding(true);
     try {
       await supabase.from('classes').update({ status: 'completed' }).eq('id', channelName);
-      await supabase.channel(`classroom:${channelName}`).send({
+      await broadcastChannelRef.current?.send({
         type: 'broadcast', event: 'CLASS_ENDED',
         payload: { endedAt: new Date().toISOString() },
       });
@@ -256,10 +272,15 @@ function ClassroomInner({
     else onLeave?.();
   };
 
-  // Publish tracks — filter out null so Agora doesn't choke
+  // During screen share, exclude camera from usePublish so it doesn't
+  // conflict with the manually-published screen track (Agora only allows
+  // one video track per client in RTC mode). Mic stays published always.
   const tracksToPublish = useMemo(
-    () => [localMicrophoneTrack, localCameraTrack].filter(Boolean) as any[],
-    [localMicrophoneTrack, localCameraTrack]
+    () =>
+      isScreenSharing
+        ? ([localMicrophoneTrack].filter(Boolean) as any[])
+        : ([localMicrophoneTrack, localCameraTrack].filter(Boolean) as any[]),
+    [localMicrophoneTrack, localCameraTrack, isScreenSharing]
   );
   usePublish(isJoined ? tracksToPublish : []);
 
@@ -278,7 +299,7 @@ function ClassroomInner({
   const toggleSpotlight = (targetUid: number | null) => {
     if (!iAmTutor) return;
     setSpotlightedUid(targetUid);
-    supabase.channel(`classroom:${channelName}`).send({
+    broadcastChannelRef.current?.send({
       type: 'broadcast', event: 'spotlight',
       payload: { uid: targetUid },
     });
@@ -318,31 +339,50 @@ function ClassroomInner({
   const startScreenShare = async () => {
     try {
       const track = await AgoraRTC.createScreenVideoTrack(
-        { encoderConfig: { width: 1920, height: 1080, frameRate: 15, bitrateMax: 2000 } },
+        { encoderConfig: { width: 1280, height: 720, frameRate: 15, bitrateMax: 2000 } },
         'disable'
       );
       const videoTrack = Array.isArray(track) ? track[0] : track;
+
+      // Agora RTC mode only supports one video track per client.
+      // Manually unpublish the camera before publishing screen.
+      // (usePublish will stop managing camera once isScreenSharing=true)
+      if (localCameraTrack && client && isJoined) {
+        try { await client.unpublish(localCameraTrack); } catch {}
+      }
+
       if (client && isJoined) await client.publish(videoTrack);
+
+      // Set state BEFORE sending broadcast so React flushes
+      // isScreenSharing=true → tracksToPublish excludes camera
       setScreenTrack(videoTrack);
       setIsScreenSharing(true);
-      supabase.channel(`classroom:${channelName}`).send({
+
+      broadcastChannelRef.current?.send({
         type: 'broadcast', event: 'screen-share',
         payload: { uid, sharing: true },
       });
+
       videoTrack.on('track-ended', () => stopScreenShare(videoTrack));
-    } catch (err) {
-      console.error('Screen share failed:', err);
+    } catch (err: any) {
+      // User cancelled screen picker — not a real error
+      if (err?.name !== 'NotAllowedError') console.error('Screen share failed:', err);
     }
   };
 
   const stopScreenShare = async (track?: any) => {
     const t = track || screenTrack;
     if (t) {
-      try { if (client && isJoined) await client.unpublish(t); t.close(); } catch (e) { console.error(e); }
+      try {
+        if (client && isJoined) await client.unpublish(t);
+        t.close();
+      } catch (e) { console.error(e); }
     }
     setScreenTrack(null);
+    // Setting isScreenSharing=false restores camera to tracksToPublish,
+    // so usePublish automatically re-publishes the camera track.
     setIsScreenSharing(false);
-    supabase.channel(`classroom:${channelName}`).send({
+    broadcastChannelRef.current?.send({
       type: 'broadcast', event: 'screen-share',
       payload: { uid, sharing: false },
     });
@@ -357,7 +397,7 @@ function ClassroomInner({
   const toggleHandRaise = () => {
     const newState = !handRaised;
     setHandRaised(newState);
-    supabase.channel(`classroom:${channelName}`).send({
+    broadcastChannelRef.current?.send({
       type: 'broadcast', event: 'hand-raise',
       payload: { uid, name: profile?.full_name || userName, raised: newState },
     });

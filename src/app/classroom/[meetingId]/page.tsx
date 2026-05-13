@@ -35,7 +35,9 @@ function ClassroomContent() {
           body: JSON.stringify({
             channelName: meetingId,
             uid,
-            role: role === 'tutor' ? 'publisher' : 'subscriber'
+            // All participants need PUBLISHER to send video/audio.
+            // SUBSCRIBER would silently block cameras/mics for students.
+            role: 'publisher',
           }),
         });
 
