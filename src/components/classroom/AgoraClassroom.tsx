@@ -47,6 +47,7 @@ import {
   Presentation,
   AlertTriangle,
   Loader2,
+  Upload,
 } from 'lucide-react';
 import { 
   AlertDialog,
@@ -57,7 +58,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -127,6 +132,12 @@ function ClassroomInner({
   const [isEnding, setIsEnding] = useState(false);
   // Map of uid -> { name, role } for showing real names on tiles
   const [participantMap, setParticipantMap] = useState<Record<number, { name: string; role: string }>>({});
+  const [activeTab, setActiveTab] = useState<'chat' | 'notes' | 'docs' | 'assignments'>('chat');
+  const [notes, setNotes] = useState('');
+  const [classResources, setClassResources] = useState<any[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
@@ -279,11 +290,35 @@ function ClassroomInner({
   const handleFinalize = async () => {
     setIsEnding(true);
     try {
+      // 1. Update Class Status
       await supabase.from('classes').update({ status: 'completed' }).eq('id', channelName);
+      
+      // 2. Export Notes as a Resource
+      if (notes.trim()) {
+        await supabase.from('resources').insert({
+          title: `Class Notes: ${classData?.title || channelName}`,
+          type: 'pdf', // Or article
+          url: 'data:text/plain;base64,' + btoa(notes), // Placeholder: in real app, convert to PDF or save as text file
+          course_id: classData?.course_id || null, // If available
+          class_id: channelName
+        });
+      }
+
+      // 3. Export Recording (Placeholder)
+      await supabase.from('resources').insert({
+        title: `Recording: ${classData?.title || channelName}`,
+        type: 'video',
+        url: `https://agora-recordings.vercel.app/${channelName}`, // Simulated recording URL
+        course_id: classData?.course_id || null,
+        class_id: channelName
+      });
+
+      // 4. Signal Class End to all participants
       await broadcastChannelRef.current?.send({
         type: 'broadcast', event: 'CLASS_ENDED',
         payload: { endedAt: new Date().toISOString() },
       });
+      
       onLeave?.();
     } catch (err) {
       console.error('Failed to finalize class:', err);
@@ -654,47 +689,34 @@ function ClassroomInner({
                     </Button>
                 </div>
 
-                {/* Finalize Dialog for Tutor */}
-                <AlertDialog open={showFinalizeDialog} onOpenChange={setShowFinalizeDialog}>
-                  <AlertDialogContent className="bg-[#0A1A12] border-white/10 text-white rounded-[2rem] p-8 max-w-md">
-                    <AlertDialogHeader className="flex flex-col items-center text-center gap-4">
-                      <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
-                        <AlertTriangle className="w-10 h-10 text-red-500 animate-pulse" />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <AlertDialogTitle className="text-2xl font-bold">End Class Session?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-white/40 text-sm">
-                          This will end the meeting for all participants and mark this class as <span className="text-[#A7C957] font-bold">Completed</span> in the system.
-                        </AlertDialogDescription>
-                      </div>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="flex flex-col sm:flex-row gap-3 mt-6">
-                      <AlertDialogCancel className="flex-1 h-12 rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white mt-0">
-                        Stay in Class
-                      </AlertDialogCancel>
-                      <Button 
-                        onClick={handleFinalize} 
-                        disabled={isEnding}
-                        className="flex-1 h-12 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-all hover:scale-105 active:scale-95"
-                      >
-                        {isEnding ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <>
-                            <CheckCircle2 className="w-4 h-4 mr-2" />
-                            Finalize Class
-                          </>
-                        )}
-                      </Button>
-                    </AlertDialogFooter>
-                    <button 
-                      onClick={() => onLeave()}
-                      className="w-full text-center mt-4 text-[10px] uppercase tracking-widest text-white/20 hover:text-white/40 transition-colors"
-                    >
-                      Just leave without ending for all
-                    </button>
-                  </AlertDialogContent>
-                </AlertDialog>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-4 py-2 flex-1 h-12 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-all hover:scale-105 active:scale-95">
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                          Finalize Class
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-[#0A1A12] border-white/10 text-white rounded-3xl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-xl font-bold">Ready to wrap up?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-white/40">
+                            This will end the meeting for everyone and export all notes, documents, and the recording as persistent resources for students.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="gap-3">
+                          <AlertDialogCancel className="bg-white/5 border-white/10 rounded-xl hover:bg-white/10 hover:text-white">Stay Live</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={handleFinalize}
+                            disabled={isEnding}
+                            className="bg-red-500 hover:bg-red-600 rounded-xl font-bold px-8"
+                          >
+                            {isEnding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                            End & Export Everything
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                </div>
               </div>
 
               {/* PARTICIPANT GRID — ALL users including tutor */}
@@ -758,8 +780,6 @@ function ClassroomInner({
                     </div>
                    );
                  })}
-
-               {/* No mock participants - only real ones from Agora */}
               </div>
 
               {/* CLASSROOM INSIGHTS & KPIs */}
@@ -790,69 +810,199 @@ function ClassroomInner({
               </div>
             </div>
 
-            {/* RIGHT COLUMN: Chat */}
+            {/* RIGHT COLUMN: Chat/Tabs */}
             <div className="w-full lg:w-[400px] flex flex-col gap-6">
               
-              {/* Chat Panel */}
-              <div className="flex-1 flex flex-col bg-white/5 rounded-[2.5rem] border border-white/5 overflow-hidden backdrop-blur-md">
-                 <div className="p-8 pb-4 flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-white/80">Chat Room</h2>
-                    <Button variant="link" className="text-[#A7C957] text-xs font-medium p-0 h-auto">View all</Button>
-                 </div>
+              <div className="flex flex-col h-[600px] bg-[#07140D] rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden group/chat">
+                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#A7C957] via-[#6A994E] to-[#A7C957] opacity-0 group-hover/chat:opacity-100 transition-opacity" />
+                 
+                 <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="flex flex-col h-full">
+                  <div className="px-8 pt-8 pb-4 border-b border-white/5">
+                    <TabsList className="bg-white/5 border-white/10 rounded-xl w-full p-1 h-12">
+                      <TabsTrigger value="chat" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-[#A7C957] data-[state=active]:text-[#0A1A12]">Chat</TabsTrigger>
+                      <TabsTrigger value="notes" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-[#A7C957] data-[state=active]:text-[#0A1A12]">Notes</TabsTrigger>
+                      <TabsTrigger value="docs" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-[#A7C957] data-[state=active]:text-[#0A1A12]">Docs</TabsTrigger>
+                      <TabsTrigger value="assignments" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-[#A7C957] data-[state=active]:text-[#0A1A12]">Tasks</TabsTrigger>
+                    </TabsList>
+                  </div>
 
-                 <div 
-                    ref={chatScrollRef}
-                    className="flex-1 overflow-y-auto px-8 py-4 flex flex-col gap-6 custom-scrollbar"
-                  >
-                    {messages.length === 0 ? (
-                      <div className="flex-1 flex flex-col items-center justify-center opacity-20">
-                        <Sparkles className="w-12 h-12 mb-4" />
-                        <p className="text-sm font-medium">No messages yet. Be the first to say hi!</p>
-                      </div>
-                    ) : (
-                      messages.map((msg) => (
-                        <ChatMessage 
-                          key={msg.id}
-                          user={msg.profiles?.full_name || 'Unknown'} 
-                          time={new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
-                          msg={msg.content} 
-                          isMe={msg.sender_id === profile?.id}
-                          avatar={msg.profiles?.avatar_url}
-                        />
-                      ))
-                    )}
-                 </div>
-
-                 <div className="p-8 pt-4">
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (msgInput.trim() && profile?.id) {
-                          sendMessage(msgInput, profile.id, { 
-                            full_name: profile.full_name, 
-                            avatar_url: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.full_name}`
-                          });
-                          setMsgInput('');
-                        }
-                      }}
-                      className="relative"
+                  <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 m-0">
+                    <div 
+                      ref={chatScrollRef}
+                      className="flex-1 overflow-y-auto px-8 py-4 flex flex-col gap-6 custom-scrollbar"
                     >
-                       <Input 
-                         value={msgInput}
-                         onChange={(e) => setMsgInput(e.target.value)}
-                         placeholder="Type your message..." 
-                         className="bg-white/5 border-none rounded-2xl py-7 pl-6 pr-14 text-sm focus-visible:ring-1 focus-visible:ring-white/20 transition-all placeholder:text-white/10"
-                       />
-                       <Button 
-                         type="submit"
-                         size="icon" 
-                         disabled={!msgInput.trim()}
-                         className="absolute right-3 top-1/2 -translate-y-1/2 bg-[#A7C957] hover:bg-[#6A994E] rounded-xl w-10 h-10 transition-transform active:scale-95 disabled:opacity-50"
-                       >
-                          <Send className="w-4 h-4 text-[#0A1A12]" />
-                       </Button>
-                    </form>
-                 </div>
+                      {messages.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center opacity-20">
+                          <Sparkles className="w-12 h-12 mb-4" />
+                          <p className="text-sm font-medium">No messages yet. Be the first to say hi!</p>
+                        </div>
+                      ) : (
+                        messages.map((msg) => (
+                          <ChatMessage 
+                            key={msg.id}
+                            user={msg.profiles?.full_name || 'Unknown'} 
+                            time={new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
+                            msg={msg.content} 
+                            isMe={msg.sender_id === profile?.id}
+                            avatar={msg.profiles?.avatar_url}
+                          />
+                        ))
+                      )}
+                    </div>
+
+                    <div className="p-8 pt-4">
+                        <form 
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            if (msgInput.trim() && profile?.id) {
+                              sendMessage(msgInput, profile.id, { 
+                                full_name: profile.full_name, 
+                                avatar_url: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.full_name}`
+                              });
+                              setMsgInput('');
+                            }
+                          }}
+                          className="relative"
+                        >
+                          <Input 
+                            value={msgInput}
+                            onChange={(e) => setMsgInput(e.target.value)}
+                            placeholder="Type your message..." 
+                            className="bg-white/5 border-none rounded-2xl py-7 pl-6 pr-14 text-sm focus-visible:ring-1 focus-visible:ring-white/20 transition-all placeholder:text-white/10"
+                          />
+                          <Button 
+                            type="submit"
+                            size="icon" 
+                            disabled={!msgInput.trim()}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 bg-[#A7C957] hover:bg-[#6A994E] rounded-xl w-10 h-10 transition-transform active:scale-95 disabled:opacity-50"
+                          >
+                              <Send className="w-4 h-4 text-[#0A1A12]" />
+                          </Button>
+                        </form>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="notes" className="flex-1 flex flex-col min-h-0 m-0 p-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-white/40">Collaborative Notes</h3>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[#A7C957] animate-pulse" />
+                        <span className="text-[10px] text-white/20">Syncing...</span>
+                      </div>
+                    </div>
+                    <Textarea 
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Start capturing key insights from the session..."
+                      className="flex-1 bg-white/5 border-white/5 rounded-2xl p-6 text-sm focus-visible:ring-1 focus-visible:ring-[#A7C957]/20 transition-all placeholder:text-white/10 resize-none leading-relaxed"
+                    />
+                    <p className="text-[10px] text-white/20 mt-4 leading-relaxed italic">
+                      * These notes will be automatically exported to the Resource Library when the class ends.
+                    </p>
+                  </TabsContent>
+
+                  <TabsContent value="docs" className="flex-1 flex flex-col min-h-0 m-0 p-8">
+                     <div className="flex flex-col gap-6">
+                        <div className="bg-white/5 border border-dashed border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 group/upload cursor-pointer hover:bg-white/[0.07] transition-all relative overflow-hidden">
+                           <div className="w-14 h-14 rounded-2xl bg-[#A7C957]/10 flex items-center justify-center group-hover/upload:scale-110 transition-transform duration-500">
+                             <Upload className="w-7 h-7 text-[#A7C957]" />
+                           </div>
+                           <div className="text-center">
+                              <p className="text-sm font-bold text-white/80">Upload Class Resource</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest mt-1">PDF, DOCX, PPT (Max 10MB)</p>
+                           </div>
+                           <input 
+                            type="file" 
+                            className="absolute inset-0 opacity-0 cursor-pointer" 
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setIsUploading(true);
+                              // Simulated upload
+                              for (let i = 0; i <= 100; i += 10) {
+                                setUploadProgress(i);
+                                await new Promise(r => setTimeout(r, 100));
+                              }
+                              setClassResources(prev => [...prev, { name: file.name, type: file.type.split('/')[1], size: (file.size / 1024 / 1024).toFixed(1) + 'MB' }]);
+                              setIsUploading(false);
+                              setUploadProgress(0);
+                            }}
+                           />
+                        </div>
+
+                        {isUploading && (
+                          <div className="space-y-2">
+                             <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
+                                <span>Uploading document...</span>
+                                <span>{uploadProgress}%</span>
+                             </div>
+                             <Progress value={uploadProgress} className="h-1 bg-white/5" indicatorClassName="bg-[#A7C957]" />
+                          </div>
+                        )}
+
+                        <div className="flex flex-col gap-3">
+                           <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 mb-1">Session Documents</h4>
+                           {classResources.length === 0 ? (
+                             <p className="text-xs text-white/10 italic">No documents shared in this session yet.</p>
+                           ) : (
+                             classResources.map((res, i) => (
+                               <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
+                                  <div className="flex items-center gap-3">
+                                     <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                                        <FileText className="w-5 h-5 text-white/20" />
+                                     </div>
+                                     <div>
+                                        <p className="text-xs font-bold text-white/80 truncate max-w-[120px]">{res.name}</p>
+                                        <p className="text-[10px] text-white/30">{res.size} · {res.type.toUpperCase()}</p>
+                                     </div>
+                                  </div>
+                                  <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg hover:bg-white/5">
+                                     <ArrowUpRight className="w-4 h-4 text-[#A7C957]" />
+                                  </Button>
+                               </div>
+                             ))
+                           )}
+                        </div>
+                     </div>
+                  </TabsContent>
+
+                  <TabsContent value="assignments" className="flex-1 flex flex-col min-h-0 m-0 p-8">
+                     <div className="flex flex-col gap-6">
+                        <div className="p-6 bg-gradient-to-br from-[#1B3E2D] to-[#0A1A12] rounded-3xl border border-[#A7C957]/10 relative overflow-hidden">
+                           <div className="absolute -top-6 -right-6 w-24 h-24 bg-[#A7C957]/10 rounded-full blur-2xl" />
+                           <h3 className="text-lg font-bold mb-2">Assignment Portal</h3>
+                           <p className="text-xs text-white/40 leading-relaxed">Students can submit their tasks here during the live session for immediate feedback.</p>
+                        </div>
+
+                        {!iAmTutor ? (
+                          <div className="bg-white/5 border border-dashed border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 group/assign cursor-pointer hover:bg-[#A7C957]/5 transition-all relative overflow-hidden">
+                            <div className="w-14 h-14 rounded-2xl bg-[#A7C957]/10 flex items-center justify-center group-hover/assign:scale-110 transition-transform duration-500">
+                              <Sparkles className="w-7 h-7 text-[#A7C957]" />
+                            </div>
+                            <div className="text-center">
+                                <p className="text-sm font-bold text-white/80">Submit Your Assignment</p>
+                                <p className="text-[10px] text-white/30 uppercase tracking-widest mt-1">Upload work to teacher</p>
+                            </div>
+                            <input 
+                              type="file" 
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              onChange={async (e) => {
+                                alert("Assignment submitted successfully to your tutor!");
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-4">
+                             <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20">Awaiting Submission</h4>
+                             <div className="flex flex-col items-center justify-center py-12 opacity-20">
+                                <Users className="w-12 h-12 mb-4" />
+                                <p className="text-xs font-medium">No student submissions yet</p>
+                             </div>
+                          </div>
+                        )}
+                     </div>
+                  </TabsContent>
+                 </Tabs>
               </div>
 
               {/* Upgrade Banner */}
