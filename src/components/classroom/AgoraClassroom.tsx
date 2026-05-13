@@ -130,11 +130,10 @@ function ClassroomInner({
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
-  // Stable ref to the subscribed Supabase broadcast channel.
-  // IMPORTANT: supabase.channel(name).send() creates a NEW ephemeral channel
-  // each call — it does NOT reuse the already-subscribed one. Every .send()
-  // must go through this ref instead.
+  // Stable ref to the subscribed Supabase broadcast channel (spotlight / screen-share / hand-raise / CLASS_ENDED).
   const broadcastChannelRef = useRef<any>(null);
+  // Stable ref to the Supabase Presence channel (participant roster).
+  const presenceChannelRef = useRef<any>(null);
 
   // Determine if the CURRENT user is the tutor/host using ALL available signals
   const iAmTutor = useMemo(() => {
@@ -211,10 +210,6 @@ function ClassroomInner({
             : prev.filter(h => h.uid !== raiserUid)
         );
       })
-      // Identity announcement — who just joined
-      .on('broadcast', { event: 'identity' }, ({ payload }) => {
-        setParticipantMap(prev => ({ ...prev, [payload.uid]: { name: payload.name, role: payload.role } }));
-      })
       .subscribe();
 
     broadcastChannelRef.current = ch;
@@ -226,22 +221,51 @@ function ClassroomInner({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelName]);
 
-  // Announce our own identity when we join the Agora channel.
-  // Small delay ensures the broadcast channel subscription is fully active.
+  // ─── SUPABASE PRESENCE — real-time participant roster ───────────────────────
+  // Presence gives an immediate full-state snapshot on subscribe (no missed
+  // messages), a built-in 10 s heartbeat, and auto-cleanup on disconnect.
+  // This completely replaces the old broadcast-identity approach.
   useEffect(() => {
-    if (!isJoined || !profile) return;
-    const t = setTimeout(() => {
-      broadcastChannelRef.current?.send({
-        type: 'broadcast',
-        event: 'identity',
-        payload: { uid, name: profile.full_name || userName, role: iAmTutor ? 'tutor' : 'student' },
-      });
-    }, 600);
-    return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isJoined, profile]);
+    if (!channelName) return;
 
-  // Auto-clear raise hand when a remote user leaves the Agora channel
+    const ch = supabase.channel(`presence:${channelName}`);
+
+    // sync fires on subscribe AND whenever anyone joins or leaves.
+    // We rebuild the whole map each time — it's tiny and O(n).
+    ch.on('presence', { event: 'sync' }, () => {
+      const state = ch.presenceState<{ uid: number; name: string; role: string }>();
+      const map: Record<number, { name: string; role: string }> = {};
+      Object.values(state)
+        .flat()
+        .forEach((p) => {
+          if (p.uid != null) map[Number(p.uid)] = { name: p.name, role: p.role };
+        });
+      setParticipantMap(map);
+    });
+
+    ch.subscribe();
+    presenceChannelRef.current = ch;
+
+    return () => {
+      presenceChannelRef.current = null;
+      supabase.removeChannel(ch);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelName]);
+
+  // Track our own presence as soon as profile is available (or identity changes).
+  // Calling .track() again updates the existing presence entry — no duplicate.
+  useEffect(() => {
+    if (!profile || !presenceChannelRef.current) return;
+    presenceChannelRef.current.track({
+      uid,
+      name: profile.full_name || userName,
+      role: iAmTutor ? 'tutor' : 'student',
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, uid, userName, iAmTutor]);
+
+  // Clear hand-raise and screen-share state when a remote user disconnects
   useEffect(() => {
     if (!client) return;
     const onUserLeft = (user: any) => {
@@ -251,25 +275,6 @@ function ClassroomInner({
     client.on('user-left', onUserLeft);
     return () => { client.off('user-left', onUserLeft); };
   }, [client]);
-
-  // Re-broadcast our identity whenever a NEW user joins the Agora channel.
-  // Without this, late-joiners never receive the initial identity broadcast
-  // (Supabase broadcast has no history) and names stay as "User {uid}".
-  useEffect(() => {
-    if (!client || !isJoined || !profile) return;
-    const onUserJoined = () => {
-      setTimeout(() => {
-        broadcastChannelRef.current?.send({
-          type: 'broadcast',
-          event: 'identity',
-          payload: { uid, name: profile.full_name || userName, role: iAmTutor ? 'tutor' : 'student' },
-        });
-      }, 300);
-    };
-    client.on('user-joined', onUserJoined);
-    return () => { client.off('user-joined', onUserJoined); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, isJoined, profile]);
 
   const handleFinalize = async () => {
     setIsEnding(true);
