@@ -233,48 +233,50 @@ function ClassroomInner({
   }, [channelName]);
 
   // ─── SUPABASE PRESENCE — real-time participant roster ───────────────────────
-  // Presence gives an immediate full-state snapshot on subscribe (no missed
-  // messages), a built-in 10 s heartbeat, and auto-cleanup on disconnect.
-  // This completely replaces the old broadcast-identity approach.
   useEffect(() => {
-    if (!channelName) return;
+    if (!channelName || !profile) return;
 
-    const ch = supabase.channel(`presence:${channelName}`);
+    // Use a unique key for presence (our UID) to avoid duplicates and simplify lookup
+    const ch = supabase.channel(`presence:${channelName}`, {
+      config: {
+        presence: {
+          key: uid.toString(),
+        },
+      },
+    });
 
-    // sync fires on subscribe AND whenever anyone joins or leaves.
-    // We rebuild the whole map each time — it's tiny and O(n).
     ch.on('presence', { event: 'sync' }, () => {
       const state = ch.presenceState<{ uid: number; name: string; role: string }>();
       const map: Record<number, { name: string; role: string }> = {};
-      Object.values(state)
-        .flat()
-        .forEach((p) => {
-          if (p.uid != null) map[Number(p.uid)] = { name: p.name, role: p.role };
-        });
+      
+      Object.entries(state).forEach(([key, presences]) => {
+        const p = presences[0]; // Take the latest presence for this key
+        if (p) {
+          map[Number(key)] = { name: p.name, role: p.role };
+        }
+      });
+      
       setParticipantMap(map);
     });
 
-    ch.subscribe();
+    ch.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log(`[Presence] Subscribed. Tracking UID: ${uid} as ${profile.full_name}`);
+        await ch.track({
+          uid,
+          name: profile.full_name || userName,
+          role: iAmTutor ? 'tutor' : 'student',
+        });
+      }
+    });
+
     presenceChannelRef.current = ch;
 
     return () => {
       presenceChannelRef.current = null;
       supabase.removeChannel(ch);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channelName]);
-
-  // Track our own presence as soon as profile is available (or identity changes).
-  // Calling .track() again updates the existing presence entry — no duplicate.
-  useEffect(() => {
-    if (!profile || !presenceChannelRef.current) return;
-    presenceChannelRef.current.track({
-      uid,
-      name: profile.full_name || userName,
-      role: iAmTutor ? 'tutor' : 'student',
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, uid, userName, iAmTutor]);
+  }, [channelName, profile, uid, userName, iAmTutor, supabase]);
 
   // Clear hand-raise and screen-share state when a remote user disconnects
   useEffect(() => {
