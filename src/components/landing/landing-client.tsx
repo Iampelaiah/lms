@@ -81,7 +81,8 @@ const Navbar = () => {
         <Button className="bg-white text-fin-green hover:bg-white/90 font-bold px-5 h-8 rounded-full text-xs" asChild>
             <Link href="/signup">Enroll now</Link>
         </Button>
-        <Button variant="ghost" size="icon" className="text-white">
+        {/* aria-label required: icon-only button must have an accessible name */}
+        <Button variant="ghost" size="icon" className="text-white" aria-label="Toggle navigation menu">
             <Menu className="w-6 h-6" />
         </Button>
       </div>
@@ -100,6 +101,7 @@ const Hero = () => {
           fill
           className="object-cover brightness-90"
           priority
+          sizes="100vw"
           data-ai-hint="student learning"
         />
         {/* Cinematic Gradient Overlay */}
@@ -210,7 +212,8 @@ const Marquee = () => {
   return (
     <div className="bg-white pt-24 pb-12 overflow-hidden">
       <div className="container mx-auto px-6 mb-16 flex flex-col items-center">
-         <div className="inline-flex items-center gap-2 px-6 py-2 bg-fin-beige rounded-full border border-fin-green/5 text-[13px] font-semibold text-fin-green/60">
+         {/* Contrast bumped from /30 to /70 to meet WCAG AA minimum contrast ratio */}
+         <div className="inline-flex items-center gap-2 px-6 py-2 bg-fin-beige rounded-full border border-fin-green/10 text-[13px] font-semibold text-fin-green/70">
             <span>Join over 10,000 students already learning with Dr Max.</span>
          </div>
       </div>
@@ -378,12 +381,14 @@ const StudySimulator = () => {
                 <span className="font-bold text-sm uppercase tracking-widest">Weekly Study Hours</span>
                 <span className="text-2xl font-bold font-headline">{hours} hrs</span>
               </div>
+              {/* aria-label required: no visible <label> is associated with this input */}
               <input 
                 type="range" 
                 min="1" 
                 max="40" 
                 step="1"
                 value={hours}
+                aria-label="Select weekly study hours"
                 onChange={(e) => setHours(Number(e.target.value))}
                 className="w-full h-2.5 bg-fin-green/10 rounded-full appearance-none cursor-pointer accent-fin-green"
               />
@@ -481,6 +486,7 @@ const ParallaxTestimonial = () => {
           alt="Student Success"
           fill
           className="object-cover brightness-50"
+          sizes="100vw"
           data-ai-hint="graduated student"
         />
       </motion.div>
