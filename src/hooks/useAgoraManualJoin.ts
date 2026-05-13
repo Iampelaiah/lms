@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { IAgoraRTCClient } from 'agora-rtc-sdk-ng';
+import { IAgoraRTCClient } from 'agora-rtc-react';
 
 interface UseAgoraManualJoinProps {
   client: IAgoraRTCClient | null;

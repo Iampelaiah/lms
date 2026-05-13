@@ -1,7 +1,11 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import {
+// Import AgoraRTC default from agora-rtc-react, NOT from agora-rtc-sdk-ng.
+// agora-rtc-react re-exports the same SDK but through its own module context.
+// Using a separate agora-rtc-sdk-ng import creates a different module instance,
+// which means client events never reach the React hooks (no video/audio renders).
+import AgoraRTC, {
   AgoraRTCProvider,
   useRTCClient,
   useLocalCameraTrack,
@@ -11,7 +15,6 @@ import {
   LocalVideoTrack,
   RemoteUser,
 } from 'agora-rtc-react';
-import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAgoraManualJoin } from '@/hooks/useAgoraManualJoin';
 import { useChat } from '@/hooks/use-chat';
 import { 
@@ -243,12 +246,30 @@ function ClassroomInner({
     if (!client) return;
     const onUserLeft = (user: any) => {
       setRaisedHands(prev => prev.filter(h => h.uid !== Number(user.uid)));
-      // Also clear remote screen share if that user was sharing
       setRemoteScreenUid(prev => (prev === Number(user.uid) ? null : prev));
     };
     client.on('user-left', onUserLeft);
     return () => { client.off('user-left', onUserLeft); };
   }, [client]);
+
+  // Re-broadcast our identity whenever a NEW user joins the Agora channel.
+  // Without this, late-joiners never receive the initial identity broadcast
+  // (Supabase broadcast has no history) and names stay as "User {uid}".
+  useEffect(() => {
+    if (!client || !isJoined || !profile) return;
+    const onUserJoined = () => {
+      setTimeout(() => {
+        broadcastChannelRef.current?.send({
+          type: 'broadcast',
+          event: 'identity',
+          payload: { uid, name: profile.full_name || userName, role: iAmTutor ? 'tutor' : 'student' },
+        });
+      }, 300);
+    };
+    client.on('user-joined', onUserJoined);
+    return () => { client.off('user-joined', onUserJoined); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, isJoined, profile]);
 
   const handleFinalize = async () => {
     setIsEnding(true);
