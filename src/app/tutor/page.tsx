@@ -88,27 +88,27 @@ function TutorStats() {
         }
 
         try {
-            // Total Students
-            const { count: studentCount } = await supabase
-                .from('profiles')
-                .select('*', { count: 'exact', head: true })
-                .eq('role', 'student');
-
-            // Upcoming Class
-            const { data: upcomingClass } = await supabase
-                .from('classes')
-                .select('schedule, title')
-                .eq('tutor_id', profile.id)
-                .or('status.eq.upcoming,status.eq.ongoing')
-                .order('schedule', { ascending: true })
-                .limit(1)
-                .single();
+            // Run both Supabase queries in parallel — cuts wait time roughly in half.
+            const [{ count: studentCount }, { data: upcomingClass }] = await Promise.all([
+                supabase
+                    .from('profiles')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('role', 'student'),
+                supabase
+                    .from('classes')
+                    .select('schedule, title')
+                    .eq('tutor_id', profile.id)
+                    .or('status.eq.upcoming,status.eq.ongoing')
+                    .order('schedule', { ascending: true })
+                    .limit(1)
+                    .single(),
+            ]);
 
             setStats({
                 totalStudents: studentCount?.toString() || "0",
-                engagementRate: "78%", 
-                assignmentsToGrade: "12", 
-                upcomingSession: upcomingClass 
+                engagementRate: "78%",
+                assignmentsToGrade: "12",
+                upcomingSession: upcomingClass
                     ? `${new Date(upcomingClass.schedule).toLocaleDateString()}, ${new Date(upcomingClass.schedule).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                     : "None scheduled"
             });

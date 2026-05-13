@@ -1,7 +1,11 @@
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import React from 'react';
+import React, { Suspense } from 'react';
+
+// Only this route segment (and children) opt into dynamic server rendering.
+// The root layout is now static-cacheable.
+export const dynamic = 'force-dynamic';
 import { SchoolHeader } from '@/components/app/school-header';
 import { TutorSidebar } from '@/components/app/tutor/tutor-sidebar';
 
@@ -41,7 +45,7 @@ export default async function TutorLayout({
                     </div>
                 </header>
                 <main className="flex-1 overflow-y-auto">
-                    {children}
+                    <Suspense>{children}</Suspense>
                 </main>
             </SidebarInset>
         </SidebarProvider>

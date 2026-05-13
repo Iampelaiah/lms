@@ -4,16 +4,31 @@ import '@/lib/server-polyfill';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import { UserProvider } from '@/components/providers/user-context';
+import { Inter, Space_Grotesk } from 'next/font/google';
+
+// Self-hosted fonts via next/font — eliminates the Google DNS round-trip and
+// renders fonts inline, improving LCP and CLS.
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Dr Max online school',
   description: 'The future of personalized digital learning.',
 };
 
-// Force all pages to render dynamically (at request time), never statically.
-// This prevents Supabase from being called during `next build` when env vars
-// are not available in the build environment.
-export const dynamic = 'force-dynamic';
+// NOTE: force-dynamic has been moved to individual route layouts/pages that
+// actually need server-side rendering (tutor, student, admin, classroom).
+// Login, signup, and the landing page are now statically generated and served
+// from Vercel's Edge CDN — zero cold-start latency on first load.
 
 export default function RootLayout({
   children,
@@ -21,19 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body className="font-body antialiased" suppressHydrationWarning>
         <ThemeProvider
             attribute="class"

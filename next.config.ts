@@ -4,7 +4,13 @@ const nextConfig: NextConfig = {
   // Disable Strict Mode to prevent Agora UID_CONFLICT errors caused by
   // React's double-mount behavior in development.
   reactStrictMode: false,
-  /* config options here */
+
+  // Remove the X-Powered-By header to reduce response size and avoid leaking framework info.
+  poweredByHeader: false,
+
+  // Enable gzip/brotli compression on Vercel serverless responses.
+  compress: true,
+
   experimental: {
     serverActions: {
       allowedOrigins: ['localhost:9002', '*.vercel.app'],
@@ -19,6 +25,10 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    // Serve modern image formats automatically — AVIF is ~50% smaller than JPEG.
+    formats: ['image/avif', 'image/webp'],
+    // Cache optimised images for 7 days on Vercel's CDN.
+    minimumCacheTTL: 60 * 60 * 24 * 7,
     remotePatterns: [
       {
         protocol: 'https',
