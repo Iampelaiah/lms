@@ -2,8 +2,9 @@ import { StudentSidebar } from '@/components/app/student/sidebar';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Suspense } from 'react';
 
-// Only student routes opt into dynamic SSR.
-export const dynamic = 'force-dynamic';
+// Student layout renders the shell (sidebar + inset). No server-side DB calls here,
+// so we do NOT force-dynamic — Next.js can cache the layout shell normally.
+// Individual page components handle their own data fetching client-side.
 
 export default function StudentLayout({
   children,

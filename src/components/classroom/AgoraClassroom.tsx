@@ -17,6 +17,12 @@ import AgoraRTC, {
 } from 'agora-rtc-react';
 import { useAgoraManualJoin } from '@/hooks/useAgoraManualJoin';
 import { useChat } from '@/hooks/use-chat';
+import { useAgoraRTM } from '@/hooks/useAgoraRTM';
+import { useConvoAI } from '@/hooks/useConvoAI';
+import { useAgoraChat } from '@/hooks/useAgoraChat';
+import { lazy, Suspense } from 'react';
+
+const AgoraWhiteboard = lazy(() => import('./AgoraWhiteboard'));
 import { 
   Mic, 
   MicOff, 
@@ -91,6 +97,8 @@ interface AgoraClassroomProps {
   role?: string;
   teacherUid?: number;
   onLeave?: () => void;
+  sessionMode?: 'rtc' | 'live';
+  voiceOnly?: boolean;
 }
 
 export function AgoraClassroom(props: AgoraClassroomProps) {
@@ -116,6 +124,8 @@ function ClassroomInner({
   role,
   teacherUid,
   onLeave,
+  sessionMode = 'rtc',
+  voiceOnly = false,
 }: AgoraClassroomProps) {
   const [micOn, setMic] = useState(false);
   const [videoOn, setVideo] = useState(false);
@@ -131,17 +141,62 @@ function ClassroomInner({
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   // Map of uid -> { name, role } for showing real names on tiles
-  const [participantMap, setParticipantMap] = useState<Record<number, { name: string; role: string }>>({});
-  const [activeTab, setActiveTab] = useState<'chat' | 'notes' | 'docs' | 'assignments'>('chat');
+  const [participantMap, setParticipantMap] = useState<Record<number, { name: string; role: string }>>({});  
+  const [activeTab, setActiveTab] = useState<'chat' | 'notes' | 'docs' | 'assignments' | 'whiteboard'>('chat');
   const [notes, setNotes] = useState('');
   const [classResources, setClassResources] = useState<any[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isVoiceOnly, setIsVoiceOnly] = useState(voiceOnly);
+  const [raisedHands, setRaisedHands] = useState<{ uid: number; name: string }[]>([]);
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
+
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
-  // Stable ref to the subscribed Supabase broadcast channel (spotlight / screen-share / hand-raise / CLASS_ENDED).
+  
+  // Phase 4: Conversational AI
+  const { isAgentActive, isStarting: isAiStarting, startAgent, stopAgent } = useConvoAI(channelName, uid);
+
+  // Phase 5: Agora Chat
+  const { messages: agoraChatMessages, sendTextMessage: sendAgoraChat, initChat } = useAgoraChat({
+    appKey: process.env.NEXT_PUBLIC_AGORA_CHAT_APP_KEY || '', 
+    userId: String(uid),
+    channelName,
+  });
+
+  // Phase 1: RTM for Signaling (Replacing Supabase Broadcast)
+  const { joinRTM, leaveRTM, sendMessage: sendRTM, registerListeners } = useAgoraRTM({
+    appId,
+    channelName,
+    uid,
+    userName: profile?.full_name || userName,
+  });
+
+  useEffect(() => {
+    initChat();
+    joinRTM();
+    return () => leaveRTM();
+  }, [initChat, joinRTM, leaveRTM]);
+
+  useEffect(() => {
+    registerListeners({
+      onClassEnded: () => { if (!iAmTutor) onLeave?.(); },
+      onSpotlight: (payload) => setSpotlightedUid(payload.uid),
+      onScreenShare: (payload) => {
+        if (payload.sharing) setRemoteScreenUid(Number(payload.uid));
+        else if (Number(payload.uid) === remoteScreenUid) setRemoteScreenUid(null);
+      },
+      onHandRaise: (payload) => {
+        const { uid: raiserUid, name, raised } = payload;
+        setRaisedHands(prev => raised 
+          ? [...prev.filter(h => h.uid !== raiserUid), { uid: raiserUid, name }]
+          : prev.filter(h => h.uid !== raiserUid));
+      }
+    });
+  }, [registerListeners, iAmTutor, onLeave, remoteScreenUid]);
+
+  // Keep for backwards compatibility if needed, but RTM takes over
   const broadcastChannelRef = useRef<any>(null);
   // Stable ref to the Supabase Presence channel (participant roster).
   const presenceChannelRef = useRef<any>(null);
@@ -177,6 +232,16 @@ function ClassroomInner({
   useEffect(() => { if (camError) { console.error('Cam:', camError); setVideo(false); } }, [camError]);
 
   // --- MANUAL JOIN WITH UID_CONFLICT RECOVERY ---
+  useEffect(() => {
+    if (client) {
+      if (sessionMode === 'live') {
+        client.setClientRole(iAmTutor ? 'host' : 'audience').catch(console.error);
+      } else {
+        client.setClientRole('host').catch(console.error); // In RTC mode, everyone is a host
+      }
+    }
+  }, [client, sessionMode, iAmTutor]);
+
   const { isJoined, isLoading: isJoinLoading, error: joinError, recovering, manualJoin } = useAgoraManualJoin({
     client, appId, channel: channelName, token: token || null, uid,
   });
@@ -315,7 +380,8 @@ function ClassroomInner({
         class_id: channelName
       });
 
-      // 4. Signal Class End to all participants
+      // 4. Signal Class End to all participants via RTM
+      await sendRTM('CLASS_ENDED', { endedAt: new Date().toISOString() });
       await broadcastChannelRef.current?.send({
         type: 'broadcast', event: 'CLASS_ENDED',
         payload: { endedAt: new Date().toISOString() },
@@ -338,13 +404,12 @@ function ClassroomInner({
   // During screen share, exclude camera from usePublish so it doesn't
   // conflict with the manually-published screen track (Agora only allows
   // one video track per client in RTC mode). Mic stays published always.
-  const tracksToPublish = useMemo(
-    () =>
-      isScreenSharing
-        ? ([localMicrophoneTrack].filter(Boolean) as any[])
-        : ([localMicrophoneTrack, localCameraTrack].filter(Boolean) as any[]),
-    [localMicrophoneTrack, localCameraTrack, isScreenSharing]
-  );
+  const tracksToPublish = useMemo(() => {
+    if (isVoiceOnly) return [localMicrophoneTrack].filter(Boolean) as any[];
+    if (isScreenSharing) return [localMicrophoneTrack].filter(Boolean) as any[];
+    return [localMicrophoneTrack, localCameraTrack].filter(Boolean) as any[];
+  }, [localMicrophoneTrack, localCameraTrack, isScreenSharing, isVoiceOnly]);
+  
   usePublish(isJoined ? tracksToPublish : []);
 
   // Track if dual stream has been enabled to avoid redundant calls
@@ -362,10 +427,7 @@ function ClassroomInner({
   const toggleSpotlight = (targetUid: number | null) => {
     if (!iAmTutor) return;
     setSpotlightedUid(targetUid);
-    broadcastChannelRef.current?.send({
-      type: 'broadcast', event: 'spotlight',
-      payload: { uid: targetUid },
-    });
+    sendRTM('spotlight', { uid: targetUid });
   };
 
   const teacherUser = useMemo(() => {
@@ -421,10 +483,7 @@ function ClassroomInner({
       setScreenTrack(videoTrack);
       setIsScreenSharing(true);
 
-      broadcastChannelRef.current?.send({
-        type: 'broadcast', event: 'screen-share',
-        payload: { uid, sharing: true },
-      });
+      sendRTM('screen-share', { uid, sharing: true });
 
       videoTrack.on('track-ended', () => stopScreenShare(videoTrack));
     } catch (err: any) {
@@ -445,10 +504,7 @@ function ClassroomInner({
     // Setting isScreenSharing=false restores camera to tracksToPublish,
     // so usePublish automatically re-publishes the camera track.
     setIsScreenSharing(false);
-    broadcastChannelRef.current?.send({
-      type: 'broadcast', event: 'screen-share',
-      payload: { uid, sharing: false },
-    });
+    sendRTM('screen-share', { uid, sharing: false });
   };
 
   // Play LOCAL screen track into the ref div
@@ -460,10 +516,7 @@ function ClassroomInner({
   const toggleHandRaise = () => {
     const newState = !handRaised;
     setHandRaised(newState);
-    broadcastChannelRef.current?.send({
-      type: 'broadcast', event: 'hand-raise',
-      payload: { uid, name: profile?.full_name || userName, raised: newState },
-    });
+    sendRTM('hand-raise', { uid, name: profile?.full_name || userName, raised: newState });
   };
 
   // --- LOADING STATE ---
@@ -682,6 +735,26 @@ function ClassroomInner({
                       icon={Hand}
                       onClick={toggleHandRaise}
                     />
+                    {iAmTutor && (
+                      <>
+                        <ControlButton
+                          active={isVoiceOnly}
+                          icon={Headphones}
+                          onClick={() => setIsVoiceOnly(!isVoiceOnly)}
+                        />
+                        <Button
+                          variant={isAgentActive ? "default" : "ghost"}
+                          className={cn(
+                            "w-14 h-14 rounded-2xl transition-all border border-white/10 backdrop-blur-md",
+                            isAgentActive ? "bg-[#A7C957] text-[#0A1A12] hover:bg-[#A7C957]/90" : "bg-black/20 text-white/40 hover:bg-white/5 hover:text-white"
+                          )}
+                          onClick={isAgentActive ? stopAgent : startAgent}
+                          disabled={isAiStarting}
+                        >
+                          {isAiStarting ? <Loader2 className="w-6 h-6 animate-spin" /> : <Sparkles className="w-6 h-6" />}
+                        </Button>
+                      </>
+                    )}
                     <Button
                       variant="destructive"
                       className="w-14 h-14 rounded-2xl bg-red-500/80 hover:bg-red-600 transition-all flex items-center justify-center border border-white/10"
@@ -825,6 +898,7 @@ function ClassroomInner({
                       <TabsTrigger value="notes" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-[#A7C957] data-[state=active]:text-[#0A1A12]">Notes</TabsTrigger>
                       <TabsTrigger value="docs" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-[#A7C957] data-[state=active]:text-[#0A1A12]">Docs</TabsTrigger>
                       <TabsTrigger value="assignments" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-[#A7C957] data-[state=active]:text-[#0A1A12]">Tasks</TabsTrigger>
+                      <TabsTrigger value="whiteboard" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-[#A7C957] data-[state=active]:text-[#0A1A12]">Board</TabsTrigger>
                     </TabsList>
                   </div>
 
@@ -861,6 +935,7 @@ function ClassroomInner({
                                 full_name: profile.full_name, 
                                 avatar_url: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.full_name}`
                               });
+                              sendAgoraChat(msgInput);
                               setMsgInput('');
                             }
                           }}
@@ -1003,6 +1078,21 @@ function ClassroomInner({
                           </div>
                         )}
                      </div>
+                  </TabsContent>
+
+                  <TabsContent value="whiteboard" className="flex-1 flex flex-col min-h-0 m-0 p-4">
+                     <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+                       {activeTab === 'whiteboard' && (
+                          <AgoraWhiteboard
+                            appIdentifier={process.env.NEXT_PUBLIC_AGORA_WHITEBOARD_APP_ID || ''}
+                            sdkToken={process.env.NEXT_PUBLIC_AGORA_WHITEBOARD_SDK_TOKEN || ''}
+                            roomToken="temp_room_token" 
+                            uuid={channelName}
+                            uid={String(uid)}
+                            isTutor={iAmTutor}
+                          />
+                       )}
+                     </Suspense>
                   </TabsContent>
                  </Tabs>
               </div>

@@ -66,13 +66,14 @@ const Navbar = () => {
       
       {/* Center: Logo */}
       <div className="flex flex-col items-center gap-0 absolute left-1/2 -translate-x-1/2 pointer-events-none">
-        <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                <GraduationCap className="w-4 h-4 text-fin-green" />
-            </div>
-            <span className="font-headline font-bold text-lg text-white">Dr Max</span>
-        </div>
-        <span className="text-[7px] font-bold uppercase tracking-[0.25em] text-white/60 -mt-1 ml-7">Online School</span>
+        <Image 
+          src="/logo.png" 
+          alt="Dr Max Online School Logo" 
+          width={64} 
+          height={24} 
+          className="object-contain" 
+          priority
+        />
       </div>
 
       {/* Right: Auth & Menu */}
@@ -426,8 +427,8 @@ const FAQ = () => {
     offset: ["start end", "start start"]
   });
 
-  const backgroundColor = useTransform(scrollYProgress, [0.5, 1], ["#F5F5F0", "#1B2B1F"]);
-  const textColor = useTransform(scrollYProgress, [0.5, 1], ["#1B2B1F", "#FFFFFF"]);
+  const backgroundColor = useTransform(scrollYProgress, [0.5, 1], ["#242424", "#1A1A1A"]);
+  const textColor = useTransform(scrollYProgress, [0.5, 1], ["#FFFFFF", "#FFFFFF"]);
 
   return (
     <motion.section 
@@ -452,7 +453,7 @@ const FAQ = () => {
           ].map((item, i) => (
             <AccordionItem key={i} value={`item-${i}`} className="border-b-0">
               <motion.div 
-                style={{ backgroundColor: i % 2 === 0 ? 'rgba(209, 243, 102, 0.05)' : 'transparent' }}
+                style={{ backgroundColor: i % 2 === 0 ? 'rgba(128, 0, 0, 0.15)' : 'transparent' }}
                 className="rounded-3xl border border-white/10 overflow-hidden"
               >
                 <AccordionTrigger className="px-10 py-8 text-white hover:no-underline group">

@@ -1,99 +1,37 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload } from "lucide-react";
-import { SecuritySettings } from "@/components/app/security-settings";
+'use client';
 
-function ProfileSettings() {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Profile</CardTitle>
-                <CardDescription>Manage your public profile and personal information.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-8">
-                <div className="flex items-center gap-6">
-                    <Avatar className="h-20 w-20">
-                        <AvatarImage src="https://picsum.photos/seed/101/200/200" alt="Alex Johnson" data-ai-hint="student portrait" />
-                        <AvatarFallback>AJ</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow">
-                        <h3 className="font-semibold">Profile Picture</h3>
-                        <p className="text-sm text-muted-foreground mb-2">Update your avatar. We recommend a 200x200px image.</p>
-                         <Button variant="outline">
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload Image
-                        </Button>
-                    </div>
-                </div>
-
-                <Separator />
-
-                <form className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
-                        <Input id="name" defaultValue="Alex Johnson" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input id="email" type="email" defaultValue="alex.j@drmax.online" />
-                    </div>
-                     <Button>Update Profile</Button>
-                     <p className="text-sm text-muted-foreground">Note: Profile changes must be approved by an administrator and may take up to 3 business days to reflect.</p>
-                </form>
-
-                <Separator />
-                
-                <SecuritySettings />
-            </CardContent>
-        </Card>
-    );
-}
+import { ProfileSettings } from '@/components/app/profile-settings';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 function NotificationSettings() {
     return (
          <Card>
             <CardHeader>
                 <CardTitle>Notifications</CardTitle>
-                <CardDescription>Choose how you want to be notified about activity on LearnetIQ.</CardDescription>
+                <CardDescription>Choose how you want to be notified about activity on Dr Max.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="flex items-center justify-between p-4 rounded-lg border">
-                    <div>
-                        <Label htmlFor="new-grades" className="font-medium">New Grades</Label>
-                        <p className="text-sm text-muted-foreground">Get notified when a tutor has graded your assignment.</p>
+                {[
+                    { id: 'new-grades', label: 'New Grades', desc: 'Get notified when a tutor has graded your assignment.', defaultChecked: true },
+                    { id: 'forum-mentions', label: 'Forum Mentions', desc: 'Get notified when someone mentions you in a forum post.', defaultChecked: true },
+                    { id: 'live-class-reminders', label: 'Live Class Reminders', desc: 'Receive reminders 15 minutes before a live class starts.', defaultChecked: false },
+                    { id: 'newsletter', label: 'Product Updates', desc: 'Receive our monthly newsletter with the latest features.', defaultChecked: false },
+                ].map(item => (
+                    <div key={item.id} className="flex items-center justify-between p-4 rounded-lg border">
+                        <div>
+                            <Label htmlFor={item.id} className="font-medium">{item.label}</Label>
+                            <p className="text-sm text-muted-foreground">{item.desc}</p>
+                        </div>
+                        <Switch id={item.id} defaultChecked={item.defaultChecked} />
                     </div>
-                    <Switch id="new-grades" defaultChecked />
-                </div>
-                 <div className="flex items-center justify-between p-4 rounded-lg border">
-                    <div>
-                        <Label htmlFor="forum-mentions" className="font-medium">Forum Mentions</Label>
-                        <p className="text-sm text-muted-foreground">Get notified when someone mentions you in a forum post.</p>
-                    </div>
-                    <Switch id="forum-mentions" defaultChecked />
-                </div>
-                 <div className="flex items-center justify-between p-4 rounded-lg border">
-                    <div>
-                        <Label htmlFor="live-class-reminders" className="font-medium">Live Class Reminders</Label>
-                        <p className="text-sm text-muted-foreground">Receive reminders 15 minutes before a live class starts.</p>
-                    </div>
-                    <Switch id="live-class-reminders" />
-                </div>
-                 <div className="flex items-center justify-between p-4 rounded-lg border">
-                    <div>
-                        <Label htmlFor="newsletter" className="font-medium">Product Updates</Label>
-                        <p className="text-sm text-muted-foreground">Receive our monthly newsletter with the latest features.</p>
-                    </div>
-                    <Switch id="newsletter" />
-                </div>
+                ))}
             </CardContent>
         </Card>
-    )
+    );
 }
 
 function AccountSettings() {
@@ -115,18 +53,16 @@ function AccountSettings() {
                  </Card>
             </CardContent>
         </Card>
-    )
+    );
 }
-
 
 export default function StudentSettingsPage() {
     return (
-        <div className="space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
                 <p className="text-muted-foreground">Manage your account and preferences.</p>
             </div>
-            
             <Tabs defaultValue="profile">
                 <TabsList className="mb-6">
                     <TabsTrigger value="profile">Profile</TabsTrigger>

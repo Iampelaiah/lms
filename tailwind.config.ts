@@ -22,9 +22,9 @@ export default {
         code: ['monospace'],
       },
       colors: {
-        'fin-green': '#1B2B1F',
-        'fin-lime': '#D1F366',
-        'fin-beige': '#F5F5F0',
+        'fin-green': '#1A1A1A',
+        'fin-lime': '#D4AF37',
+        'fin-beige': '#242424',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
