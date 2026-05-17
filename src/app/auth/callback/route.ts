@@ -22,40 +22,44 @@ export async function GET(request: Request) {
 
       if (existingProfile) {
         // RETURNING USER: enforce role — block if they're trying the wrong portal
-        if (intendedRole && existingProfile.role !== intendedRole) {
+        if (intendedRole && existingProfile.role?.toLowerCase() !== intendedRole.toLowerCase()) {
           await supabase.auth.signOut()
           return NextResponse.redirect(
             `${origin}/login?error=${encodeURIComponent(`This account is registered as a ${existingProfile.role}. Please use the correct portal.`)}`
           )
         }
+
+        // Check approval status
+        if (!existingProfile.is_approved) {
+          await supabase.auth.signOut()
+          return NextResponse.redirect(
+            `${origin}/login?message=${encodeURIComponent('Your account is pending admin approval.')}`
+          )
+        }
+
         // Redirect to their actual dashboard
-        const destination = `/${existingProfile.role}`
+        let rolePath = existingProfile.role.toLowerCase()
+        if (rolePath === 'school admin') rolePath = 'admin'
+
+        const destination = `/${rolePath}`
         return NextResponse.redirect(`${origin}${destination}`)
       }
 
-      // NEW USER: upsert the profile with the role from the URL
-      const finalRole = intendedRole || 'student'
-      const fullName = data.user.user_metadata?.full_name || data.user.user_metadata?.name || ''
-      const avatarUrl = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || ''
+      // NEW USER: The database trigger handle_new_user should have already created the profile.
+      // We just need to check if it's approved (unlikely for new users) and redirect.
 
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        full_name: fullName,
-        role: finalRole,
-        avatar_url: avatarUrl,
-        updated_at: new Date().toISOString(),
-      })
+      await supabase.auth.signOut()
 
-      const destination = `/${finalRole}`
       const forwardedHost = request.headers.get('x-forwarded-host')
       const isLocalEnv = process.env.NODE_ENV === 'development'
 
+      const message = encodeURIComponent('Signup successful! Your account is pending admin approval.')
       if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${destination}`)
+        return NextResponse.redirect(`${origin}/login?message=${message}`)
       } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${destination}`)
+        return NextResponse.redirect(`https://${forwardedHost}/login?message=${message}`)
       } else {
-        return NextResponse.redirect(`${origin}${destination}`)
+        return NextResponse.redirect(`${origin}/login?message=${message}`)
       }
     }
   }
