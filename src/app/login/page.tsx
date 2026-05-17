@@ -92,6 +92,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   useEffect(() => {
     setMounted(true);
 
@@ -99,11 +101,9 @@ export default function LoginPage() {
     const message = searchParams.get('message');
 
     if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error,
-      });
+      setErrorMessage(error);
+      // Remove error from URL without reloading the page
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     if (message) {
@@ -111,6 +111,8 @@ export default function LoginPage() {
         title: 'Success',
         description: message,
       });
+      // Optionally remove message from URL too
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [searchParams, toast]);
 
@@ -247,6 +249,15 @@ export default function LoginPage() {
             <h2 className="text-2xl font-bold text-white">Login as {displayRole}</h2>
             <p className="text-gray-500 text-xs">Enter your credentials to access your account.</p>
           </div>
+
+          {errorMessage && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-xl text-sm flex items-start gap-3">
+              <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{errorMessage}</span>
+            </div>
+          )}
 
           <div className="space-y-3">
             {/* Social Buttons */}

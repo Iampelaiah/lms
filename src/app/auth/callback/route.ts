@@ -12,6 +12,7 @@ export async function GET(request: Request) {
 
     if (!error && data.user) {
       const intendedRole = next.split('?')[0].split('/').filter(Boolean)[0] // e.g. 'tutor' or 'student'
+      const action = searchParams.get('action')
 
       // Check if user already has a profile (returning user)
       const { data: existingProfile } = await supabase
@@ -24,8 +25,14 @@ export async function GET(request: Request) {
         // RETURNING USER: enforce role — block if they're trying the wrong portal
         if (intendedRole && existingProfile.role !== intendedRole) {
           await supabase.auth.signOut()
+          
+          let errorMessage = `This account is registered as a ${existingProfile.role}. Please use the correct portal.`;
+          if (action === 'signup') {
+            errorMessage = `This email is already registered as a ${existingProfile.role}. An email can only be assigned to one role.`;
+          }
+          
           return NextResponse.redirect(
-            `${origin}/login?error=${encodeURIComponent(`This account is registered as a ${existingProfile.role}. Please use the correct portal.`)}`
+            `${origin}/login?error=${encodeURIComponent(errorMessage)}`
           )
         }
         // Redirect to their actual dashboard
@@ -33,18 +40,25 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}${destination}`)
       }
 
-      // NEW USER: upsert the profile with the role from the URL
-      const finalRole = intendedRole || 'student'
-      const fullName = data.user.user_metadata?.full_name || data.user.user_metadata?.name || ''
-      const avatarUrl = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || ''
+      // NEW USER: upsert the profile with the role from metadata or URL
+      const metaRole = data.user.user_metadata?.role;
+      const finalRole = metaRole || intendedRole || 'student';
+      const fullName = data.user.user_metadata?.full_name || data.user.user_metadata?.name || '';
+      const avatarUrl = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || '';
 
-      await supabase.from('profiles').upsert({
+      const { error: upsertError } = await supabase.from('profiles').upsert({
         id: data.user.id,
         full_name: fullName,
         role: finalRole,
         avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),
-      })
+      });
+
+      if (upsertError) {
+        // Handle trigger constraint violations or RLS errors
+        await supabase.auth.signOut();
+        return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent('Error creating your profile. If you have already registered with a different role, please use the correct login portal.')}`);
+      }
 
       const destination = `/${finalRole}`
       const forwardedHost = request.headers.get('x-forwarded-host')

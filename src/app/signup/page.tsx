@@ -78,6 +78,7 @@ export default function SignupPage() {
   const [role, setRole] = useState('student');
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -85,6 +86,7 @@ export default function SignupPage() {
 
   const handleAction = async (formData: FormData) => {
     setIsLoading(true);
+    setErrorMessage(null);
     const firstName = formData.get('first-name') as string;
     const lastName = formData.get('last-name') as string;
     formData.append('fullName', `${firstName} ${lastName}`);
@@ -93,32 +95,25 @@ export default function SignupPage() {
     const result = await signup(formData);
     
     if (result?.error) {
-      toast({
-        variant: 'destructive',
-        title: 'Signup failed',
-        description: result.error,
-      });
+      setErrorMessage(result.error);
       setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    setErrorMessage(null);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         // Role is passed via the `next` param — the callback reads it and upserts the profile
-        redirectTo: `${window.location.origin}/auth/callback?next=/${role}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/${role}&action=signup`,
       },
     });
 
     if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Google Login failed',
-        description: error.message,
-      });
+      setErrorMessage(error.message);
       setIsLoading(false);
     }
   };
@@ -195,6 +190,15 @@ export default function SignupPage() {
             <h2 className="text-2xl font-bold text-white">Sign Up Account</h2>
             <p className="text-gray-500 text-xs">Enter your personal data to create your account.</p>
           </div>
+
+          {errorMessage && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-xl text-sm flex items-start gap-3">
+              <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{errorMessage}</span>
+            </div>
+          )}
 
           <div className="space-y-3">
             {/* Social Buttons */}
