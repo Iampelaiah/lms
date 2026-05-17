@@ -19,28 +19,39 @@ export async function login(formData: FormData) {
     return { error: error.message }
   }
 
-  // Fetch role to verify it matches the login attempt
+  // Fetch profile to verify role and approval status
   let { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, is_approved')
     .eq('id', data.user.id)
     .single()
 
   // FALLBACK: If profile record is missing, use metadata from Auth
-  const userRole = profile?.role || data.user.user_metadata?.role || 'student'
+  let userRole = profile?.role?.toLowerCase() || data.user.user_metadata?.role?.toLowerCase() || 'student'
 
-  if (userRole !== role) {
+  // Normalize 'school admin' to 'admin' for matching the login portal role
+  const normalizedUserRole = userRole === 'school admin' ? 'admin' : userRole;
+
+  if (normalizedUserRole !== role.toLowerCase()) {
     // Sign out immediately if role mismatch
     await supabase.auth.signOut()
     return { error: `This account is registered as a ${userRole}. Please log in through the correct portal.` }
   }
 
+  // Check if account is approved
+  if (profile && !profile.is_approved) {
+    await supabase.auth.signOut()
+    return { error: 'Your account is pending admin approval. Please try again once activated.' }
+  }
+
   // Ensure profile exists if it was missing (healing)
   if (!profile) {
+    // Note: The database trigger handle_new_user should have created this already,
+    // but we keep this as a safe fallback.
     await supabase.from('profiles').upsert({
       id: data.user.id,
       full_name: data.user.user_metadata?.full_name || '',
-      role: userRole,
+      role: userRole.charAt(0).toUpperCase() + userRole.slice(1),
       updated_at: new Date().toISOString(),
     })
   }
@@ -48,13 +59,13 @@ export async function login(formData: FormData) {
   revalidatePath('/', 'layout')
   
   // Explicitly redirect based on determined role
-  if (userRole === 'tutor') {
+  if (normalizedUserRole === 'tutor') {
     return redirect('/tutor')
   }
-  if (userRole === 'admin') {
+  if (normalizedUserRole === 'admin') {
     return redirect('/admin')
   }
-  if (userRole === 'parent') {
+  if (normalizedUserRole === 'parent') {
     return redirect('/parent')
   }
   
@@ -85,29 +96,18 @@ export async function signup(formData: FormData) {
     return { error: error.message }
   }
 
-  // If user is created successfully, ensure profile record exists
-  if (data.user) {
-    await supabase.from('profiles').upsert({
-      id: data.user.id,
-      full_name: fullName,
-      role: role,
-      updated_at: new Date().toISOString(),
-    })
-  }
+  // If user is created successfully, the database trigger handle_new_user will
+  // automatically create the profile record and enforce role immutability.
 
   revalidatePath('/', 'layout')
   
-  // If a session exists, the user is already logged in (email confirmation disabled)
-  // Redirect them directly to their dashboard
+  // Even if a session exists, we should redirect to a pending page if they aren't approved
+  // For now, redirecting to login with a message is safest.
   if (data.session) {
-    if (role === 'tutor') return redirect('/tutor')
-    if (role === 'admin') return redirect('/admin')
-    if (role === 'parent') return redirect('/parent')
-    return redirect('/student')
+    await supabase.auth.signOut()
   }
 
-  // Fallback: email confirmation required
-  redirect('/login?message=' + encodeURIComponent('Check your email to confirm your account.'))
+  redirect('/login?message=' + encodeURIComponent('Signup successful! Your account is pending admin approval.'))
 }
 
 export async function signOut() {
