@@ -19,7 +19,6 @@ export function useAgoraRTM({ appId, channelName, uid, userName, token }: UseAgo
   const [error, setError] = useState<string | null>(null);
   
   const clientRef = useRef<any>(null);
-  const channelRef = useRef<any>(null);
   const isMounted = useRef(true);
 
   // Store message handlers so they can be dynamically updated without re-subscribing
@@ -40,12 +39,19 @@ export function useAgoraRTM({ appId, channelName, uid, userName, token }: UseAgo
 
   const leaveRTM = async () => {
     try {
-      if (channelRef.current) {
-        await channelRef.current.leave();
-        channelRef.current = null;
-      }
       if (clientRef.current) {
-        await clientRef.current.logout();
+        if (isJoined) {
+          try {
+            await clientRef.current.unsubscribe(channelName);
+          } catch (err) {
+            console.error('[RTM] Unsubscribe error:', err);
+          }
+        }
+        try {
+          await clientRef.current.logout();
+        } catch (err) {
+          console.error('[RTM] Logout error:', err);
+        }
         clientRef.current = null;
       }
       setIsJoined(false);
@@ -58,41 +64,43 @@ export function useAgoraRTM({ appId, channelName, uid, userName, token }: UseAgo
     if (!appId || !channelName || !uid || isJoined) return;
 
     try {
-      // 1. Initialize Client
-      const client = AgoraRTM.createInstance(appId);
+      // 1. Initialize RTM Client
+      const client = new AgoraRTM.RTM(appId, String(uid), {
+        token: token || undefined,
+      });
       clientRef.current = client;
 
-      client.on('ConnectionStateChanged', (newState, reason) => {
-        console.log(`[RTM] State: ${newState}, Reason: ${reason}`);
+      client.addEventListener('status', (event: any) => {
+        console.log(`[RTM] Status:`, event);
       });
 
-      // 2. Login
-      await client.login({ uid: String(uid), token: token || undefined });
-
-      // 3. Join Channel
-      const channel = client.createChannel(channelName);
-      channelRef.current = channel;
-
-      channel.on('ChannelMessage', ({ text }: { text: string }, senderId: string) => {
-        try {
-          const msg = JSON.parse(text);
-          console.log(`[RTM] Msg from ${senderId}:`, msg);
-          
-          if (msg.event === 'spotlight' && handlersRef.current.onSpotlight) {
-            handlersRef.current.onSpotlight(msg.payload);
-          } else if (msg.event === 'screen-share' && handlersRef.current.onScreenShare) {
-            handlersRef.current.onScreenShare(msg.payload);
-          } else if (msg.event === 'hand-raise' && handlersRef.current.onHandRaise) {
-            handlersRef.current.onHandRaise(msg.payload);
-          } else if (msg.event === 'CLASS_ENDED' && handlersRef.current.onClassEnded) {
-            handlersRef.current.onClassEnded(msg.payload);
+      // 2. Register Message event listener
+      client.addEventListener('message', (event: any) => {
+        if (event.channelName === channelName) {
+          try {
+            const msg = JSON.parse(event.message);
+            console.log(`[RTM] Msg from ${event.publisherId}:`, msg);
+            
+            if (msg.event === 'spotlight' && handlersRef.current.onSpotlight) {
+              handlersRef.current.onSpotlight(msg.payload);
+            } else if (msg.event === 'screen-share' && handlersRef.current.onScreenShare) {
+              handlersRef.current.onScreenShare(msg.payload);
+            } else if (msg.event === 'hand-raise' && handlersRef.current.onHandRaise) {
+              handlersRef.current.onHandRaise(msg.payload);
+            } else if (msg.event === 'CLASS_ENDED' && handlersRef.current.onClassEnded) {
+              handlersRef.current.onClassEnded(msg.payload);
+            }
+          } catch (e) {
+            console.error('[RTM] Failed to parse message', event.message, e);
           }
-        } catch (e) {
-          console.error('[RTM] Failed to parse message', text, e);
         }
       });
 
-      await channel.join();
+      // 3. Login
+      await client.login();
+
+      // 4. Subscribe to the classroom channel
+      await client.subscribe(channelName);
 
       if (isMounted.current) {
         setIsJoined(true);
@@ -109,14 +117,14 @@ export function useAgoraRTM({ appId, channelName, uid, userName, token }: UseAgo
   }, [appId, channelName, uid, token]);
 
   const sendMessage = useCallback(async (event: string, payload: any) => {
-    if (!channelRef.current || !isJoined) return;
+    if (!clientRef.current || !isJoined) return;
     try {
       const text = JSON.stringify({ event, payload, senderName: userName });
-      await channelRef.current.sendMessage({ text });
+      await clientRef.current.publish(channelName, text);
     } catch (err) {
       console.error('[RTM] Send failed:', err);
     }
-  }, [isJoined, userName]);
+  }, [isJoined, channelName, userName]);
 
   // Hook to register listeners dynamically without re-creating RTM instance
   const registerListeners = useCallback((handlers: typeof handlersRef.current) => {
