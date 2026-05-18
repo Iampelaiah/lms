@@ -92,6 +92,7 @@ interface AgoraClassroomProps {
   appId: string;
   channelName: string;
   token: string;
+  rtmToken?: string;
   uid: number;
   userName: string;
   role?: string;
@@ -102,11 +103,12 @@ interface AgoraClassroomProps {
 }
 
 export function AgoraClassroom(props: AgoraClassroomProps) {
+  const { sessionMode = 'rtc' } = props;
   // Stable client instance for the lifetime of this component.
   // Do NOT manually call agoraClient.leave() here — useJoin inside
   // ClassroomInner is the sole owner of the join/leave lifecycle.
   // A competing leave() causes UID_CONFLICT on the next join attempt.
-  const [agoraClient] = useState(() => AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }));
+  const [agoraClient] = useState(() => AgoraRTC.createClient({ mode: sessionMode, codec: 'vp8' }));
 
   return (
     <AgoraRTCProvider client={agoraClient}>
@@ -119,6 +121,7 @@ function ClassroomInner({
   appId,
   channelName,
   token,
+  rtmToken,
   uid,
   userName,
   role,
@@ -179,12 +182,13 @@ function ClassroomInner({
     channelName,
     uid,
     userName: profile?.full_name || userName,
+    token: rtmToken,
   });
 
   useEffect(() => {
     initChat();
     joinRTM();
-    return () => leaveRTM();
+    return () => { leaveRTM(); };
   }, [initChat, joinRTM, leaveRTM]);
 
   useEffect(() => {
@@ -236,8 +240,6 @@ function ClassroomInner({
     if (client) {
       if (sessionMode === 'live') {
         client.setClientRole(iAmTutor ? 'host' : 'audience').catch(console.error);
-      } else {
-        client.setClientRole('host').catch(console.error); // In RTC mode, everyone is a host
       }
     }
   }, [client, sessionMode, iAmTutor]);

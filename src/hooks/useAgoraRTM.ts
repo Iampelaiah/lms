@@ -20,6 +20,9 @@ export function useAgoraRTM({ appId, channelName, uid, userName, token }: UseAgo
   
   const clientRef = useRef<any>(null);
   const isMounted = useRef(true);
+  
+  // Asynchronous connection state machine to prevent concurrent login/logout requests (fixes RTM:ERROR -10023)
+  const connectionStateRef = useRef<'disconnected' | 'connecting' | 'connected' | 'disconnecting'>('disconnected');
 
   // Store message handlers so they can be dynamically updated without re-subscribing
   const handlersRef = useRef<{
@@ -29,44 +32,56 @@ export function useAgoraRTM({ appId, channelName, uid, userName, token }: UseAgo
     onClassEnded?: (payload: any) => void;
   }>({});
 
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-      leaveRTM();
-    };
-  }, []);
-
-  const leaveRTM = async () => {
+  const leaveRTM = useCallback(async () => {
+    if (connectionStateRef.current === 'disconnected' || connectionStateRef.current === 'disconnecting') {
+      return;
+    }
+    
+    console.log(`[RTM] Leaving channel: ${channelName}`);
+    connectionStateRef.current = 'disconnecting';
+    
     try {
       if (clientRef.current) {
-        if (isJoined) {
-          try {
-            await clientRef.current.unsubscribe(channelName);
-          } catch (err) {
-            console.error('[RTM] Unsubscribe error:', err);
-          }
+        try {
+          await clientRef.current.unsubscribe(channelName);
+        } catch (err) {
+          console.warn('[RTM] Unsubscribe warning:', err);
         }
         try {
           await clientRef.current.logout();
         } catch (err) {
-          console.error('[RTM] Logout error:', err);
+          console.warn('[RTM] Logout warning:', err);
         }
         clientRef.current = null;
       }
-      setIsJoined(false);
     } catch (err) {
-      console.error('[RTM] Leave error:', err);
+      console.warn('[RTM] Leave warning:', err);
+    } finally {
+      connectionStateRef.current = 'disconnected';
+      if (isMounted.current) {
+        setIsJoined(false);
+      }
     }
-  };
+  }, [channelName]);
 
   const joinRTM = useCallback(async () => {
-    if (!appId || !channelName || !uid || isJoined) return;
+    // 1. Guard against missing params or when token is not yet fetched from server
+    if (!appId || !channelName || !uid || !token) {
+      return;
+    }
+
+    // 2. Prevent concurrent / duplicate login requests (prevents RTM cancellation code -10023)
+    if (connectionStateRef.current === 'connecting' || connectionStateRef.current === 'connected') {
+      return;
+    }
+
+    console.log(`[RTM] Initiating join to channel: ${channelName} with UID: ${uid}`);
+    connectionStateRef.current = 'connecting';
 
     try {
-      // 1. Initialize RTM Client
+      // 1. Initialize RTM Client with logLevel set to 'none' to suppress console.error spam from SDK internals
       const client = new AgoraRTM.RTM(appId, String(uid), {
-        token: token || undefined,
+        logLevel: 'none'
       });
       clientRef.current = client;
 
@@ -91,40 +106,52 @@ export function useAgoraRTM({ appId, channelName, uid, userName, token }: UseAgo
               handlersRef.current.onClassEnded(msg.payload);
             }
           } catch (e) {
-            console.error('[RTM] Failed to parse message', event.message, e);
+            console.warn('[RTM] Failed to parse message', event.message, e);
           }
         }
       });
 
-      // 3. Login
-      await client.login();
+      // 3. Login with RTM dynamic token
+      await client.login({ token: token });
 
       // 4. Subscribe to the classroom channel
       await client.subscribe(channelName);
 
       if (isMounted.current) {
+        connectionStateRef.current = 'connected';
         setIsJoined(true);
         setError(null);
+        console.log(`[RTM] Successfully joined signaling channel: ${channelName}`);
       }
     } catch (err: any) {
-      console.error('[RTM] Join failed:', err);
+      console.warn('[RTM] Join warning (normal during state changes/cancellations):', err);
       if (isMounted.current) {
         setError(err.message || 'Failed to join RTM');
       }
-      leaveRTM();
+      connectionStateRef.current = 'disconnected';
+      await leaveRTM();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appId, channelName, uid, token]);
+  }, [appId, channelName, uid, token, leaveRTM]);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      leaveRTM();
+    };
+  }, [leaveRTM]);
 
   const sendMessage = useCallback(async (event: string, payload: any) => {
-    if (!clientRef.current || !isJoined) return;
+    if (!clientRef.current || connectionStateRef.current !== 'connected') {
+      return;
+    }
     try {
       const text = JSON.stringify({ event, payload, senderName: userName });
       await clientRef.current.publish(channelName, text);
     } catch (err) {
-      console.error('[RTM] Send failed:', err);
+      console.warn('[RTM] Send warning:', err);
     }
-  }, [isJoined, channelName, userName]);
+  }, [channelName, userName]);
 
   // Hook to register listeners dynamically without re-creating RTM instance
   const registerListeners = useCallback((handlers: typeof handlersRef.current) => {

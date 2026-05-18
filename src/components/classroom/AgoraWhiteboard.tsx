@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { WhiteWebSdk, RoomWhiteboard, DeviceType } from 'white-web-sdk';
+import { WhiteWebSdk, Room, DeviceType, ApplianceNames } from 'white-web-sdk';
 import { Loader2 } from 'lucide-react';
 
 interface AgoraWhiteboardProps {
@@ -22,12 +22,12 @@ export default function AgoraWhiteboard({
   isTutor,
 }: AgoraWhiteboardProps) {
   const whiteboardRef = useRef<HTMLDivElement>(null);
-  const [room, setRoom] = useState<RoomWhiteboard | null>(null);
+  const [room, setRoom] = useState<Room | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let currentRoom: RoomWhiteboard | null = null;
+    let currentRoom: Room | null = null;
     let isMounted = true;
 
     const initWhiteboard = async () => {
@@ -50,7 +50,8 @@ export default function AgoraWhiteboard({
 
         if (isMounted) {
           newRoom.bindHtmlElement(whiteboardRef.current);
-          setRoom(newRoom as any);
+          currentRoom = newRoom;
+          setRoom(newRoom);
           setIsLoading(false);
         }
       } catch (err: any) {
@@ -101,21 +102,21 @@ export default function AgoraWhiteboard({
       {isTutor && room && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-lg text-black">
            <button 
-             onClick={() => room.setMemberState({ currentApplianceName: 'pencil' })}
+             onClick={() => room.setMemberState({ currentApplianceName: ApplianceNames.pencil })}
              className="px-3 py-1 hover:bg-gray-100 rounded-md text-sm font-medium transition-colors"
            >
              Pen
            </button>
            <div className="w-px h-4 bg-gray-300" />
            <button 
-             onClick={() => room.setMemberState({ currentApplianceName: 'eraser' })}
+             onClick={() => room.setMemberState({ currentApplianceName: ApplianceNames.eraser })}
              className="px-3 py-1 hover:bg-gray-100 rounded-md text-sm font-medium transition-colors"
            >
              Eraser
            </button>
            <div className="w-px h-4 bg-gray-300" />
            <button 
-             onClick={() => room.setMemberState({ currentApplianceName: 'text' })}
+             onClick={() => room.setMemberState({ currentApplianceName: ApplianceNames.text })}
              className="px-3 py-1 hover:bg-gray-100 rounded-md text-sm font-medium transition-colors"
            >
              Text

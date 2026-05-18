@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RtcTokenBuilder, RtcRole } from 'agora-access-token';
+import { RtcTokenBuilder, RtcRole, RtmTokenBuilder, RtmRole } from 'agora-access-token';
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,7 +35,16 @@ export async function POST(req: NextRequest) {
       privilegeExpiredTs
     );
 
-    return NextResponse.json({ token, appId });
+    // Generate RTM Token for signaling
+    const rtmToken = RtmTokenBuilder.buildToken(
+      appId,
+      appCertificate,
+      String(uid || 0),
+      RtmRole.Rtm_User,
+      privilegeExpiredTs
+    );
+
+    return NextResponse.json({ token, rtmToken, appId });
   } catch (error: any) {
     console.error('Error generating Agora token:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });

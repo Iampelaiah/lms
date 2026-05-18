@@ -79,7 +79,7 @@ export default function RoleLoginPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const role = Array.isArray(params.role) ? params.role[0] : params.role;
+  const role = (Array.isArray(params.role) ? params.role[0] : params.role) || 'student';
   const [email, setEmail] = useState('');
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,9 +127,6 @@ export default function RoleLoginPage() {
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/${role}`,
-        data: {
-          role: role,
-        },
       },
     });
 

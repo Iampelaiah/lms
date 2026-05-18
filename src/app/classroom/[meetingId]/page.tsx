@@ -18,7 +18,7 @@ function ClassroomContent() {
   const role = searchParams.get('role') || 'participant';
   const userName = searchParams.get('name') || 'Guest';
   
-  const [agoraData, setAgoraData] = useState<{ token: string; appId: string; uid: number } | null>(null);
+  const [agoraData, setAgoraData] = useState<{ token: string; rtmToken?: string; appId: string; uid: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -86,6 +86,7 @@ function ClassroomContent() {
       appId={agoraData.appId}
       channelName={meetingId}
       token={agoraData.token}
+      rtmToken={agoraData.rtmToken}
       uid={agoraData.uid}
       userName={userName}
       role={role}
