@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { GraduationCap, Briefcase, Shield, UserCog, Eye, ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -83,7 +83,7 @@ const roleImagePositions: Record<string, string> = {
   student: '100%',
 };
 
-export default function LoginPage() {
+function LoginForm() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const [role, setRole] = useState('student');
@@ -358,5 +358,13 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="h-screen bg-black flex items-center justify-center text-white">Loading login form...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -21,8 +21,6 @@ import { useAgoraRTM } from '@/hooks/useAgoraRTM';
 import { useConvoAI } from '@/hooks/useConvoAI';
 import { useAgoraChat } from '@/hooks/useAgoraChat';
 import { lazy, Suspense } from 'react';
-
-const AgoraWhiteboard = lazy(() => import('./AgoraWhiteboard'));
 import { 
   Mic, 
   MicOff, 
@@ -75,6 +73,8 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { createClient } from '@/utils/supabase/client';
 import { useUser } from '@/components/providers/user-context';
+
+const AgoraWhiteboard = lazy(() => import('./AgoraWhiteboard'));
 
 interface UserProfile {
   id: string;
@@ -441,7 +441,6 @@ function ClassroomInner({
 
   // --- SCREEN SHARING & UI STATE ---
   const [handRaised, setHandRaised] = useState(false);
-  const [raisedHands, setRaisedHands] = useState<{uid: number; name: string}[]>([]);
   const screenVideoRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1116,31 +1115,7 @@ function ClassroomInner({
             </div>
 
           </div>
-        </div>
       </main>
-
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,700&display=swap');
-
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 5px;
-          height: 5px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.1);
-        }
-
-        body {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-      `}</style>
     </div>
   );
 }
