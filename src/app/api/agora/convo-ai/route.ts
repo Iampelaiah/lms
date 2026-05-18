@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing channelName or uid' }, { status: 400 });
     }
 
-    const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID;
+    const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || process.env.AGORA_APP_ID;
     const AGORA_APP_CERTIFICATE = process.env.AGORA_APP_CERTIFICATE; // Server-side only
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // Server-side only
 
@@ -87,7 +87,7 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ error: 'Missing agentId' }, { status: 400 });
         }
 
-        const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID;
+        const AGORA_APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID || process.env.AGORA_APP_ID;
         const AGORA_APP_CERTIFICATE = process.env.AGORA_APP_CERTIFICATE;
 
         if (!AGORA_APP_ID || !AGORA_APP_CERTIFICATE) {
