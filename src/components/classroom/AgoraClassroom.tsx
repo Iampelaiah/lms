@@ -150,6 +150,14 @@ function ClassroomInner({
   const [isVoiceOnly, setIsVoiceOnly] = useState(voiceOnly);
   const [raisedHands, setRaisedHands] = useState<{ uid: number; name: string }[]>([]);
 
+  // Determine if the CURRENT user is the tutor/host using ALL available signals
+  const iAmTutor = useMemo(() => {
+    const fromProp = role === 'tutor';
+    const fromProfile = profile?.role === 'tutor';
+    const fromUid = uid >= 1000 && uid <= 2000;
+    return fromProp || fromProfile || fromUid;
+  }, [role, profile?.role, uid]);
+
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const supabaseRef = useRef(createClient());
@@ -200,14 +208,6 @@ function ClassroomInner({
   const broadcastChannelRef = useRef<any>(null);
   // Stable ref to the Supabase Presence channel (participant roster).
   const presenceChannelRef = useRef<any>(null);
-
-  // Determine if the CURRENT user is the tutor/host using ALL available signals
-  const iAmTutor = useMemo(() => {
-    const fromProp = role === 'tutor';
-    const fromProfile = profile?.role === 'tutor';
-    const fromUid = uid >= 1000 && uid <= 2000;
-    return fromProp || fromProfile || fromUid;
-  }, [role, profile?.role, uid]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
