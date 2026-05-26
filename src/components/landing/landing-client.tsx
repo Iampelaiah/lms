@@ -1,49 +1,39 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { 
   ArrowRight, 
-  Check, 
   Plus, 
-  Minus, 
   Menu, 
-  X, 
   BarChart3, 
-  BookOpen, 
   GraduationCap, 
-  Zap, 
-  Globe,
   Brain,
-  Video,
-  Library,
-  Trophy,
-  MessageCircle,
-  MoreHorizontal
+  Trophy
 } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+// Dynamically import heavy sections
+const Features = dynamic(() => import('./sections/features').then(mod => mod.Features), {
+  loading: () => <div className="h-screen bg-white animate-pulse" />
+});
+const StudySimulator = dynamic(() => import('./sections/study-simulator').then(mod => mod.StudySimulator), {
+  loading: () => <div className="h-[600px] bg-white animate-pulse" />
+});
+const FAQ = dynamic(() => import('./sections/faq').then(mod => mod.FAQ), {
+  loading: () => <div className="h-[600px] bg-[#242424] animate-pulse" />
+});
+const ParallaxTestimonial = dynamic(() => import('./sections/parallax-testimonial').then(mod => mod.ParallaxTestimonial), {
+  loading: () => <div className="h-screen bg-fin-green animate-pulse" />
+});
+const Footer = dynamic(() => import('./sections/footer').then(mod => mod.Footer), {
+  loading: () => <div className="h-[400px] bg-fin-green animate-pulse" />
+});
 
 // --- Components ---
-
-const AnimatedNumber = ({ value, suffix = "" }: { value: number, suffix?: string }) => {
-  const spring = useSpring(value, { mass: 0.8, stiffness: 75, damping: 15 });
-  const [displayValue, setDisplayValue] = useState(value);
-
-  useEffect(() => {
-    spring.set(value);
-  }, [value, spring]);
-
-  useEffect(() => {
-    return spring.onChange((latest) => {
-      setDisplayValue(latest);
-    });
-  }, [spring]);
-
-  return <span>{displayValue.toFixed(displayValue > 100 ? 0 : 1)}{suffix}</span>;
-};
 
 const Navbar = () => {
   const { scrollY } = useScroll();
@@ -233,355 +223,6 @@ const Marquee = () => {
         </motion.div>
       </div>
     </div>
-  );
-};
-
-const Features = () => {
-  return (
-    <section id="methodology" className="py-24 px-6 md:px-12 bg-white relative">
-      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-stretch">
-        {/* Left Column: Massive Headline & Text */}
-        <div className="lg:col-span-5 space-y-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-6xl md:text-7xl font-headline font-bold text-fin-green leading-[1] tracking-tight">
-              Build for your <br /> next gen of <br /> learning
-            </h2>
-            <div className="mt-10 flex flex-wrap gap-4">
-               <Button size="lg" className="bg-fin-green text-white hover:bg-fin-green/90 font-bold px-8 h-14 rounded-full text-md group">
-                  Start learning <ArrowRight className="ml-2 w-4 h-4" />
-               </Button>
-               <Button size="lg" variant="outline" className="border-fin-green/10 text-fin-green hover:bg-fin-beige font-bold px-8 h-14 rounded-full text-md">
-                  Learn more
-               </Button>
-            </div>
-            
-            <div className="mt-16 space-y-6 max-w-md">
-              <p className="text-fin-green/60 text-lg leading-relaxed">
-                Experience seamless integration of technology and education, built for your success and convenience.
-              </p>
-              <p className="text-fin-green/60 text-lg leading-relaxed font-bold">
-                The power of an AI-driven school, with none of the legacy baggage. Dr Max gives modern learners and tutors an intuitive platform for exam-readiness and mastery.
-              </p>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Right Column: Bento Feature Cards - Exact Stagger and Scale */}
-        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-3 gap-8 items-start relative h-full">
-            {/* Card 1: Landscape (Wide/Short) - Light Background */}
-            <motion.div 
-                initial={{ opacity: 0, y: 40, scale: 0.93 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0 }}
-                className="bg-[#E4F0F2] rounded-[2.5rem] p-7 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[224px] absolute bottom-[10px] left-0 w-[57%]"
-            >
-                <div className="space-y-6">
-                    <h3 className="text-2xl font-headline font-bold text-fin-green tracking-tight leading-tight">
-                        Control study <br /> effortlessly at any pace
-                    </h3>
-                    <ul className="space-y-4 text-fin-green/60 font-medium">
-                        <li className="flex items-center gap-3">
-                            <ArrowRight className="w-4 h-4" /> 
-                            <span>Adaptive learning paths</span>
-                        </li>
-                        <li className="flex items-center gap-3">
-                            <ArrowRight className="w-4 h-4" /> 
-                            <span>24/7 AI tutor support</span>
-                        </li>
-                    </ul>
-                </div>
-                <Button variant="ghost" className="mt-7 w-fit bg-fin-green text-white hover:bg-fin-green/90 rounded-full px-5 h-9 font-bold flex gap-2 text-sm">
-                    Manage studies <ArrowRight className="w-4 h-4" />
-                </Button>
-            </motion.div>
-
-            {/* Card 2: Portrait (Narrow/Tall) - Dark Background */}
-            <motion.div 
-                initial={{ opacity: 0, y: 40, scale: 0.93 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-                className="bg-fin-green rounded-[2.5rem] p-10 flex flex-col justify-between overflow-hidden absolute bottom-[10px] right-0 w-[40%] min-h-[380px]"
-            >
-                <div className="space-y-8 relative z-10">
-                    {/* UI Mockup Snippets */}
-                    <div className="space-y-4">
-                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/5 w-full flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-fin-lime/20 flex items-center justify-center">
-                                    <Brain className="w-6 h-6 text-fin-lime" />
-                                </div>
-                                <span className="text-white text-sm font-bold">Ask AI Buddy</span>
-                            </div>
-                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                                <Plus className="w-4 h-4 text-white" />
-                            </div>
-                        </div>
-
-                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/5 w-fit ml-auto flex items-center gap-4">
-                             <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Ongoing session</span>
-                             <div className="flex -space-x-2">
-                                <div className="w-6 h-6 rounded-full border-2 border-fin-green bg-blue-500 overflow-hidden">
-                                    <Image src="https://picsum.photos/seed/face1/40/40" alt="user" width={40} height={40} />
-                                </div>
-                                <div className="w-6 h-6 rounded-full border-2 border-fin-green bg-green-500 overflow-hidden">
-                                    <Image src="https://picsum.photos/seed/face2/40/40" alt="user" width={40} height={40} />
-                                </div>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mt-20 relative z-10">
-                    <h3 className="text-3xl font-headline font-bold text-fin-lime tracking-tight leading-tight">
-                        Fuel your future with <br /> world-class certified <br /> expert tutors
-                    </h3>
-                </div>
-
-                {/* Abstract Shadow Style Overlay */}
-                <div className="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none">
-                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full scale-150">
-                        <path fill="#D1F366" d="M44.7,-76.4C58.1,-69.2,70.1,-58.5,77.4,-45.3C84.7,-32.1,87.3,-16,85.1,-0.6C82.9,14.8,75.9,29.5,67,42.5C58.1,55.5,47.3,66.8,34.4,73.5C21.5,80.2,6.5,82.3,-8.4,79.5C-23.3,76.7,-38.1,69,-50.2,58.4C-62.3,47.8,-71.7,34.3,-76.5,19.3C-81.3,4.3,-81.5,-12.3,-75.7,-26.8C-69.9,-41.3,-58.1,-53.7,-44.6,-61C-31.1,-68.3,-15.5,-70.5,-0.1,-70.3C15.3,-70.1,31.2,-83.6,44.7,-76.4Z" transform="translate(100 100)" />
-                    </svg>
-                </div>
-            </motion.div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const StudySimulator = () => {
-  const [hours, setHours] = useState(10);
-  // Base 60% + 2% per hour, max 99%
-  const projectedGrade = Math.min(60 + (hours * 3), 99);
-  const masteryBoost = hours * 1.5;
-
-  return (
-    <section className="py-32 px-6 md:px-12 bg-white">
-      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-        <div>
-          <h2 className="text-5xl md:text-7xl font-headline font-bold text-fin-green leading-[0.9] tracking-tight">Visualize your <br /> success.</h2>
-          <p className="mt-8 text-2xl text-fin-green/60 max-w-md leading-relaxed">Our algorithm projects your performance based on commitment and resource engagement.</p>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          className="bg-fin-lime p-12 rounded-[3rem] text-fin-green shadow-2xl shadow-fin-lime/20"
-        >
-          <div className="space-y-12">
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <span className="font-bold text-sm uppercase tracking-widest">Weekly Study Hours</span>
-                <span className="text-2xl font-bold font-headline">{hours} hrs</span>
-              </div>
-              {/* aria-label required: no visible <label> is associated with this input */}
-              <input 
-                type="range" 
-                min="1" 
-                max="40" 
-                step="1"
-                value={hours}
-                aria-label="Select weekly study hours"
-                onChange={(e) => setHours(Number(e.target.value))}
-                className="w-full h-2.5 bg-fin-green/10 rounded-full appearance-none cursor-pointer accent-fin-green"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-8 border-t border-fin-green/10 pt-12">
-              <div>
-                <p className="text-fin-green/40 text-xs uppercase font-bold tracking-widest">Projected Grade</p>
-                <div className="text-4xl font-headline font-bold mt-4 tracking-tighter">
-                  <AnimatedNumber value={projectedGrade} suffix="%" />
-                </div>
-              </div>
-              <div>
-                <p className="text-fin-green/40 text-xs uppercase font-bold tracking-widest">Mastery Velocity</p>
-                <div className="text-4xl font-headline font-bold mt-4 text-fin-green tracking-tighter">
-                  <AnimatedNumber value={masteryBoost} suffix="x" />
-                </div>
-              </div>
-            </div>
-
-            <Button className="w-full bg-fin-green text-white hover:bg-fin-green/90 h-[60px] rounded-2xl font-bold text-base transition-all active:scale-95" asChild>
-              <Link href="/signup">Unlock Full Potential</Link>
-            </Button>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-};
-
-const FAQ = () => {
-  const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "start start"]
-  });
-
-  const backgroundColor = useTransform(scrollYProgress, [0.5, 1], ["#242424", "#1A1A1A"]);
-  const textColor = useTransform(scrollYProgress, [0.5, 1], ["#FFFFFF", "#FFFFFF"]);
-
-  return (
-    <motion.section 
-      ref={containerRef}
-      style={{ backgroundColor }}
-      className="py-32 px-6 md:px-12 transition-colors duration-500"
-    >
-      <div className="container mx-auto max-w-4xl">
-        <motion.h2 
-          style={{ color: textColor }}
-          className="text-5xl md:text-8xl font-headline font-bold mb-20 text-center leading-[0.85] tracking-tight"
-        >
-          Frequently Asked <br /> Questions
-        </motion.h2>
-
-        <Accordion type="single" collapsible className="space-y-6">
-          {[
-            { q: "Is Dr Max Online School accredited?", a: "Yes, our curriculum is fully aligned with national standards and our certificates are recognized globally for further education." },
-            { q: "How do the AI tutors work?", a: "Our AI Study Buddy uses advanced Gemini LLMs to analyze your specific learning gaps and generate personalized summaries, quizzes, and study paths." },
-            { q: "Can I switch between subjects?", a: "Absolutely. Our platform is designed for flexible learning. You can enroll in multiple courses and manage them all from a single dashboard." },
-            { q: "What role do parents play?", a: "Parents have a dedicated portal to monitor attendance, real-time progress, and academic milestones, ensuring a collaborative approach to education." }
-          ].map((item, i) => (
-            <AccordionItem key={i} value={`item-${i}`} className="border-b-0">
-              <motion.div 
-                style={{ backgroundColor: i % 2 === 0 ? 'rgba(128, 0, 0, 0.15)' : 'transparent' }}
-                className="rounded-3xl border border-white/10 overflow-hidden"
-              >
-                <AccordionTrigger className="px-10 py-8 text-white hover:no-underline group">
-                  <span className="text-left font-headline font-bold text-2xl tracking-tight">{item.q}</span>
-                </AccordionTrigger>
-                <AccordionContent className="px-10 pb-10 text-white/60 text-xl leading-relaxed">
-                  {item.a}
-                </AccordionContent>
-              </motion.div>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
-    </motion.section>
-  );
-};
-
-const ParallaxTestimonial = () => {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"]
-  });
-  const y = useTransform(scrollYProgress, [0, 1], [0, -300]);
-
-  return (
-    <section ref={ref} className="relative h-screen overflow-hidden">
-      <motion.div style={{ y }} className="absolute -inset-y-40 inset-x-0">
-        <Image 
-          src="https://picsum.photos/seed/edu-parallax-exact/1600/900"
-          alt="Student Success"
-          fill
-          className="object-cover brightness-50"
-          sizes="100vw"
-          data-ai-hint="graduated student"
-        />
-      </motion.div>
-      
-      <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-32 bg-gradient-to-t from-fin-green to-transparent">
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          className="bg-fin-lime p-10 rounded-[2.5rem] max-w-2xl shadow-2xl shadow-black/40"
-        >
-          <p className="text-2xl md:text-4xl font-headline font-bold text-fin-green leading-[1] tracking-tight">
-            "Since joining Dr Max, my grade in Mathematics jumped from a C to an A+. The AI tutor changed how I study forever."
-          </p>
-          <div className="mt-8 flex items-center gap-4">
-            <div className="w-12 h-12 bg-fin-green rounded-full flex items-center justify-center">
-                <Trophy className="text-fin-lime w-6 h-6" />
-            </div>
-            <div>
-              <p className="font-bold text-fin-green text-lg">Sarah Jenkins</p>
-              <p className="text-fin-green/60 text-xs font-bold uppercase tracking-widest">Grade 11 Student</p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-};
-
-const Footer = () => {
-  return (
-    <footer className="bg-fin-green text-white py-32 px-6 md:px-12 border-t border-white/5">
-      <div className="container mx-auto">
-        <div className="flex flex-col items-center text-center mb-32">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-6xl md:text-[140px] font-headline font-bold mb-16 leading-[0.8] tracking-tighter"
-          >
-            Start your digital <br /> learning journey
-          </motion.h2>
-          <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-16 h-24 rounded-full text-3xl group transition-all duration-500 shadow-2xl shadow-fin-lime/20" asChild>
-            <Link href="/signup">
-                Enroll Today <ArrowRight className="ml-6 w-10 h-10 group-hover:translate-x-3 transition-transform" />
-            </Link>
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-16 pt-32 border-t border-white/5">
-          <div className="col-span-2">
-            <div className="flex items-center gap-3 mb-10">
-              <div className="w-10 h-10 bg-fin-lime rounded-full flex items-center justify-center">
-                <GraduationCap className="w-6 h-6 text-fin-green" />
-              </div>
-              <div className="flex flex-col leading-tight">
-                <span className="font-headline font-bold text-3xl">Dr Max</span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-fin-lime/80">Online School</span>
-              </div>
-            </div>
-            <p className="text-white/30 max-w-xs text-lg leading-relaxed font-medium">
-              Pioneering the future of digital education with AI-powered personalized learning systems.
-            </p>
-          </div>
-          
-          {[
-            { title: "Methodology", links: [{label: "AI Tutoring", href: "#"}, {label: "Virtual Labs", href: "#"}, {label: "Hybrid Learning", href: "#"}, {label: "Assessment", href: "#"}] },
-            { title: "Portals", links: [{label: "Students", href: "/login/student"}, {label: "Tutors", href: "/login/tutor"}, {label: "Parents", href: "/login/parent"}, {label: "Administrators", href: "/login/admin"}] },
-            { title: "Resources", links: [{label: "Library", href: "#"}, {label: "Forums", href: "#"}, {label: "Live Archive", href: "#"}, {label: "Support", href: "#"}] },
-            { title: "Institution", links: [{label: "About", href: "#"}, {label: "Faculty", href: "#"}, {label: "Contact", href: "#"}, {label: "Privacy", href: "#"}] }
-          ].map((section, i) => (
-            <div key={i}>
-              <h4 className="font-bold mb-8 text-xs uppercase tracking-[0.2em] text-fin-lime">{section.title}</h4>
-              <ul className="space-y-5 text-white/50 font-medium">
-                {section.links.map((link, j) => (
-                  <li key={j}>
-                    <Link href={link.href} className="hover:text-white transition-colors">{link.label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-32 pt-10 border-t border-white/5 flex flex-col md:row justify-between items-center gap-10 text-white/20 text-sm font-bold uppercase tracking-widest">
-          <p>© 2024 Dr Max Online School. All rights reserved.</p>
-          <div className="flex gap-12">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors">Cookies</a>
-          </div>
-        </div>
-      </div>
-    </footer>
   );
 };
 

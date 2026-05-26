@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { PlusCircle, Loader2, Upload, ImageIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import {
     Dialog,
@@ -169,7 +170,7 @@ export function CreatePostDialog({
                             
                             {imageUrl && (
                                 <div className="relative aspect-video w-full rounded-lg overflow-hidden border bg-muted mt-2">
-                                    <img src={imageUrl} alt="Post attachment preview" className="object-contain w-full h-full" />
+                                    <Image src={imageUrl} alt="Post attachment preview" fill className="object-contain" />
                                     {uploading && (
                                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                                             <Loader2 className="h-8 w-8 animate-spin text-white" />

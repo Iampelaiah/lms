@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PlusCircle, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import {
     Dialog,
@@ -176,10 +177,11 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                                 ) : imageUrl ? (
                                     /* Preview fetched from Supabase public URL */
                                     <div className="relative aspect-[2/1] w-full rounded-lg overflow-hidden border bg-muted group">
-                                        <img
+                                        <Image
                                             src={imageUrl}
                                             alt="Banner preview"
-                                            className="object-cover w-full h-full"
+                                            fill
+                                            className="object-cover"
                                         />
                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-start justify-end p-2">
                                             <Button
