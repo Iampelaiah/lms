@@ -1,69 +1,38 @@
-'use client';
-
-import { createClient } from '@/utils/supabase/client';
-import { notFound, useParams } from 'next/navigation';
+import { createClient } from '@/utils/supabase/server';
+import { notFound } from 'next/navigation';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { BookUser, Clock, PlayCircle, FileText, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { BookUser, Clock, PlayCircle, FileText } from 'lucide-react';
 
-export default function CoursePage() {
-  const params = useParams();
-  const courseId = Array.isArray(params.subjectId) ? params.subjectId[0] : params.subjectId;
-  const [course, setCourse] = useState<any>(null);
-  const [lessons, setLessons] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+export default async function CoursePage({ params }: { params: Promise<{ subjectId: string }> }) {
+  const { subjectId: courseId } = await params;
+  const supabase = await createClient();
 
-  useEffect(() => {
-    const fetchCourseData = async () => {
-      const { data: courseData } = await supabase
-        .from('courses')
-        .select(`
-          *,
-          tutor:profiles (
-            full_name
-          )
-        `)
-        .eq('id', courseId)
-        .single();
-      
-      if (courseData) {
-        setCourse(courseData);
-        const { data: lessonData } = await supabase
-          .from('lessons')
-          .select('*')
-          .eq('course_id', courseId)
-          .order('order_index', { ascending: true });
-        
-        if (lessonData) setLessons(lessonData);
-      }
-      setLoading(false);
-    };
-
-    if (courseId) fetchCourseData();
-  }, [courseId]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading course content...</p>
-      </div>
-    );
-  }
+  const { data: course } = await supabase
+    .from('courses')
+    .select(`
+      *,
+      tutor:profiles (
+        full_name
+      ),
+      lessons (*)
+    `)
+    .eq('id', courseId)
+    .single();
 
   if (!course) {
     notFound();
   }
+
+  const lessons = course.lessons || [];
+  const sortedLessons = [...lessons].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
   return (
     <div className="space-y-6">
@@ -77,16 +46,16 @@ export default function CoursePage() {
           </div>
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            <span>{lessons.length} Lessons</span>
+            <span>{sortedLessons.length} Lessons</span>
           </div>
         </div>
       </div>
 
       <div className="grid gap-6">
         <h2 className="text-2xl font-bold">Curriculum</h2>
-        {lessons.length > 0 ? (
+        {sortedLessons.length > 0 ? (
           <div className="space-y-4">
-            {lessons.map((lesson, index) => (
+            {sortedLessons.map((lesson: any, index: number) => (
               <Card key={lesson.id} className="hover:border-primary transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between py-4">
                   <div className="flex items-center gap-4">

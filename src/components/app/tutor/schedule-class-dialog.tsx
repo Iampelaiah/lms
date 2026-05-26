@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CalendarPlus, Loader2, Sparkles, Upload, Video, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import {
     Dialog,
@@ -152,7 +153,7 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
                         <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20">Class Presentation Banner</Label>
                         {imageUrl ? (
                             <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl group">
-                                <img src={imageUrl} alt="Preview" className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110" />
+                                <Image src={imageUrl} alt="Preview" fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                                 {uploading ? (
                                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
                                         <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 animate-spin">

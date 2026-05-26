@@ -70,6 +70,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { createClient } from '@/utils/supabase/client';
 import { useUser } from '@/components/providers/user-context';
@@ -1169,7 +1170,7 @@ function LobbyScreen(props: {
         <div className="w-full aspect-video rounded-[2rem] overflow-hidden mb-8 relative border border-white/10 shadow-2xl group">
           {classBanner ? (
             <>
-              <img src={classBanner} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Class Banner" />
+              <Image src={classBanner} fill className="object-cover transition-transform duration-700 group-hover:scale-110" alt="Class Banner" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               <div className="absolute bottom-6 left-6 flex items-center gap-3">
                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A7C957] to-[#6A994E] flex items-center justify-center shadow-lg shadow-[#A7C957]/20">
@@ -1358,7 +1359,7 @@ function ControlButton({
 function MockParticipant({ name, img, status }: { name: string, img: string, status: 'muted' | 'active' | 'talking' }) {
   return (
     <div className="w-44 shrink-0 aspect-[4/3] rounded-[2rem] overflow-hidden border border-white/5 bg-white/5 relative group cursor-pointer transition-all hover:border-[#A7C957]/30">
-        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=p${img}`} className="w-full h-full object-cover transition-transform group-hover:scale-110 opacity-60" alt={name} />
+        <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=p${img}`} fill className="object-cover transition-transform group-hover:scale-110 opacity-60" alt={name} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         
         {status === 'talking' && (

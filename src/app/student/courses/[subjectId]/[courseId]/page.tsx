@@ -1,45 +1,24 @@
-'use client';
-
-import { createClient } from '@/utils/supabase/client';
-import { notFound, useParams } from 'next/navigation';
+import { createClient } from '@/utils/supabase/server';
+import { notFound } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-import { BookUser, Clock, PlayCircle, FileText, HelpCircle, ChevronLeft, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PlayCircle, ChevronLeft } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
 
-export default function LessonViewPage() {
-  const params = useParams();
-  const courseId = Array.isArray(params.subjectId) ? params.subjectId[0] : params.subjectId;
-  const lessonId = Array.isArray(params.courseId) ? params.courseId[0] : params.courseId;
-  const [lesson, setLesson] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+export default async function LessonViewPage({
+  params
+}: {
+  params: Promise<{ subjectId: string; courseId: string }>
+}) {
+  const { subjectId: courseId, courseId: lessonId } = await params;
+  const supabase = await createClient();
 
-  useEffect(() => {
-    const fetchLesson = async () => {
-      const { data, error } = await supabase
-        .from('lessons')
-        .select('*')
-        .eq('id', lessonId)
-        .single();
-      
-      if (data) setLesson(data);
-      setLoading(false);
-    };
-
-    if (lessonId) fetchLesson();
-  }, [lessonId]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Loading lesson...</p>
-      </div>
-    );
-  }
+  const { data: lesson } = await supabase
+    .from('lessons')
+    .select('*')
+    .eq('id', lessonId)
+    .single();
 
   if (!lesson) {
     notFound();

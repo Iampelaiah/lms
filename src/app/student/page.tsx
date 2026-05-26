@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { BrainCircuit, Lightbulb, Video, Calendar, Clock, Loader2, Shield } from 'lucide-react';
+import { BrainCircuit, Lightbulb, Video, Calendar, Clock, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { DetailedProgressCard } from "@/components/app/student/dashboard/subject-progress-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,8 +17,9 @@ import Image from "next/image";
 import { SchoolHeader } from '@/components/app/school-header';
 import { useUser } from '@/components/providers/user-context';
 import { createClient } from '@/utils/supabase/client';
-import { LiveClass } from '@/lib/types';
 import React, { useEffect, useState } from 'react';
+import useSWR from 'swr';
+import { Skeleton } from "@/components/ui/skeleton";
 
 function AiStudyPanel() {
   return (
@@ -39,7 +40,7 @@ function AiStudyPanel() {
   )
 }
 
-function AiTutorAssistant({ courses }: { courses: any[] }) {
+function AiTutorAssistant({ courses, isLoading }: { courses: any[], isLoading: boolean }) {
   return (
     <Card>
       <CardHeader>
@@ -54,32 +55,39 @@ function AiTutorAssistant({ courses }: { courses: any[] }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Subject" />
-            </SelectTrigger>
-            <SelectContent>
-              {courses.map(course => (
-                <SelectItem key={course.name} value={course.name.toLowerCase()}>{course.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Focus Area" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="conceptual">Conceptual Understanding</SelectItem>
-              <SelectItem value="problem-solving">Problem Solving</SelectItem>
-              <SelectItem value="revision">Revision</SelectItem>
-              <SelectItem value="exam-prep">Exam Preparation</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <Button className="w-full">
+        {isLoading ? (
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <Skeleton className="h-10 w-full rounded-md" />
+             <Skeleton className="h-10 w-full rounded-md" />
+           </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Subject" />
+              </SelectTrigger>
+              <SelectContent>
+                {courses.map(course => (
+                  <SelectItem key={course.name} value={course.name.toLowerCase()}>{course.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Focus Area" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="conceptual">Conceptual Understanding</SelectItem>
+                <SelectItem value="problem-solving">Problem Solving</SelectItem>
+                <SelectItem value="revision">Revision</SelectItem>
+                <SelectItem value="exam-prep">Exam Preparation</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <Button className="w-full" disabled={isLoading}>
           <Lightbulb className="mr-2 h-4 w-4" />
-          Get Recommendations
+          {isLoading ? 'Preparing...' : 'Get Recommendations'}
         </Button>
       </CardContent>
     </Card>
@@ -87,13 +95,10 @@ function AiTutorAssistant({ courses }: { courses: any[] }) {
 }
 
 function UpcomingLiveClass() {
-  const [upcomingClass, setUpcomingClass] = useState<LiveClass | null>(null);
-  const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
-  useEffect(() => {
-    const fetchUpcoming = async () => {
-      const { data, error } = await supabase
+  const { data: upcomingClass, error, isLoading } = useSWR('upcoming-class', async () => {
+    const { data, error } = await supabase
         .from('classes')
         .select(`
           *,
@@ -106,20 +111,26 @@ function UpcomingLiveClass() {
         .limit(1)
         .single();
 
-      if (data && !error) {
-        setUpcomingClass(data as any);
-      }
-      setLoading(false);
-    };
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  });
 
-    fetchUpcoming();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <Card className="animate-pulse">
-        <CardHeader><div className="h-6 w-32 bg-muted rounded" /></CardHeader>
-        <CardContent><div className="aspect-[3/2] bg-muted rounded mb-4" /></CardContent>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-32 mb-2" />
+          <Skeleton className="h-4 w-48" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="aspect-[3/2] w-full rounded-lg" />
+          <Skeleton className="h-6 w-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-1/3" />
+          </div>
+          <Skeleton className="h-10 w-full rounded-md" />
+        </CardContent>
       </Card>
     );
   }
@@ -189,8 +200,6 @@ function SecurityAlert() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in via Google (OAuth)
-    // Most OAuth users won't have a local password set initially
     if (user?.app_metadata?.provider === 'google' || user?.app_metadata?.providers?.includes('google')) {
       setIsVisible(true);
     }
@@ -223,57 +232,42 @@ function SecurityAlert() {
 
 export default function StudentDashboardPage() {
   const { profile } = useUser();
-  const [courses, setCourses] = React.useState<any[]>([]);
-  const [loadingCourses, setLoadingCourses] = React.useState(true);
   const supabase = createClient();
   const userName = profile?.full_name || 'Student';
 
-    React.useEffect(() => {
-    const fetchProgress = async () => {
-      if (!profile?.id) {
-        setLoadingCourses(false);
-        return;
-      }
+  const { data: courses = [], isLoading: loadingCourses } = useSWR(
+    profile?.id ? `student-progress-${profile.id}` : null,
+    async () => {
+      const { data: enrollments } = await supabase
+        .from('enrollments')
+        .select(`
+          course:courses (
+            id,
+            title,
+            lessons (id),
+            student_progress (completed)
+          )
+        `)
+        .eq('student_id', profile?.id);
 
-      try {
-        // Fetch enrolled courses for this student with lesson/progress data
-        const { data: enrollments } = await supabase
-          .from('enrollments')
-          .select(`
-            course:courses (
-              id,
-              title,
-              lessons (id),
-              student_progress (completed)
-            )
-          `)
-          .eq('student_id', profile.id);
+      if (!enrollments) return [];
 
-        if (enrollments) {
-          const formatted = enrollments
-            .map(e => e.course)
-            .filter(Boolean)
-            .map((course: any) => {
-              const totalLessons = course.lessons?.length || 0;
-              const completedLessons = course.student_progress?.filter((p: any) => p.completed).length || 0;
-              const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-              return {
-                name: course.title,
-                overallProgress: progress,
-                topics: [] // Clear mock topics
-              };
-            });
-          setCourses(formatted);
-        }
-      } catch (err) {
-        console.error('Error fetching student progress:', err);
-      } finally {
-        setLoadingCourses(false);
-      }
-    };
+      return enrollments
+        .map(e => e.course)
+        .filter(Boolean)
+        .map((course: any) => {
+          const totalLessons = course.lessons?.length || 0;
+          const completedLessons = course.student_progress?.filter((p: any) => p.completed).length || 0;
+          const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+          return {
+            name: course.title,
+            overallProgress: progress,
+            topics: []
+          };
+        });
+    }
+  );
 
-    fetchProgress();
-  }, [profile?.id]);
   return (
     <div className="space-y-6">
         <SchoolHeader />
@@ -292,13 +286,22 @@ export default function StudentDashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {loadingCourses ? (
           [1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader><div className="h-6 w-32 bg-muted rounded" /></CardHeader>
-              <CardContent><div className="h-32 bg-muted rounded" /></CardContent>
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-32 w-full rounded-md" />
+                <div className="flex gap-2">
+                   <Skeleton className="h-4 w-12" />
+                   <Skeleton className="h-4 w-12" />
+                </div>
+              </CardContent>
             </Card>
           ))
         ) : courses.length > 0 ? (
-          courses.map((course, index) => (
+          courses.map((course: any, index: number) => (
               <DetailedProgressCard 
                   key={course.name} 
                   subject={course.name}
@@ -325,7 +328,7 @@ export default function StudentDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-            <AiTutorAssistant courses={courses} />
+            <AiTutorAssistant courses={courses} isLoading={loadingCourses} />
         </div>
         <div>
             <UpcomingLiveClass />
