@@ -40,7 +40,7 @@ export default function PostPage() {
         .select(
           `
           *,
-          author:profiles!posts_author_id_fkey (
+          author:profiles!posts_user_id_fkey (
             full_name,
             avatar_url
           )

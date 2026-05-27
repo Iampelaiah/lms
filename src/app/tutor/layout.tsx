@@ -8,6 +8,7 @@ import React, { Suspense } from 'react';
 export const dynamic = 'force-dynamic';
 import { SchoolHeader } from '@/components/app/school-header';
 import { TutorSidebar } from '@/components/app/tutor/tutor-sidebar';
+import { PreviewBanner } from '@/components/app/preview-banner';
 
 export default async function TutorLayout({
     children,
@@ -38,6 +39,7 @@ export default async function TutorLayout({
         <SidebarProvider>
             <TutorSidebar />
             <SidebarInset>
+                <PreviewBanner />
                 <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 md:hidden">
                     <SidebarTrigger />
                     <div className="flex-1">

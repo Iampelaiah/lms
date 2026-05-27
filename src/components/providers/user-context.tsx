@@ -9,6 +9,7 @@ interface UserProfile {
   full_name: string;
   role: string;
   avatar_url?: string;
+  is_approved?: boolean;
 }
 
 interface UserContextType {
@@ -25,8 +26,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  const lastFetchedUserIdRef = React.useRef<string | null>(null);
+  const isFetchingRef = React.useRef<string | null>(null);
 
-  const fetchProfile = async (userId: string, userMetadata?: any) => {
+  const fetchProfile = async (userId: string, userMetadata?: any, force = false) => {
+    if (!force && lastFetchedUserIdRef.current === userId) {
+      return;
+    }
+    if (!force && isFetchingRef.current === userId) {
+      return;
+    }
+
+    isFetchingRef.current = userId;
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -36,6 +47,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       if (data && !error) {
         setProfile(data);
+        lastFetchedUserIdRef.current = userId;
       } else if (userMetadata) {
         // Fallback to metadata if record is missing
         setProfile({
@@ -43,18 +55,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           full_name: userMetadata.full_name || userMetadata.name || '',
           role: userMetadata.role || 'student',
           avatar_url: userMetadata.avatar_url || userMetadata.picture || '',
+          is_approved: userMetadata.is_approved ?? false,
         });
+        lastFetchedUserIdRef.current = userId;
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
     } finally {
+      isFetchingRef.current = null;
       setLoading(false);
     }
   };
 
   const refreshProfile = async () => {
     if (user) {
-      await fetchProfile(user.id, user.user_metadata);
+      await fetchProfile(user.id, user.user_metadata, true);
     }
   };
 
@@ -81,6 +96,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         await fetchProfile(currentUser.id, currentUser.user_metadata);
       } else {
         setProfile(null);
+        lastFetchedUserIdRef.current = null;
         setLoading(false);
       }
     });

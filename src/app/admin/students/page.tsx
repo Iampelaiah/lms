@@ -12,6 +12,7 @@ import { Search } from "lucide-react";
 import * as React from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ManageStudentDialog } from "@/components/app/admin/manage-student-dialog";
 
 const STUDENTS_PER_PAGE = 10;
 
@@ -26,6 +27,7 @@ function StudentListSkeleton() {
                         <Skeleton className="h-3 w-56" />
                     </div>
                     <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-8 w-20 rounded-md" />
                     <Skeleton className="h-8 w-20 rounded-md" />
                 </div>
             ))}
@@ -44,10 +46,9 @@ function StudentList() {
     const { toast } = useToast();
 
     const fetchStudents = React.useCallback(async () => {
-        setLoading(true);
         const { data, error } = await supabase
             .from('profiles')
-            .select('id, full_name, email, avatar_url, role, is_approved, updated_at')
+            .select('id, full_name, avatar_url, role, is_approved, updated_at')
             .eq('role', 'student')
             .order('updated_at', { ascending: false });
 
@@ -59,9 +60,35 @@ function StudentList() {
         setLoading(false);
     }, [supabase, toast]);
 
+    // Initial fetch + real-time subscription on the profiles table
     React.useEffect(() => {
         fetchStudents();
-    }, [fetchStudents]);
+
+        const channel = supabase
+            .channel('admin-students-realtime')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'profiles',
+                filter: 'role=eq.student',
+            }, (payload) => {
+                // Granular update: handle INSERT, UPDATE, DELETE without a full refetch
+                if (payload.eventType === 'INSERT') {
+                    setStudents(prev => [payload.new as any, ...prev]);
+                } else if (payload.eventType === 'UPDATE') {
+                    setStudents(prev =>
+                        prev.map(s => s.id === (payload.new as any).id ? { ...s, ...(payload.new as any) } : s)
+                    );
+                } else if (payload.eventType === 'DELETE') {
+                    setStudents(prev => prev.filter(s => s.id !== (payload.old as any).id));
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [fetchStudents, supabase]);
 
     const toggleApproveStudent = async (studentId: string, currentStatus: boolean) => {
         // Optimistic update — instant UI response, no waiting for refetch
@@ -88,10 +115,13 @@ function StudentList() {
         }
     };
 
+    const handleStudentRemoved = React.useCallback((studentId: string) => {
+        setStudents(prev => prev.filter(s => s.id !== studentId));
+    }, []);
+
     const filteredStudents = React.useMemo(() => students.filter(student => {
         const query = searchQuery.toLowerCase();
-        return (student.full_name || "").toLowerCase().includes(query) ||
-               (student.email || "").toLowerCase().includes(query);
+        return (student.full_name || "").toLowerCase().includes(query);
     }), [students, searchQuery]);
 
     const totalPages = Math.ceil(filteredStudents.length / STUDENTS_PER_PAGE) || 1;
@@ -158,11 +188,11 @@ function StudentList() {
                                                     </Avatar>
                                                     <div>
                                                         <div className="font-medium">{student.full_name || 'Unnamed Student'}</div>
-                                                        <div className="text-sm text-muted-foreground">{student.email}</div>
+                                                        <div className="text-sm text-muted-foreground capitalize">{student.role}</div>
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="capitalize">{student.role}</TableCell>
+                                            <TableCell className="capitalize text-muted-foreground">Student</TableCell>
                                             <TableCell>{student.updated_at ? new Date(student.updated_at).toLocaleDateString() : 'N/A'}</TableCell>
                                             <TableCell>
                                                 {student.is_approved ? (
@@ -171,15 +201,21 @@ function StudentList() {
                                                     <Badge variant="outline" className="text-orange-500 border-orange-500/20 bg-orange-500/10">Pending</Badge>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button 
-                                                    size="sm" 
-                                                    variant="outline"
-                                                    className={student.is_approved ? "text-red-500 border-red-500/20 hover:bg-red-500/10" : "text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10"}
-                                                    onClick={() => toggleApproveStudent(student.id, student.is_approved)}
-                                                >
-                                                    {student.is_approved ? "Suspend" : "Approve"}
-                                                </Button>
+                                            <TableCell>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <ManageStudentDialog
+                                                        student={student}
+                                                        onStudentRemoved={handleStudentRemoved}
+                                                    />
+                                                    <Button 
+                                                        size="sm" 
+                                                        variant="outline"
+                                                        className={student.is_approved ? "text-red-500 border-red-500/20 hover:bg-red-500/10" : "text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10"}
+                                                        onClick={() => toggleApproveStudent(student.id, student.is_approved)}
+                                                    >
+                                                        {student.is_approved ? "Suspend" : "Approve"}
+                                                    </Button>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))

@@ -84,8 +84,8 @@ export function ClassPerformance({ tutorId }: { tutorId?: string }) {
       </CardHeader>
       <CardContent>
         {performanceData.length > 0 ? (
-          <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-            <ResponsiveContainer width="100%" height={300}>
+          <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
               <RechartsBarChart
                 data={performanceData}
                 layout="vertical"

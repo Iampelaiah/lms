@@ -25,6 +25,7 @@ import {
   HelpCircle,
   Puzzle,
   Palette,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -86,16 +87,33 @@ export function TutorSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarMenu>
-            {navItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                <Link href={item.href}>
-                    <SidebarMenuButton tooltip={item.label} isActive={pathname === item.href}>
-                    <item.icon />
-                    <span>{item.label}</span>
+            {navItems.map((item) => {
+                const restricted = !!(profile && !profile.is_approved && item.href !== '/tutor' && item.href !== '/tutor/settings');
+
+                const ButtonContent = (
+                    <SidebarMenuButton 
+                        tooltip={restricted ? 'Restricted in Preview Mode' : item.label} 
+                        isActive={pathname === item.href}
+                        disabled={restricted}
+                        className={restricted ? "opacity-50" : ""}
+                    >
+                        <item.icon />
+                        <span>{item.label}</span>
+                        {restricted && <Lock className="ml-auto w-4 h-4 text-muted-foreground" />}
                     </SidebarMenuButton>
-                </Link>
+                );
+
+                return (
+                <SidebarMenuItem key={item.label}>
+                  {restricted ? (
+                      ButtonContent
+                  ) : (
+                      <Link href={item.href}>
+                          {ButtonContent}
+                      </Link>
+                  )}
                 </SidebarMenuItem>
-            ))}
+            )})}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

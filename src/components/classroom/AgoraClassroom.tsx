@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 // Import AgoraRTC default from agora-rtc-react, NOT from agora-rtc-sdk-ng.
 // agora-rtc-react re-exports the same SDK but through its own module context.
 // Using a separate agora-rtc-sdk-ng import creates a different module instance,
@@ -138,6 +138,8 @@ function ClassroomInner({
   const [spotlightedUid, setSpotlightedUid] = useState<number | null>(null);
   const [screenTrack, setScreenTrack] = useState<any>(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenPermissionRevoked, setScreenPermissionRevoked] = useState(false);
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
   // UID of the remote participant currently sharing screen
   const [remoteScreenUid, setRemoteScreenUid] = useState<number | null>(null);
   const [classData, setClassData] = useState<any>(null);
@@ -213,12 +215,70 @@ function ClassroomInner({
   // Stable ref to the Supabase Presence channel (participant roster).
   const presenceChannelRef = useRef<any>(null);
 
+  // Combine local/Supabase and Agora Chat message feeds into a unified chronological feed
+  const combinedMessages = useMemo(() => {
+    const all: any[] = [];
+    const ids = new Set<string>();
+
+    // Add Supabase broadcast messages
+    messages.forEach((msg) => {
+      if (msg.id && !ids.has(msg.id)) {
+        ids.add(msg.id);
+        all.push({
+          ...msg,
+          source: 'supabase'
+        });
+      }
+    });
+
+    // Add Agora Chat messages
+    agoraChatMessages.forEach((msg: any) => {
+      const senderUid = msg.from || msg.sender_id;
+      if (!senderUid) return;
+
+      const isMe = String(senderUid) === String(uid);
+      const info = participantMap[Number(senderUid)];
+      const name = isMe ? (profile?.full_name || userName) : (info?.name || `User ${senderUid}`);
+      const content = msg.msg || msg.content || '';
+      const createdTime = msg.time 
+        ? new Date(msg.time).toISOString() 
+        : (msg.created_at || new Date().toISOString());
+      
+      const msgId = msg.id || `${senderUid}-${createdTime}-${content.substring(0, 10)}`;
+
+      if (!ids.has(msgId)) {
+        ids.add(msgId);
+        all.push({
+          id: msgId,
+          content: content,
+          sender_id: String(senderUid),
+          created_at: createdTime,
+          profiles: {
+            full_name: name,
+            avatar_url: isMe ? profile?.avatar_url : `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`
+          },
+          source: 'agora'
+        });
+      }
+    });
+
+    // Sort chronologically
+    return all.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  }, [messages, agoraChatMessages, uid, profile, userName, participantMap]);
+
   // Auto-scroll chat to bottom
   useEffect(() => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [combinedMessages]);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val as any);
+    if (val === 'whiteboard') {
+      setShowWhiteboard(true);
+    }
+  };
 
   // Agora Hooks — explicit encoder config for low latency
   const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack(micOn, {
@@ -231,9 +291,44 @@ function ClassroomInner({
   const remoteUsers = useRemoteUsers();
   const client = useRTCClient();
 
+  const isPermissionDeniedError = useCallback((err: any): boolean => {
+    if (!err) return false;
+    const errMsg = String(err.message || err).toLowerCase();
+    const errCode = String(err.code || '').toLowerCase();
+    return (
+      errMsg.includes('notallowederror') ||
+      errMsg.includes('permission denied') ||
+      errMsg.includes('permission_denied') ||
+      errCode.includes('permission_denied') ||
+      errCode.includes('notallowederror')
+    );
+  }, []);
+
+  const micPermissionRevoked = useMemo(() => isPermissionDeniedError(micError), [micError, isPermissionDeniedError]);
+  const camPermissionRevoked = useMemo(() => isPermissionDeniedError(camError), [camError, isPermissionDeniedError]);
+
   // Handle permission errors
-  useEffect(() => { if (micError) { console.error('Mic:', micError); setMic(false); } }, [micError]);
-  useEffect(() => { if (camError) { console.error('Cam:', camError); setVideo(false); } }, [camError]);
+  useEffect(() => {
+    if (micError) {
+      if (isPermissionDeniedError(micError)) {
+        console.warn('[Classroom] Microphone permission revoked by user.');
+      } else {
+        console.error('Mic:', micError);
+      }
+      setMic(false);
+    }
+  }, [micError, isPermissionDeniedError]);
+
+  useEffect(() => {
+    if (camError) {
+      if (isPermissionDeniedError(camError)) {
+        console.warn('[Classroom] Camera permission revoked by user.');
+      } else {
+        console.error('Cam:', camError);
+      }
+      setVideo(false);
+    }
+  }, [camError, isPermissionDeniedError]);
 
   // --- MANUAL JOIN WITH UID_CONFLICT RECOVERY ---
   useEffect(() => {
@@ -463,6 +558,7 @@ function ClassroomInner({
   }, []);
 
   const startScreenShare = async () => {
+    setScreenPermissionRevoked(false);
     try {
       const track = await AgoraRTC.createScreenVideoTrack(
         { encoderConfig: { width: 1280, height: 720, frameRate: 15, bitrateMax: 2000 } },
@@ -489,7 +585,12 @@ function ClassroomInner({
       videoTrack.on('track-ended', () => stopScreenShare(videoTrack));
     } catch (err: any) {
       // User cancelled screen picker — not a real error
-      if (err?.name !== 'NotAllowedError') console.error('Screen share failed:', err);
+      if (isPermissionDeniedError(err)) {
+        console.warn('[Classroom] Screen sharing casting permission denied or cancelled by user.');
+        setScreenPermissionRevoked(true);
+      } else {
+        console.error('Screen share failed:', err);
+      }
     }
   };
 
@@ -540,6 +641,8 @@ function ClassroomInner({
         videoOn={videoOn}
         micError={micError}
         camError={camError}
+        micPermissionRevoked={micPermissionRevoked}
+        camPermissionRevoked={camPermissionRevoked}
         localCameraTrack={localCameraTrack}
         onToggleMic={() => setMic(m => !m)}
         onToggleVideo={() => setVideo(v => !v)}
@@ -557,68 +660,66 @@ function ClassroomInner({
 
   return (
     <div className="flex h-screen bg-[#0A1A12] text-white overflow-hidden font-sans">
-      {/* --- LEFT SIDEBAR --- */}
-      <aside className="w-20 bg-[#07140D] flex flex-col items-center py-8 gap-10 border-r border-white/5 z-30">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A7C957] to-[#6A994E] flex items-center justify-center shadow-lg shadow-[#A7C957]/20">
-            <Sparkles className="w-6 h-6 text-[#0A1A12]" />
-        </div>
-        
-        <nav className="flex flex-col gap-6">
-          <SidebarIcon icon={Home} />
-          <SidebarIcon icon={Headphones} active />
-          <SidebarIcon icon={FileText} />
-          <SidebarIcon icon={Users} />
-          <SidebarIcon icon={Calendar} />
-        </nav>
-
-        <div className="mt-auto flex flex-col gap-6">
-           <SidebarIcon icon={Bell} />
-           <SidebarIcon icon={Settings} />
-           <Avatar className="w-10 h-10 border-2 border-white/10">
-              <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || userName}`} />
-              <AvatarFallback>{(profile?.full_name || userName)[0]}</AvatarFallback>
-           </Avatar>
-        </div>
-      </aside>
-
       {/* --- MAIN CONTENT AREA --- */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        
         {/* Header */}
-        <header className="px-8 py-6 flex items-center justify-between z-20">
+        <header className="px-4 md:px-8 py-4 md:py-6 flex flex-wrap items-center justify-between gap-4 z-20">
           <div>
-            <h1 className="text-2xl font-bold text-white/90">Hello, {profile?.full_name || userName}!</h1>
-            <p className="text-sm text-white/40">{channelName} | {profile?.role ? (profile.role.charAt(0).toUpperCase() + profile.role.slice(1)) : (role === 'tutor' ? 'Tutor' : 'Participant')}</p>
+            <h1 className="text-xl md:text-2xl font-bold font-serif text-white/90">Hello, {profile?.full_name || userName}!</h1>
+            <p className="text-xs text-white/40 font-sans mt-1">Team Collaboration Meeting | Live Now</p>
           </div>
 
           <div className="flex items-center gap-4">
-             <div className="relative w-80">
+             <div className="relative w-full max-w-[20rem] hidden md:block">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                <Input 
+                <input 
+                  className="flex h-10 w-full border border-input px-3 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm file:ml-auto file:pl-4 bg-white/5 border-none rounded-full pl-11 py-5 text-sm focus-visible:ring-1 focus-visible:ring-white/20 transition-all placeholder:text-white/20" 
                   placeholder="Search meetings..." 
-                  className="bg-white/5 border-none rounded-full pl-11 py-5 text-sm focus-visible:ring-1 focus-visible:ring-white/20 transition-all placeholder:text-white/20"
                 />
              </div>
-             <Button variant="ghost" size="icon" className="rounded-full bg-white/5 hover:bg-white/10 w-10 h-10">
-                <Bell className="w-5 h-5 text-white/60" />
-             </Button>
+             <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:text-accent-foreground rounded-full bg-[#D9ED92] hover:bg-[#B5E48C] text-[#0A1A12] w-10 h-10 shadow-lg shadow-[#D9ED92]/20 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bell w-5 h-5 text-[#0A1A12]">
+                  <path d="M10.268 21a2 2 0 0 0 3.464 0"></path>
+                  <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path>
+                </svg>
+             </button>
           </div>
         </header>
 
         {/* Content Scrollable */}
-        <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
-          <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-4 md:pb-8 custom-scrollbar">
+          <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
             
             {/* LEFT COLUMN: Video & Insights */}
-            <div className="flex-1 flex flex-col gap-8">
+            <div className="flex-1 flex flex-col gap-4 md:gap-8">
               
-              {/* PRESENTATION STAGE — screen share takes priority, then tutor camera */}
+              {/* PRESENTATION STAGE — whiteboard has priority, then screen share, then tutor camera */}
               <div ref={stageRef} className={cn("relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-[#07120C] shadow-2xl group group/stage", isFullscreen ? 'rounded-none' : 'aspect-video')}>
-                {/* Priority 1: LOCAL screen share (tutor sharing their screen) */}
-                {isScreenSharing && screenTrack ? (
+                {showWhiteboard ? (
+                  /* Priority 1: Interactive Whiteboard */
+                  <div className="absolute inset-0 w-full h-full p-2 bg-[#07120C] z-10">
+                    <AgoraWhiteboard
+                      appIdentifier={process.env.NEXT_PUBLIC_AGORA_WHITEBOARD_APP_ID || ''}
+                      sdkToken={process.env.NEXT_PUBLIC_AGORA_WHITEBOARD_SDK_TOKEN || ''}
+                      roomToken="temp_room_token" 
+                      uuid={channelName}
+                      uid={String(uid)}
+                      isTutor={iAmTutor}
+                    />
+                    
+                    {/* Floating Close Button inside Stage */}
+                    <button 
+                      onClick={() => setShowWhiteboard(false)}
+                      className="absolute top-6 right-20 inline-flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md hover:bg-black/80 px-4 py-2 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white transition-all hover:scale-105 active:scale-95 z-20"
+                    >
+                      Close Board
+                    </button>
+                  </div>
+                ) : isScreenSharing && screenTrack ? (
+                  /* Priority 2: LOCAL screen share (tutor sharing their screen) */
                   <div ref={screenVideoRef} className="absolute inset-0" style={{ width: '100%', height: '100%' }} />
                 ) : remoteScreenUid ? (
-                  /* Priority 2: REMOTE screen share (someone else sharing) */
+                  /* Priority 3: REMOTE screen share (someone else sharing) */
                   (() => {
                     const sharingUser = remoteUsers.find(u => Number(u.uid) === remoteScreenUid);
                     return sharingUser ? (
@@ -628,12 +729,12 @@ function ClassroomInner({
                     ) : null;
                   })()
                 ) : iAmTutor && videoOn && localCameraTrack ? (
-                  /* Priority 3: TUTOR's own camera (they see themselves in stage) */
+                  /* Priority 4: TUTOR's own camera (they see themselves in stage) */
                   <div className="absolute inset-0">
                     <LocalVideoTrack track={localCameraTrack} play style={{ width: '100%', height: '100%' }} />
                   </div>
                 ) : !iAmTutor && teacherUser && teacherUser !== 'local' ? (
-                  /* Priority 3 (student view): Show REMOTE tutor's camera in the stage */
+                  /* Priority 4 (student view): Show REMOTE tutor's camera in the stage */
                   <div className="absolute inset-0">
                     <RemoteUser user={teacherUser as any} playVideo playAudio style={{ width: '100%', height: '100%' }} />
                   </div>
@@ -707,29 +808,47 @@ function ClassroomInner({
                 )}
 
                 <div className="absolute top-6 right-6">
-                  <Button variant="ghost" size="icon" className="bg-black/60 backdrop-blur-md hover:bg-black/80 rounded-xl w-10 h-10 border border-white/10" onClick={toggleFullscreen}>
-                    {isFullscreen ? <Minimize2 className="w-5 h-5 text-white/80" /> : <Maximize2 className="w-5 h-5 text-white/80" />}
-                  </Button>
+                  <button className="inline-flex items-center justify-center rounded-full bg-black/60 backdrop-blur-md hover:bg-black/80 w-10 h-10 border border-white/10 transition-all hover:scale-105 active:scale-95" onClick={toggleFullscreen}>
+                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white/80">
+                        <path d="M15 3H21V9M9 21H3V15M21 3L14 10M3 21L10 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                     </svg>
+                  </button>
+                </div>
+
+                {/* Right Edge: Vertical Volume Slider */}
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 bg-black/60 backdrop-blur-md px-2.5 py-5 rounded-full border border-white/10 z-20">
+                  <div className="h-24 w-1 bg-white/10 rounded-full relative overflow-hidden">
+                    <div className="absolute bottom-0 left-0 right-0 h-3/4 bg-[#A7C957] rounded-full shadow-[0_0_8px_rgba(167,201,87,0.5)]" />
+                  </div>
+                  <Volume2 className="w-4 h-4 text-white/60 animate-pulse" />
                 </div>
 
                 {/* MAIN CONTROLS */}
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-4 bg-black/60 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-2xl transition-transform hover:scale-105 duration-300">
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-4 bg-black/60 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-2xl transition-transform hover:scale-105 duration-300 z-20">
                     <ControlButton
                       active={micOn}
                       isError={!!micError}
+                      isWarning={micPermissionRevoked}
                       icon={micOn ? Mic : MicOff}
                       onClick={() => setMic(!micOn)}
                     />
                     <ControlButton
                       active={videoOn}
                       isError={!!camError}
+                      isWarning={camPermissionRevoked}
                       icon={videoOn ? VideoIcon : VideoOff}
                       onClick={() => setVideo(!videoOn)}
                     />
                     <ControlButton
                       active={isScreenSharing}
+                      isWarning={screenPermissionRevoked}
                       icon={isScreenSharing ? MonitorOff : Monitor}
                       onClick={isScreenSharing ? () => stopScreenShare() : startScreenShare}
+                    />
+                    <ControlButton
+                      active={showWhiteboard}
+                      icon={Presentation}
+                      onClick={() => setShowWhiteboard(!showWhiteboard)}
                     />
                     <ControlButton
                       active={handRaised}
@@ -746,7 +865,7 @@ function ClassroomInner({
                         <Button
                           variant={isAgentActive ? "default" : "ghost"}
                           className={cn(
-                            "w-14 h-14 rounded-2xl transition-all border border-white/10 backdrop-blur-md",
+                            "w-14 h-14 rounded-full transition-all border border-white/10 backdrop-blur-md",
                             isAgentActive ? "bg-[#A7C957] text-[#0A1A12] hover:bg-[#A7C957]/90" : "bg-black/20 text-white/40 hover:bg-white/5 hover:text-white"
                           )}
                           onClick={isAgentActive ? stopAgent : startAgent}
@@ -758,7 +877,7 @@ function ClassroomInner({
                     )}
                     <Button
                       variant="destructive"
-                      className="w-14 h-14 rounded-2xl bg-red-500/80 hover:bg-red-600 transition-all flex items-center justify-center border border-white/10"
+                      className="w-14 h-14 rounded-full bg-red-500/80 hover:bg-red-600 transition-all flex items-center justify-center border border-white/10"
                       onClick={handleLeaveClick}
                     >
                       <LogOut className="w-6 h-6" />
@@ -792,7 +911,6 @@ function ClassroomInner({
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                </div>
               </div>
 
               {/* PARTICIPANT GRID — ALL users including tutor */}
@@ -865,7 +983,7 @@ function ClassroomInner({
                     <Button variant="link" className="text-[#A7C957] text-sm font-medium p-0 h-auto">Goal Progress</Button>
                  </div>
                  
-                 <div className="flex flex-col gap-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <InsightCard 
                       title="Assignment Submissions" 
                       time="Due today" 
@@ -882,17 +1000,16 @@ function ClassroomInner({
                       progress={70}
                       icon={Sparkles}
                     />
-                 </div>
-              </div>
+                  </div>
+               </div>
             </div>
 
-            {/* RIGHT COLUMN: Chat/Tabs */}
-            <div className="w-full lg:w-[400px] flex flex-col gap-6">
-              
-              <div className="flex flex-col h-[600px] bg-[#07140D] rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden group/chat">
-                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#A7C957] via-[#6A994E] to-[#A7C957] opacity-0 group-hover/chat:opacity-100 transition-opacity" />
-                 
-                 <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="flex flex-col h-full">
+            {/* RIGHT COLUMN: Chat/Tabs — full-height, at the far right */}
+            <div className="w-full lg:w-[420px] flex flex-col gap-6 self-stretch">
+               <div className="flex flex-col flex-1 min-h-[500px] bg-[#07140D] rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden group/chat">
+                  <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#A7C957] via-[#6A994E] to-[#A7C957] opacity-0 group-hover/chat:opacity-100 transition-opacity" />
+                  
+                  <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col flex-1 min-h-0">
                   <div className="px-8 pt-8 pb-4 border-b border-white/5">
                     <TabsList className="bg-white/5 border-white/10 rounded-xl w-full p-1 h-12">
                       <TabsTrigger value="chat" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-[#A7C957] data-[state=active]:text-[#0A1A12]">Chat</TabsTrigger>
@@ -903,18 +1020,18 @@ function ClassroomInner({
                     </TabsList>
                   </div>
 
-                  <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 m-0">
+                  <TabsContent value="chat" className="flex-1 data-[state=active]:!flex flex-col min-h-0 m-0 relative">
                     <div 
                       ref={chatScrollRef}
-                      className="flex-1 overflow-y-auto px-8 py-4 flex flex-col gap-6 custom-scrollbar"
+                      className="h-[70%] overflow-y-auto px-8 pt-4 pb-[70px] flex flex-col gap-4 custom-scrollbar"
                     >
-                      {messages.length === 0 ? (
-                        <div className="flex-1 flex flex-col items-center justify-center opacity-20">
+                      {combinedMessages.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center opacity-20 h-full min-h-[200px]">
                           <Sparkles className="w-12 h-12 mb-4" />
                           <p className="text-sm font-medium">No messages yet. Be the first to say hi!</p>
                         </div>
                       ) : (
-                        messages.map((msg) => (
+                        combinedMessages.map((msg) => (
                           <ChatMessage 
                             key={msg.id}
                             user={msg.profiles?.full_name || 'Unknown'} 
@@ -927,7 +1044,7 @@ function ClassroomInner({
                       )}
                     </div>
 
-                    <div className="p-8 pt-4">
+                    <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-10 bg-gradient-to-t from-[#07140D] from-70% to-transparent pointer-events-none">
                         <form 
                           onSubmit={(e) => {
                             e.preventDefault();
@@ -940,7 +1057,7 @@ function ClassroomInner({
                               setMsgInput('');
                             }
                           }}
-                          className="relative"
+                          className="relative pointer-events-auto"
                         >
                           <Input 
                             value={msgInput}
@@ -960,7 +1077,7 @@ function ClassroomInner({
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="notes" className="flex-1 flex flex-col min-h-0 m-0 p-8">
+                  <TabsContent value="notes" className="flex-1 data-[state=active]:!flex flex-col min-h-0 m-0 p-8">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-sm font-bold uppercase tracking-widest text-white/40">Collaborative Notes</h3>
                       <div className="flex items-center gap-2">
@@ -979,7 +1096,7 @@ function ClassroomInner({
                     </p>
                   </TabsContent>
 
-                  <TabsContent value="docs" className="flex-1 flex flex-col min-h-0 m-0 p-8">
+                  <TabsContent value="docs" className="flex-1 data-[state=active]:!flex flex-col min-h-0 m-0 p-8">
                      <div className="flex flex-col gap-6">
                         <div className="bg-white/5 border border-dashed border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 group/upload cursor-pointer hover:bg-white/[0.07] transition-all relative overflow-hidden">
                            <div className="w-14 h-14 rounded-2xl bg-[#A7C957]/10 flex items-center justify-center group-hover/upload:scale-110 transition-transform duration-500">
@@ -1044,7 +1161,7 @@ function ClassroomInner({
                      </div>
                   </TabsContent>
 
-                  <TabsContent value="assignments" className="flex-1 flex flex-col min-h-0 m-0 p-8">
+                  <TabsContent value="assignments" className="flex-1 data-[state=active]:!flex flex-col min-h-0 m-0 p-8">
                      <div className="flex flex-col gap-6">
                         <div className="p-6 bg-gradient-to-br from-[#1B3E2D] to-[#0A1A12] rounded-3xl border border-[#A7C957]/10 relative overflow-hidden">
                            <div className="absolute -top-6 -right-6 w-24 h-24 bg-[#A7C957]/10 rounded-full blur-2xl" />
@@ -1081,42 +1198,115 @@ function ClassroomInner({
                      </div>
                   </TabsContent>
 
-                  <TabsContent value="whiteboard" className="flex-1 flex flex-col min-h-0 m-0 p-4">
-                     <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
-                       {activeTab === 'whiteboard' && (
-                          <AgoraWhiteboard
-                            appIdentifier={process.env.NEXT_PUBLIC_AGORA_WHITEBOARD_APP_ID || ''}
-                            sdkToken={process.env.NEXT_PUBLIC_AGORA_WHITEBOARD_SDK_TOKEN || ''}
-                            roomToken="temp_room_token" 
-                            uuid={channelName}
-                            uid={String(uid)}
-                            isTutor={iAmTutor}
-                          />
-                       )}
-                     </Suspense>
+                  <TabsContent value="whiteboard" className="flex-1 data-[state=active]:!flex flex-col min-h-0 m-0 p-8">
+                     <div className="flex flex-col gap-6 h-full justify-between">
+                        <div className="space-y-6">
+                           <div className="p-6 bg-gradient-to-br from-[#1B3E2D] to-[#0A1A12] rounded-3xl border border-[#A7C957]/10 relative overflow-hidden">
+                              <div className="absolute -top-6 -right-6 w-24 h-24 bg-[#A7C957]/10 rounded-full blur-2xl" />
+                              <h3 className="text-lg font-bold mb-2">Whiteboard Stage</h3>
+                              <p className="text-xs text-white/40 leading-relaxed">
+                                 The interactive board has been relocated to the widescreen **Main Presentation Stage** for maximum drawing space and utility.
+                              </p>
+                           </div>
+
+                           <div className="space-y-4">
+                              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20">Board Status & Controls</h4>
+                              
+                              <div className="p-5 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
+                                 <div className="flex items-center gap-3">
+                                    <div className={cn(
+                                       "w-3 h-3 rounded-full animate-pulse",
+                                       showWhiteboard ? "bg-[#A7C957] shadow-[0_0_8px_rgba(167,201,87,0.5)]" : "bg-white/25"
+                                    )} />
+                                    <div>
+                                       <p className="text-xs font-bold text-white/80">Interactive Stage Mode</p>
+                                       <p className="text-[10px] text-white/30 uppercase tracking-widest mt-0.5">
+                                          {showWhiteboard ? "Active on Main Screen" : "Currently Hidden"}
+                                       </p>
+                                    </div>
+                                 </div>
+                                 <Button
+                                    onClick={() => setShowWhiteboard(!showWhiteboard)}
+                                    className={cn(
+                                       "rounded-full px-5 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all",
+                                       showWhiteboard 
+                                          ? "bg-white/10 hover:bg-white/15 text-white" 
+                                          : "bg-[#A7C957] hover:bg-[#6A994E] text-[#0A1A12]"
+                                    )}
+                                 >
+                                    {showWhiteboard ? "Hide Board" : "Show Board"}
+                                 </Button>
+                              </div>
+
+                              <div className="p-5 bg-white/5 rounded-2xl border border-white/5 space-y-3.5">
+                                 <h5 className="text-[10px] font-bold uppercase tracking-wider text-[#A7C957]">Board Guide & Features</h5>
+                                 <ul className="text-xs space-y-2.5 text-white/50">
+                                    <li className="flex items-start gap-2">
+                                       <span className="text-[#A7C957] font-bold">•</span>
+                                       <span>**Tutor Privileges**: Only the tutor can draw or clear the board, ensuring structured classes.</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                       <span className="text-[#A7C957] font-bold">•</span>
+                                       <span>**Smooth Fallback**: Automatically switches to local canvas if cloud sync is unavailable.</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                       <span className="text-[#A7C957] font-bold">•</span>
+                                       <span>**Drawing Toolbar**: Located at the bottom of the main stage screen when the whiteboard is active.</span>
+                                    </li>
+                                 </ul>
+                              </div>
+                           </div>
+                        </div>
+
+                        <p className="text-[10px] text-white/20 leading-relaxed italic">
+                           * All participants see drawing updates in near-zero latency.
+                        </p>
+                     </div>
                   </TabsContent>
                  </Tabs>
               </div>
 
-              {/* Upgrade Banner */}
-              <div className="bg-gradient-to-br from-[#1B3E2D] to-[#0A1A12] p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#A7C957]/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-[#A7C957]/20 transition-colors" />
-                  <h3 className="text-2xl font-serif italic mb-2">Upgrade <span className="text-[#A7C957] font-sans not-italic font-bold">to Pro</span></h3>
-                  <p className="text-xs text-white/40 mb-6 leading-relaxed">Unlock the full potential of AI Assistant!</p>
-                  <Button className="bg-[#D9ED92] hover:bg-[#B5E48C] text-[#0A1A12] font-bold rounded-full px-8 py-6 text-sm transition-all hover:scale-105 active:scale-95">
-                     Explore Pro Plan
-                  </Button>
-                  
-                  <div className="absolute right-8 bottom-8 w-16 h-16 bg-white/5 rounded-full flex items-center justify-center border border-white/10 shadow-inner group-hover:rotate-12 transition-transform">
-                      <div className="w-10 h-10 bg-red-500/80 rounded-full flex items-center justify-center shadow-lg shadow-red-500/20">
-                          <CheckCircle2 className="w-6 h-6 text-white" />
-                      </div>
+              {/* Upgrade Banner — right column, below Chat */}
+              <div className="bg-[#07140D] p-6 rounded-[2.5rem] border border-white/5 relative overflow-hidden flex items-center justify-between group/upgrade shadow-2xl">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#A7C957]/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover/upgrade:bg-[#A7C957]/10 transition-colors" />
+                  <div className="flex flex-col gap-2 z-10">
+                     <h3 className="text-xl font-bold font-serif text-white/90">
+                       Upgrade <span className="font-serif italic text-[#A7C957]">to Pro</span>
+                     </h3>
+                     <p className="text-[11px] text-white/40 max-w-[180px] leading-relaxed">
+                       Unlock the full potential of AI Assistant!
+                     </p>
+                     <Button className="mt-2 bg-[#D9ED92] hover:bg-[#B5E48C] text-[#0A1A12] font-semibold rounded-full px-5 py-1.5 text-xs transition-all w-fit shadow-md shadow-[#D9ED92]/15">
+                       Explore Pro Plan
+                     </Button>
+                  </div>
+                  <div className="relative w-24 h-24 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse duration-[3000ms]">
+                    <svg viewBox="0 0 100 100" className="w-20 h-20">
+                      <defs>
+                        <radialGradient id="coinRadial" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                          <stop offset="0%" stopColor="#ffb3c1" />
+                          <stop offset="40%" stopColor="#ff758f" />
+                          <stop offset="85%" stopColor="#c9184a" />
+                          <stop offset="100%" stopColor="#590d22" />
+                        </radialGradient>
+                      </defs>
+                      <circle cx="50" cy="50" r="42" fill="url(#coinRadial)" stroke="#ffb3c1" strokeWidth="2" />
+                      <circle cx="50" cy="50" r="36" fill="none" stroke="#ff85a1" strokeWidth="1" strokeDasharray="3 2" />
+                      <path
+                        d="M12 4.419C12.448 3.852 14.105 2.25 16.223 2.012C18.665 1.739 20.252 3.421 21 4.58C21.748 3.421 23.335 1.739 25.777 2.012C27.895 2.25 29.552 3.852 30 4.419C30.985 5.67 31.066 9.479 28.536 12.569C26.177 15.451 21.666 19.333 21 20C20.334 19.333 15.823 15.451 13.464 12.569C10.934 9.479 11.015 5.67 12 4.419Z"
+                        fill="#ff0f47"
+                        stroke="#ffb3c1"
+                        strokeWidth="1"
+                        transform="translate(29, 28) scale(2.0)"
+                      />
+                    </svg>
                   </div>
               </div>
 
             </div>
 
           </div>
+        </div>
       </main>
     </div>
   );
@@ -1131,6 +1321,8 @@ function LobbyScreen(props: {
   videoOn: boolean;
   micError: any;
   camError: any;
+  micPermissionRevoked?: boolean;
+  camPermissionRevoked?: boolean;
   localCameraTrack: any;
   onToggleMic: () => void;
   onToggleVideo: () => void;
@@ -1149,6 +1341,8 @@ function LobbyScreen(props: {
     videoOn,
     micError,
     camError,
+    micPermissionRevoked = false,
+    camPermissionRevoked = false,
     localCameraTrack,
     onToggleMic,
     onToggleVideo,
@@ -1217,9 +1411,12 @@ function LobbyScreen(props: {
                 <VideoOff className="w-8 h-8 text-white/20" />
               </div>
               <p className="text-white/30 text-sm">
-                {camError ? 'Camera access denied' : 'Camera is off'}
+                {camPermissionRevoked ? 'Camera permission revoked' : camError ? 'Camera access denied' : 'Camera is off'}
               </p>
-              {camError && (
+              {camPermissionRevoked && (
+                <p className="text-amber-400/60 text-xs mt-1">Please allow camera access in your browser address bar</p>
+              )}
+              {!camPermissionRevoked && camError && (
                 <p className="text-red-400/60 text-xs mt-1">Check your browser permissions</p>
               )}
             </div>
@@ -1234,9 +1431,28 @@ function LobbyScreen(props: {
           {/* Error & Recovery badges */}
           {(micError || camError || error) && (
             <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-              {(micError || camError) && (
-                <div className="px-3 py-1.5 bg-red-500/20 border border-red-500/30 backdrop-blur-md rounded-full">
-                  <span className="text-[10px] text-red-400 font-medium uppercase tracking-wide">Permission needed</span>
+              {micPermissionRevoked && (
+                <div className="px-3 py-1.5 bg-amber-500/20 border border-amber-500/30 backdrop-blur-md rounded-full flex items-center gap-1.5 shadow-lg shadow-amber-500/5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <span className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">Mic Revoked</span>
+                </div>
+              )}
+              {camPermissionRevoked && (
+                <div className="px-3 py-1.5 bg-amber-500/20 border border-amber-500/30 backdrop-blur-md rounded-full flex items-center gap-1.5 shadow-lg shadow-amber-500/5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <span className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">Cam Revoked</span>
+                </div>
+              )}
+              {!micPermissionRevoked && micError && (
+                <div className="px-3 py-1.5 bg-red-500/20 border border-red-500/30 backdrop-blur-md rounded-full flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+                  <span className="text-[10px] text-red-400 font-medium uppercase tracking-wide">Mic Error</span>
+                </div>
+              )}
+              {!camPermissionRevoked && camError && (
+                <div className="px-3 py-1.5 bg-red-500/20 border border-red-500/30 backdrop-blur-md rounded-full flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+                  <span className="text-[10px] text-red-400 font-medium uppercase tracking-wide">Cam Error</span>
                 </div>
               )}
               {error && (
@@ -1265,12 +1481,13 @@ function LobbyScreen(props: {
               micOn
                 ? 'bg-[#A7C957]/10 border-[#A7C957]/30 text-[#A7C957]'
                 : 'bg-white/5 border-white/10 text-white/40 hover:text-white/70 hover:bg-white/10',
-              micError && 'border-red-500/30 text-red-400'
+              micPermissionRevoked && 'border-amber-500/30 text-amber-400 bg-amber-500/5',
+              !micPermissionRevoked && micError && 'border-red-500/30 text-red-400'
             )}
           >
             {micOn ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
-            <span className="text-[10px] uppercase tracking-widest font-semibold">
-              {micError ? 'Denied' : micOn ? 'Mic On' : 'Mic Off'}
+            <span className="text-[10px] uppercase tracking-widest font-semibold text-center leading-tight">
+              {micPermissionRevoked ? 'Revoked' : micError ? 'Error' : micOn ? 'Mic On' : 'Mic Off'}
             </span>
           </button>
 
@@ -1281,12 +1498,13 @@ function LobbyScreen(props: {
               videoOn
                 ? 'bg-[#A7C957]/10 border-[#A7C957]/30 text-[#A7C957]'
                 : 'bg-white/5 border-white/10 text-white/40 hover:text-white/70 hover:bg-white/10',
-              camError && 'border-red-500/30 text-red-400'
+              camPermissionRevoked && 'border-amber-500/30 text-amber-400 bg-amber-500/5',
+              !camPermissionRevoked && camError && 'border-red-500/30 text-red-400'
             )}
           >
             {videoOn ? <VideoIcon className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
-            <span className="text-[10px] uppercase tracking-widest font-semibold">
-              {camError ? 'Denied' : videoOn ? 'Cam On' : 'Cam Off'}
+            <span className="text-[10px] uppercase tracking-widest font-semibold text-center leading-tight">
+              {camPermissionRevoked ? 'Revoked' : camError ? 'Error' : videoOn ? 'Cam On' : 'Cam Off'}
             </span>
           </button>
         </div>
@@ -1322,8 +1540,8 @@ function LobbyScreen(props: {
 function SidebarIcon({ icon: Icon, active = false }: { icon: any, active?: boolean }) {
   return (
     <div className={cn(
-      "w-12 h-12 flex items-center justify-center rounded-2xl transition-all cursor-pointer group",
-      active ? "bg-[#A7C957] text-[#0A1A12] shadow-lg shadow-[#A7C957]/20" : "text-white/30 hover:text-white/60 hover:bg-white/5"
+      "w-12 h-12 flex items-center justify-center rounded-full transition-all cursor-pointer group",
+      active ? "bg-white text-[#0A1A12] shadow-lg shadow-white/5" : "text-white/30 hover:text-white/60 hover:bg-white/5"
     )}>
       <Icon className={cn("w-6 h-6", !active && "group-hover:scale-110 transition-transform")} />
     </div>
@@ -1334,11 +1552,13 @@ function ControlButton({
   icon: Icon, 
   active = false, 
   isError = false,
+  isWarning = false,
   onClick 
 }: { 
   icon: any, 
   active?: boolean, 
   isError?: boolean,
+  isWarning?: boolean,
   onClick?: () => void 
 }) {
   return (
@@ -1347,12 +1567,18 @@ function ControlButton({
       size="icon" 
       onClick={onClick}
       className={cn(
-        "w-14 h-14 rounded-2xl transition-all border border-white/10 backdrop-blur-md",
+        "w-14 h-14 rounded-full transition-all border border-white/10 backdrop-blur-md relative",
         active ? "bg-white/10 text-white" : "bg-black/20 text-white/40 hover:bg-white/5 hover:text-white",
+        isWarning && "border-amber-500/50 text-amber-500 hover:text-amber-400 hover:border-amber-500/80 bg-amber-500/10",
         isError && "border-red-500/50 text-red-500 hover:text-red-400"
       )}
     >
       <Icon className="w-6 h-6" />
+      {isWarning && (
+        <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-black border border-[#0A1A12] animate-bounce">
+          !
+        </span>
+      )}
     </Button>
   );
 }
@@ -1418,17 +1644,18 @@ function ChatMessage({ user, time, msg, avatar, isMe = false, isAI = false }: an
              <AvatarFallback>{user[0]}</AvatarFallback>
           </Avatar>
           <div className={cn("flex items-center gap-2", isMe && "flex-row-reverse")}>
-             <span className="text-xs font-bold text-white/60">{user}</span>
+             <span className={cn("text-xs font-bold", isMe ? "text-white/60" : "text-[#A7C957]")}>{user}</span>
              <span className="text-[10px] text-white/20">{time}</span>
           </div>
        </div>
        <div className={cn(
-         "px-5 py-3 rounded-2xl text-sm max-w-[85%] leading-relaxed shadow-sm",
-         isMe ? "bg-[#A7C957] text-[#0A1A12] rounded-tr-none" : 
-         isAI ? "bg-[#1B3E2D] text-[#A7C957] border border-[#A7C957]/20 italic rounded-tl-none" : 
-         "bg-white/10 text-white/80 rounded-tl-none"
+         "px-5 py-3 rounded-2xl text-sm max-w-[85%] leading-relaxed shadow-sm flex items-center gap-2",
+         isMe ? "bg-[#0B1E14] border border-white/5 text-white/90 rounded-tr-none" : 
+         isAI ? "bg-[#132E1F]/80 border border-[#A7C957]/20 text-[#A7C957] rounded-tl-none italic font-medium" : 
+         "bg-[#132E1F] border border-white/5 text-white/90 rounded-tl-none"
        )}>
-          {msg}
+          {isAI && <Sparkles className="w-3.5 h-3.5 shrink-0 text-[#A7C957]" />}
+          <span>{msg}</span>
        </div>
     </div>
   );

@@ -274,7 +274,6 @@ export default function TutorPage() {
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-8">
                     <UpcomingClasses tutorId={profile?.id} />
-                    <ClassPerformance tutorId={profile?.id} />
                 </div>
 
                 {/* Sidebar */}
@@ -284,6 +283,8 @@ export default function TutorPage() {
             </div>
 
             <TutorTools profileId={profile?.id} />
+
+            <ClassPerformance tutorId={profile?.id} />
         </div>
     );
 }

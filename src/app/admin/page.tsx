@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Crown, GraduationCap, Settings, Users, Database, ShieldAlert, CheckCircle, XCircle, FileText, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Copy, Crown, GraduationCap, Settings, Users, Database, ShieldAlert, CheckCircle, XCircle, FileText, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { SchoolHeader } from "@/components/app/school-header";
@@ -16,22 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
 // --- Mock Data for Charts ---
-const activityData = [
-  { name: 'Mon', students: 400, tutors: 240 },
-  { name: 'Tue', students: 300, tutors: 139 },
-  { name: 'Wed', students: 200, tutors: 980 },
-  { name: 'Thu', students: 278, tutors: 390 },
-  { name: 'Fri', students: 189, tutors: 480 },
-  { name: 'Sat', students: 239, tutors: 380 },
-  { name: 'Sun', students: 349, tutors: 430 },
-];
-
-const roleDistribution = [
-  { name: 'Students', value: 450, color: 'hsl(var(--primary))' },
-  { name: 'Tutors', value: 50, color: 'hsl(var(--chart-2))' },
-  { name: 'Admins', value: 10, color: 'hsl(var(--chart-3))' },
-  { name: 'Parents', value: 120, color: 'hsl(var(--chart-4))' },
-];
+// (Removed hardcoded mock data - now in component state)
 
 // --- Components ---
 type StatCardProps = {
@@ -81,6 +66,25 @@ export default function AdminDashboardPage() {
     const [userName, setUserName] = React.useState('Admin');
     const [stats, setStats] = React.useState({ totalUsers: 0, pendingUsers: 0, activeCourses: 0 });
     const [pendingProfiles, setPendingProfiles] = React.useState<any[]>([]);
+    
+    // Real-time Chart State
+    const [activityData, setActivityData] = React.useState([
+        { name: 'Mon', students: 0, tutors: 0 },
+        { name: 'Tue', students: 0, tutors: 0 },
+        { name: 'Wed', students: 0, tutors: 0 },
+        { name: 'Thu', students: 0, tutors: 0 },
+        { name: 'Fri', students: 0, tutors: 0 },
+        { name: 'Sat', students: 0, tutors: 0 },
+        { name: 'Sun', students: 0, tutors: 0 },
+    ]);
+    const [roleDistribution, setRoleDistribution] = React.useState([
+        { name: 'Students', value: 0, color: 'hsl(var(--primary))' },
+        { name: 'Tutors', value: 0, color: 'hsl(var(--chart-2))' },
+        { name: 'Admins', value: 0, color: 'hsl(var(--chart-3))' },
+        { name: 'Parents', value: 0, color: 'hsl(var(--chart-4))' },
+    ]);
+    const [isRefreshing, setIsRefreshing] = React.useState(false);
+    
     // Stable client reference — never recreated on re-render
     const supabase = React.useMemo(() => createClient(), []);
     const { toast } = useToast();
@@ -94,15 +98,32 @@ export default function AdminDashboardPage() {
                 setUserName(name.charAt(0).toUpperCase() + name.slice(1));
             }
         }
-        fetchDashboardData();
+        fetchDashboardData(false);
     }, []);
 
-    async function fetchDashboardData() {
-        // Run all three queries in parallel — 3x faster than sequential awaits
-        const [usersResult, pendingResult, coursesResult] = await Promise.all([
+    async function fetchDashboardData(showToast = false) {
+        setIsRefreshing(true);
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+        // Run all queries in parallel for performance
+        const [
+            usersResult, 
+            pendingResult, 
+            coursesResult,
+            studentsCount,
+            tutorsCount,
+            adminsCount,
+            parentsCount,
+            recentActivity
+        ] = await Promise.all([
             supabase.from('profiles').select('*', { count: 'exact', head: true }),
             supabase.from('profiles').select('id, full_name, role, updated_at, is_approved').eq('is_approved', false),
             supabase.from('courses').select('*', { count: 'exact', head: true }),
+            supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'student'),
+            supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'tutor'),
+            supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'admin'),
+            supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'parent'),
+            supabase.from('profiles').select('role, updated_at').gte('updated_at', sevenDaysAgo)
         ]);
 
         setStats({
@@ -114,6 +135,55 @@ export default function AdminDashboardPage() {
         if (pendingResult.data) {
             setPendingProfiles(pendingResult.data);
         }
+
+        // Update Role Distribution Chart
+        setRoleDistribution([
+            { name: 'Students', value: studentsCount.count || 0, color: 'hsl(var(--primary))' },
+            { name: 'Tutors', value: tutorsCount.count || 0, color: 'hsl(var(--chart-2))' },
+            { name: 'Admins', value: adminsCount.count || 0, color: 'hsl(var(--chart-3))' },
+            { name: 'Parents', value: parentsCount.count || 0, color: 'hsl(var(--chart-4))' },
+        ]);
+
+        // Update Activity Trend Chart
+        if (recentActivity.data) {
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const today = new Date();
+            
+            // Initialize last 7 days array
+            const newActivityData: {
+                name: string;
+                students: number;
+                tutors: number;
+                dateString: string;
+            }[] = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                newActivityData.push({
+                    name: days[d.getDay()],
+                    students: 0,
+                    tutors: 0,
+                    dateString: d.toISOString().split('T')[0]
+                });
+            }
+
+            // Populate counts
+            recentActivity.data.forEach(profile => {
+                if (!profile.updated_at) return;
+                const date = new Date(profile.updated_at).toISOString().split('T')[0];
+                const dayIndex = newActivityData.findIndex(d => d.dateString === date);
+                if (dayIndex !== -1) {
+                    if (profile.role === 'student') newActivityData[dayIndex].students++;
+                    if (profile.role === 'tutor') newActivityData[dayIndex].tutors++;
+                }
+            });
+
+            setActivityData(newActivityData);
+        }
+        setIsRefreshing(false);
+        if (showToast) {
+            toast({ title: "Data Refreshed", description: "Successfully fetched the latest platform data." });
+        }
     }
 
     const handleApproveUser = async (userId: string, isApproving: boolean) => {
@@ -122,9 +192,10 @@ export default function AdminDashboardPage() {
             setPendingProfiles(prev => prev.filter(p => p.id !== userId));
             setStats(prev => ({ ...prev, pendingUsers: Math.max(0, prev.pendingUsers - 1) }));
 
-            const { error } = await supabase.from('profiles').update({ is_approved: true }).eq('id', userId);
-            if (error) {
-                toast({ title: "Error", description: error.message, variant: "destructive" });
+            const { data, error } = await supabase.from('profiles').update({ is_approved: true }).eq('id', userId).select();
+            
+            if (error || !data || data.length === 0) {
+                toast({ title: "Update Failed", description: error?.message || "Could not save approval. Supabase RLS may be blocking this action. Please configure RLS policies.", variant: "destructive" });
                 fetchDashboardData(); // Revert on error
             } else {
                 toast({ title: "User Approved", description: "The user has been granted access." });
@@ -134,9 +205,10 @@ export default function AdminDashboardPage() {
             setPendingProfiles(prev => prev.filter(p => p.id !== userId));
             setStats(prev => ({ ...prev, pendingUsers: Math.max(0, prev.pendingUsers - 1), totalUsers: Math.max(0, prev.totalUsers - 1) }));
 
-            const { error } = await supabase.from('profiles').delete().eq('id', userId);
-            if (error) {
-                toast({ title: "Error", description: error.message, variant: "destructive" });
+            const { data, error } = await supabase.from('profiles').delete().eq('id', userId).select();
+            
+            if (error || !data || data.length === 0) {
+                toast({ title: "Update Failed", description: error?.message || "Could not delete user. Supabase RLS may be blocking this action. Please configure RLS policies.", variant: "destructive" });
                 fetchDashboardData(); // Revert on error
             } else {
                 toast({ title: "User Rejected", description: "The user's profile has been removed." });
@@ -163,7 +235,10 @@ export default function AdminDashboardPage() {
                     <p className="text-muted-foreground">Welcome, {userName}! Manage operations, users, and platform health.</p>
                 </div>
                 <div className="flex gap-2">
-                     <Button variant="outline" onClick={fetchDashboardData}><Database className="mr-2 h-4 w-4" /> Refresh Data</Button>
+                     <Button variant="outline" onClick={() => fetchDashboardData(true)} disabled={isRefreshing}>
+                        {isRefreshing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />} 
+                        {isRefreshing ? "Refreshing..." : "Refresh Data"}
+                     </Button>
                 </div>
             </div>
 

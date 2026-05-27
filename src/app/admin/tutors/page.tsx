@@ -60,7 +60,31 @@ export default function TutorsPage() {
 
     React.useEffect(() => {
         fetchTutors();
-    }, [fetchTutors]);
+
+        const channel = supabase
+            .channel('admin-tutors-realtime')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'profiles',
+                filter: 'role=eq.tutor',
+            }, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    setTutors(prev => [payload.new as any, ...prev]);
+                } else if (payload.eventType === 'UPDATE') {
+                    setTutors(prev =>
+                        prev.map(t => t.id === (payload.new as any).id ? { ...t, ...(payload.new as any) } : t)
+                    );
+                } else if (payload.eventType === 'DELETE') {
+                    setTutors(prev => prev.filter(t => t.id !== (payload.old as any).id));
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [fetchTutors, supabase]);
 
     const handleCopyLink = () => {
         navigator.clipboard.writeText(INVITE_LINK);

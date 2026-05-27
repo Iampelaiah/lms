@@ -31,6 +31,7 @@ import {
   Plus,
   BrainCircuit,
   Video,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -92,19 +93,33 @@ export function StudentSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={item.href}>
+            {navItems.map((item) => {
+              const restricted = !!(profile && !profile.is_approved && item.href !== '/student' && item.href !== '/student/settings');
+              
+              const ButtonContent = (
                   <SidebarMenuButton
                     isActive={pathname.startsWith(item.href) && (item.href !== '/student' || pathname === '/student')}
-                    tooltip={item.label}
+                    tooltip={restricted ? 'Restricted in Preview Mode' : item.label}
+                    disabled={restricted}
+                    className={restricted ? "opacity-50" : ""}
                   >
                     <item.icon />
                     <span>{item.label}</span>
+                    {restricted && <Lock className="ml-auto w-4 h-4 text-muted-foreground" />}
                   </SidebarMenuButton>
-                </Link>
+              );
+
+              return (
+              <SidebarMenuItem key={item.href}>
+                {restricted ? (
+                    ButtonContent
+                ) : (
+                    <Link href={item.href}>
+                      {ButtonContent}
+                    </Link>
+                )}
               </SidebarMenuItem>
-            ))}
+            )})}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

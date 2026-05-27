@@ -92,6 +92,7 @@ export type LiveClass = {
   imageHint?: string;
   agora_channel_name?: string;
   dyteMeetingId?: string; // Legacy
+  recording_url?: string;
   tutor?: {
     full_name: string;
     avatar_url?: string;

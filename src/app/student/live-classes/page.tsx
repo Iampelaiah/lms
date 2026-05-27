@@ -28,7 +28,7 @@ const statusVariantMap: Record<string, 'default' | 'secondary' | 'destructive'> 
 export default function StudentLiveClassesPage() {
     const [classes, setClasses] = useState<LiveClass[]>([]);
     const [loading, setLoading] = useState(true);
-    const { profile } = useUser();
+    const { profile, loading: userLoading } = useUser();
     const supabase = createClient();
 
     useEffect(() => {
@@ -69,11 +69,28 @@ export default function StudentLiveClassesPage() {
         };
     }, []);
 
-    if (loading) {
+    if (loading || userLoading) {
         return (
             <div className="h-[60vh] flex flex-col items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 <p className="mt-4 text-muted-foreground">Loading classes...</p>
+            </div>
+        );
+    }
+
+    if (profile && !profile.is_approved) {
+        return (
+            <div className="h-[60vh] flex flex-col items-center justify-center text-center max-w-md mx-auto px-4">
+                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+                    <Video className="w-8 h-8 text-red-500" />
+                </div>
+                <h1 className="text-2xl font-bold mb-2">Access Restricted</h1>
+                <p className="text-muted-foreground mb-6">
+                    Your account is currently pending administrator approval. Once approved, you will be able to view and join live classes.
+                </p>
+                <Button className="bg-[#A7C957] hover:bg-[#6A994E] text-[#0A1A12] font-bold rounded-xl" asChild>
+                    <Link href="/student">Back to Dashboard</Link>
+                </Button>
             </div>
         );
     }

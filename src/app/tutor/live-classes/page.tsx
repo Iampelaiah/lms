@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarPlus, Users, Video, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import Link from "next/link";
 import { SchoolHeader } from "@/components/app/school-header";
@@ -19,7 +22,94 @@ const statusVariantMap: Record<string, "default" | "secondary" | "destructive"> 
     "completed": "secondary",
 };
 
-function LiveClassList({ status, classes }: { status: string, classes: any[] }) {
+function EditRecordingDialog({ 
+  classId, 
+  currentUrl, 
+  onSaved, 
+  trigger 
+}: { 
+  classId: string; 
+  currentUrl?: string; 
+  onSaved: () => void; 
+  trigger: React.ReactNode; 
+}) {
+  const [url, setUrl] = useState(currentUrl || '');
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const supabase = createClient();
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('classes')
+        .update({ recording_url: url.trim() || null })
+        .eq('id', classId);
+
+      if (error) throw error;
+      
+      onSaved();
+      setOpen(false);
+    } catch (err) {
+      console.error('Error saving recording URL:', err);
+      alert('Failed to save recording URL. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px] bg-[#0A1A12] border-white/10 text-white rounded-3xl">
+        <form onSubmit={handleSave}>
+          <DialogHeader>
+            <DialogTitle>Add / Edit Recording</DialogTitle>
+            <DialogDescription className="text-white/40">
+              Provide a video recording link (YouTube, Zoom, Vimeo, or direct MP4 URL) for students to watch this class session.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="recording-url" className="text-white/60">Recording URL</Label>
+              <Input
+                id="recording-url"
+                type="url"
+                placeholder="https://example.com/recording.mp4"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="bg-white/5 border-white/10 rounded-xl py-6 focus-visible:ring-1 focus-visible:ring-primary text-white"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              className="bg-white/5 border-white/10 rounded-xl hover:bg-white/10 hover:text-white"
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={saving}
+              className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black font-bold rounded-xl"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Recording'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function LiveClassList({ status, classes, onUpdate }: { status: string, classes: any[], onUpdate: () => void }) {
     const filteredClasses = classes.filter(c => c.status === status);
 
     if (filteredClasses.length === 0) {
@@ -56,12 +146,35 @@ function LiveClassList({ status, classes }: { status: string, classes: any[] }) 
                         </p>
                     </CardContent>
                      <CardFooter className="p-4 pt-0">
-                         <Button className="w-full rounded-xl py-6" asChild variant={liveClass.status === "ongoing" ? "destructive" : "default"}>
-                            <Link href={`/classroom/${liveClass.id}?role=host`}>
-                               <Video className="mr-2 h-4 w-4" />
-                               {liveClass.status === "completed" ? "View Recording" : liveClass.status === "ongoing" ? "Join Now" : "Start Class"}
-                            </Link>
-                        </Button>
+                         {liveClass.status === "completed" ? (
+                             <div className="flex gap-2 w-full">
+                                 {liveClass.recording_url && (
+                                     <Button className="flex-1 rounded-xl py-6 bg-white/5 hover:bg-white/10 text-white border-white/10" variant="outline" asChild>
+                                         <a href={liveClass.recording_url} target="_blank" rel="noreferrer">
+                                             <Video className="mr-2 h-4 w-4 text-[#00FFCC]" />
+                                             View
+                                         </a>
+                                     </Button>
+                                 )}
+                                 <EditRecordingDialog
+                                     classId={liveClass.id}
+                                     currentUrl={liveClass.recording_url}
+                                     onSaved={onUpdate}
+                                     trigger={
+                                         <Button className="flex-1 rounded-xl py-6 bg-white/5 hover:bg-white/10 text-white border-white/10">
+                                             {liveClass.recording_url ? 'Edit Recording' : 'Add Recording'}
+                                         </Button>
+                                     }
+                                 />
+                             </div>
+                         ) : (
+                             <Button className="w-full rounded-xl py-6" asChild variant={liveClass.status === "ongoing" ? "destructive" : "default"}>
+                                 <Link href={`/classroom/${liveClass.agora_channel_name || liveClass.id}?role=host`}>
+                                     <Video className="mr-2 h-4 w-4" />
+                                     {liveClass.status === "ongoing" ? "Join Now" : "Start Class"}
+                                 </Link>
+                             </Button>
+                         )}
                     </CardFooter>
                 </Card>
            ))}
@@ -131,13 +244,13 @@ export default function TutorLiveClassesPage() {
                         <TabsTrigger value="completed">Completed</TabsTrigger>
                     </TabsList>
                     <TabsContent value="ongoing" className="mt-8">
-                        <LiveClassList status="ongoing" classes={classes} />
+                        <LiveClassList status="ongoing" classes={classes} onUpdate={fetchClasses} />
                     </TabsContent>
                     <TabsContent value="upcoming" className="mt-8">
-                        <LiveClassList status="upcoming" classes={classes} />
+                        <LiveClassList status="upcoming" classes={classes} onUpdate={fetchClasses} />
                     </TabsContent>
                     <TabsContent value="completed" className="mt-8">
-                        <LiveClassList status="completed" classes={classes} />
+                        <LiveClassList status="completed" classes={classes} onUpdate={fetchClasses} />
                     </TabsContent>
                 </Tabs>
             )}

@@ -12,34 +12,36 @@ export function RecentActivity({ tutorId }: { tutorId?: string }) {
     useEffect(() => {
         const fetchActivity = async () => {
             try {
-                // Fetch new students
-                const { data: students } = await supabase
-                    .from('profiles')
-                    .select('id, full_name, created_at')
-                    .eq('role', 'student')
-                    .order('created_at', { ascending: false })
-                    .limit(3);
+                // Run queries in parallel to eliminate sequential database roundtrip waterfalls
+                const [studentsRes, enrollmentsRes, coursesRes] = await Promise.all([
+                    supabase
+                        .from('profiles')
+                        .select('id, full_name, created_at')
+                        .eq('role', 'student')
+                        .order('created_at', { ascending: false })
+                        .limit(3),
+                    supabase
+                        .from('enrollments')
+                        .select(`
+                            id,
+                            created_at,
+                            student:profiles!enrollments_student_id_fkey (full_name),
+                            course:courses!enrollments_course_id_fkey (title, tutor_id)
+                        `)
+                        .eq('course.tutor_id', tutorId)
+                        .order('created_at', { ascending: false })
+                        .limit(3),
+                    supabase
+                        .from('courses')
+                        .select('id, title, created_at')
+                        .eq('tutor_id', tutorId)
+                        .order('created_at', { ascending: false })
+                        .limit(3)
+                ]);
 
-                // Fetch new enrollments for this tutor's courses
-                const { data: enrollments } = await supabase
-                    .from('enrollments')
-                    .select(`
-                        id,
-                        created_at,
-                        student:profiles!enrollments_student_id_fkey (full_name),
-                        course:courses!enrollments_course_id_fkey (title, tutor_id)
-                    `)
-                    .eq('course.tutor_id', tutorId)
-                    .order('created_at', { ascending: false })
-                    .limit(3);
-
-                // Fetch new courses created by this tutor
-                const { data: courses } = await supabase
-                    .from('courses')
-                    .select('id, title, created_at')
-                    .eq('tutor_id', tutorId)
-                    .order('created_at', { ascending: false })
-                    .limit(3);
+                const students = studentsRes.data;
+                const enrollments = enrollmentsRes.data;
+                const courses = coursesRes.data;
 
                 const aggregated: any[] = [];
 

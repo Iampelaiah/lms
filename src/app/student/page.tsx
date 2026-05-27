@@ -86,35 +86,7 @@ function AiTutorAssistant({ courses }: { courses: any[] }) {
   );
 }
 
-function UpcomingLiveClass() {
-  const [upcomingClass, setUpcomingClass] = useState<LiveClass | null>(null);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
-
-  useEffect(() => {
-    const fetchUpcoming = async () => {
-      const { data, error } = await supabase
-        .from('classes')
-        .select(`
-          *,
-          tutor:profiles!classes_tutor_id_fkey (
-            full_name
-          )
-        `)
-        .or('status.eq.ongoing,status.eq.upcoming')
-        .order('schedule', { ascending: true })
-        .limit(1)
-        .single();
-
-      if (data && !error) {
-        setUpcomingClass(data as any);
-      }
-      setLoading(false);
-    };
-
-    fetchUpcoming();
-  }, []);
-
+function UpcomingLiveClass({ upcomingClass, loading }: { upcomingClass: LiveClass | null; loading: boolean }) {
   if (loading) {
     return (
       <Card className="animate-pulse">
@@ -225,30 +197,47 @@ export default function StudentDashboardPage() {
   const { profile } = useUser();
   const [courses, setCourses] = React.useState<any[]>([]);
   const [loadingCourses, setLoadingCourses] = React.useState(true);
-  const supabase = createClient();
+  const [upcomingClass, setUpcomingClass] = useState<LiveClass | null>(null);
+  const [loadingUpcoming, setLoadingUpcoming] = useState(true);
+  const supabase = React.useMemo(() => createClient(), []);
   const userName = profile?.full_name || 'Student';
 
-    React.useEffect(() => {
-    const fetchProgress = async () => {
+  const fetchDashboardData = React.useCallback(async () => {
       if (!profile?.id) {
         setLoadingCourses(false);
+        setLoadingUpcoming(false);
         return;
       }
 
       try {
-        // Fetch enrolled courses for this student with lesson/progress data
-        const { data: enrollments } = await supabase
-          .from('enrollments')
-          .select(`
-            course:courses (
-              id,
-              title,
-              lessons (id),
-              student_progress (completed)
-            )
-          `)
-          .eq('student_id', profile.id);
+        // Run student progress fetch and upcoming live class fetch in parallel
+        const [enrollmentsResult, upcomingClassResult] = await Promise.all([
+          supabase
+            .from('enrollments')
+            .select(`
+              course:courses (
+                id,
+                title,
+                lessons (id),
+                student_progress (completed)
+              )
+            `)
+            .eq('student_id', profile.id),
+          supabase
+            .from('classes')
+            .select(`
+              *,
+              tutor:profiles!classes_tutor_id_fkey (
+                full_name
+              )
+            `)
+            .or('status.eq.ongoing,status.eq.upcoming')
+            .order('schedule', { ascending: true })
+            .limit(1)
+            .maybeSingle()
+        ]);
 
+        const enrollments = enrollmentsResult.data;
         if (enrollments) {
           const formatted = enrollments
             .map(e => e.course)
@@ -260,20 +249,44 @@ export default function StudentDashboardPage() {
               return {
                 name: course.title,
                 overallProgress: progress,
-                topics: [] // Clear mock topics
+                topics: []
               };
             });
           setCourses(formatted);
         }
+
+        if (upcomingClassResult.data) {
+          setUpcomingClass(upcomingClassResult.data as any);
+        } else {
+          setUpcomingClass(null);
+        }
       } catch (err) {
-        console.error('Error fetching student progress:', err);
+        console.error('Error fetching student dashboard data:', err);
       } finally {
         setLoadingCourses(false);
+        setLoadingUpcoming(false);
       }
-    };
+  }, [profile?.id, supabase]);
 
-    fetchProgress();
-  }, [profile?.id]);
+  React.useEffect(() => {
+    fetchDashboardData();
+
+    // Real-time: instantly reflect when admin adds/removes enrollments
+    if (!profile?.id) return;
+    const channel = supabase
+      .channel(`student-enrollments-${profile.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'enrollments',
+        filter: `student_id=eq.${profile.id}`,
+      }, () => {
+        fetchDashboardData();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchDashboardData, profile?.id, supabase]);
   return (
     <div className="space-y-6">
         <SchoolHeader />
@@ -313,11 +326,11 @@ export default function StudentDashboardPage() {
                 <Lightbulb className="w-8 h-8 text-muted-foreground/40" />
              </div>
              <div className="space-y-1">
-                <h3 className="font-bold text-lg">No Courses Enrolled</h3>
-                <p className="text-muted-foreground text-sm">Enroll in a course to track your progress and access AI study tools.</p>
+                <h3 className="font-bold text-lg">No Subjects Enrolled</h3>
+                <p className="text-muted-foreground text-sm">Enroll in a subject to track your progress and access AI study tools.</p>
              </div>
              <Button asChild variant="outline">
-                <Link href="/student/courses">Browse Courses</Link>
+                <Link href="/student/courses">Browse Subjects</Link>
              </Button>
           </Card>
         )}
@@ -328,7 +341,7 @@ export default function StudentDashboardPage() {
             <AiTutorAssistant courses={courses} />
         </div>
         <div>
-            <UpcomingLiveClass />
+            <UpcomingLiveClass upcomingClass={upcomingClass} loading={loadingUpcoming} />
         </div>
       </div>
 

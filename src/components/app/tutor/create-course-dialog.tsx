@@ -30,49 +30,102 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
     const [imageUrl, setImageUrl] = useState("");
     const [lessons, setLessons] = useState<{ title: string; content: string }[]>([]);
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const supabase = createClient();
 
+    /**
+     * Compresses an image using a canvas element before upload.
+     * Resizes to max 1000px wide and applies JPEG quality compression.
+     * Typically reduces size by 70-90%, making uploads 3-10x faster.
+     */
+    const compressImage = (file: File, maxWidth = 1000, quality = 0.7): Promise<Blob> => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const objectUrl = URL.createObjectURL(file);
+            img.onload = () => {
+                URL.revokeObjectURL(objectUrl);
+                const canvas = document.createElement('canvas');
+                const scale = Math.min(1, maxWidth / img.width);
+                canvas.width = Math.round(img.width * scale);
+                canvas.height = Math.round(img.height * scale);
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return reject(new Error('Canvas not supported'));
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob(
+                    (blob) => blob ? resolve(blob) : reject(new Error('Compression failed')),
+                    'image/jpeg',
+                    quality
+                );
+            };
+            img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Image load failed')); };
+            img.src = objectUrl;
+        });
+    };
 
     const uploadBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !tutorId) return;
 
-        // Validate file size (5MB limit)
-        if (file.size > 5 * 1024 * 1024) {
-            setUploadError("File is too large. Max 5MB allowed.");
+        if (file.size > 10 * 1024 * 1024) {
+            setUploadError("File is too large. Max 10MB allowed.");
             return;
         }
 
         setUploadError(null);
-        setUploading(true); // Show loading skeleton — NO local blob yet
+        setUploading(true);
+        setUploadProgress(0);
 
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${tutorId}/${Date.now()}.${fileExt}`;
-        const filePath = `banners/${fileName}`;
+        // Step 1: Show instant local preview — no waiting for upload
+        const localUrl = URL.createObjectURL(file);
+        setImageUrl(localUrl);
+        setUploadProgress(10);
+
+        // Timer for smooth fake progress to avoid the "stuck" feeling
+        let progressInterval: NodeJS.Timeout;
 
         try {
-            // Step 1: Upload file to Supabase Storage bucket
+            // Step 2: Compress in background (fast, ~100-300ms)
+            const compressed = await compressImage(file);
+            setUploadProgress(20);
+
+            const fileName = `${tutorId}/${Date.now()}.jpg`;
+            const filePath = `banners/${fileName}`;
+
+            let currentFakeProgress = 20;
+            progressInterval = setInterval(() => {
+                currentFakeProgress += Math.floor(Math.random() * 5) + 3;
+                if (currentFakeProgress > 90) currentFakeProgress = 90;
+                setUploadProgress(currentFakeProgress);
+            }, 100);
+
+            // Step 3: Upload the compressed blob (much smaller = much faster)
             const { error: uploadErr } = await supabase.storage
                 .from('course-banners')
-                .upload(filePath, file, { upsert: false });
+                .upload(filePath, compressed, { upsert: false, contentType: 'image/jpeg' });
+            
+            clearInterval(progressInterval);
 
             if (uploadErr) throw uploadErr;
+            setUploadProgress(95);
 
-            // Step 2: Fetch the public URL from Supabase (not local blob)
             const { data } = supabase.storage
                 .from('course-banners')
                 .getPublicUrl(filePath);
 
-            if (!data?.publicUrl) throw new Error("Could not retrieve public URL from Supabase.");
+            if (!data?.publicUrl) throw new Error("Could not retrieve public URL.");
 
-            // Step 3: Set preview to the Supabase-hosted URL
+            setUploadProgress(100);
+            // Step 4: Swap local blob URL for permanent Supabase URL
             setImageUrl(data.publicUrl);
+            URL.revokeObjectURL(localUrl);
         } catch (err: any) {
             console.error("Upload failed:", err);
-            setUploadError(err.message || "Upload failed. Check your storage bucket settings.");
+            setUploadError(err.message || "Upload failed. Please try again.");
         } finally {
+            if (progressInterval!) clearInterval(progressInterval);
             setUploading(false);
+            setUploadProgress(0);
         }
     };
 
@@ -167,30 +220,46 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                         <div className="grid gap-2">
                             <Label htmlFor="image">Course Banner</Label>
                             <div className="flex flex-col gap-3">
-                                {uploading ? (
-                                    /* Loading skeleton while uploading to Supabase */
-                                    <div className="relative aspect-[2/1] w-full rounded-lg overflow-hidden border bg-muted animate-pulse flex flex-col items-center justify-center gap-2">
-                                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                                        <p className="text-xs text-muted-foreground">Uploading to Supabase…</p>
-                                    </div>
-                                ) : imageUrl ? (
-                                    /* Preview fetched from Supabase public URL */
+                                {imageUrl ? (
+                                    /* Preview fetched from local blob or Supabase public URL */
                                     <div className="relative aspect-[2/1] w-full rounded-lg overflow-hidden border bg-muted group">
                                         <img
                                             src={imageUrl}
                                             alt="Banner preview"
                                             className="object-cover w-full h-full"
                                         />
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-start justify-end p-2">
-                                            <Button
-                                                variant="destructive"
-                                                size="sm"
-                                                className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                onClick={() => setImageUrl("")}
-                                            >
-                                                Change Image
-                                            </Button>
-                                        </div>
+                                        {uploading && (
+                                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
+                                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                                <p className="text-xs text-white font-medium">
+                                                    {uploadProgress < 30 ? 'Compressing' : uploadProgress < 85 ? 'Uploading' : 'Finalizing'} {uploadProgress}%
+                                                </p>
+                                                <div className="w-[60%] bg-white/20 h-1 rounded-full overflow-hidden mt-1">
+                                                    <div 
+                                                        className="h-full bg-primary transition-all duration-300"
+                                                        style={{ width: `${uploadProgress}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                        {!uploading && (
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-start justify-end p-2 opacity-0 group-hover:opacity-100 duration-200">
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    className="h-7 px-2"
+                                                    onClick={() => setImageUrl("")}
+                                                >
+                                                    Change Image
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : uploading ? (
+                                    /* Fail-safe placeholder if uploading but no local preview url exists */
+                                    <div className="relative aspect-[2/1] w-full rounded-lg overflow-hidden border bg-muted animate-pulse flex flex-col items-center justify-center gap-2">
+                                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                        <p className="text-xs text-muted-foreground">Uploading to Supabase ({uploadProgress}%)…</p>
                                     </div>
                                 ) : (
                                     /* Default: URL input + file upload button */

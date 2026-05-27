@@ -86,7 +86,7 @@ export function CreatePostDialog({
                 content,
                 image_url: imageUrl,
                 community_id: communityId,
-                author_id: authorId
+                user_id: authorId
             });
 
         if (!error) {
