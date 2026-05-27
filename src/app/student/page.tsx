@@ -9,11 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { BrainCircuit, Lightbulb, Video, Calendar, Clock, Loader2, Shield } from 'lucide-react';
+import { BrainCircuit, Lightbulb, Video, Calendar, Clock, Loader2, Shield, Search, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { DetailedProgressCard } from "@/components/app/student/dashboard/subject-progress-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SchoolHeader } from '@/components/app/school-header';
 import { useUser } from '@/components/providers/user-context';
 import { createClient } from '@/utils/supabase/client';
@@ -22,16 +23,16 @@ import React, { useEffect, useState } from 'react';
 
 function AiStudyPanel() {
   return (
-    <Card className="bg-secondary/50">
+    <Card className="bg-secondary/50 rounded-[2rem] border-none shadow-md">
         <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-6">
-            <div className="bg-primary/10 p-3 rounded-full">
+            <div className="bg-primary/10 p-4 rounded-full">
                 <BrainCircuit className="w-8 h-8 text-primary" />
             </div>
-            <div className="flex-grow">
+            <div className="flex-grow text-center sm:text-left">
                 <h3 className="text-xl font-bold">AI-Powered Study Panel</h3>
-                <p className="text-muted-foreground">Choose a subject to get key concepts, resources, and answers from your AI Study Buddy.</p>
+                <p className="text-muted-foreground text-sm mt-1">Choose a subject to get key concepts, resources, and answers from your AI Study Buddy.</p>
             </div>
-            <Button asChild size="lg">
+            <Button asChild size="lg" className="rounded-full w-full sm:w-auto font-semibold">
                 <Link href="/student/study-panel">Go to Study Panel</Link>
             </Button>
         </CardContent>
@@ -41,7 +42,7 @@ function AiStudyPanel() {
 
 function AiTutorAssistant({ courses }: { courses: any[] }) {
   return (
-    <Card>
+    <Card className="rounded-[2rem] shadow-sm">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="p-2 bg-amber-100 rounded-md">
@@ -77,7 +78,7 @@ function AiTutorAssistant({ courses }: { courses: any[] }) {
             </SelectContent>
           </Select>
         </div>
-        <Button className="w-full">
+        <Button className="w-full rounded-full">
           <Lightbulb className="mr-2 h-4 w-4" />
           Get Recommendations
         </Button>
@@ -115,7 +116,7 @@ function UpcomingLiveClass({ upcomingClass, loading }: { upcomingClass: LiveClas
   }
 
   return (
-    <Card>
+    <Card className="rounded-[2rem] shadow-sm">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 rounded-md">
@@ -148,7 +149,7 @@ function UpcomingLiveClass({ upcomingClass, loading }: { upcomingClass: LiveClas
             <span>{upcomingClass.schedule ? new Date(upcomingClass.schedule).toLocaleTimeString() : 'TBD'}</span>
           </div>
         </div>
-        <Button className="w-full" asChild>
+        <Button className="w-full rounded-full font-semibold" asChild>
           <Link href={`/classroom/${upcomingClass.id}`}>Join Classroom</Link>
         </Button>
       </CardContent>
@@ -291,7 +292,30 @@ export default function StudentDashboardPage() {
     <div className="space-y-6">
         <SchoolHeader />
         <SecurityAlert />
-      <div>
+      {/* Mobile Top Bar */}
+      <div className="flex items-center justify-between sm:hidden mb-2">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10 border border-white/10">
+            <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} alt={userName} />
+            <AvatarFallback>{userName[0]?.toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-sm text-muted-foreground leading-none">Good morning,</p>
+            <h1 className="text-lg font-bold">Hi, {userName.split(' ')[0]}</h1>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="rounded-full bg-secondary/50">
+            <Search className="w-4 h-4 text-muted-foreground" />
+          </Button>
+          <Button variant="ghost" size="icon" className="rounded-full bg-secondary/50">
+            <Bell className="w-4 h-4 text-muted-foreground" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Desktop Welcome Header */}
+      <div className="hidden sm:block">
         <h1 className="text-3xl font-bold tracking-tight">
           Welcome back, {userName}!
         </h1>
@@ -302,10 +326,10 @@ export default function StudentDashboardPage() {
 
      <AiStudyPanel />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:snap-none sm:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
         {loadingCourses ? (
           [1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse shrink-0 w-[85vw] snap-center sm:w-auto rounded-[2rem]">
               <CardHeader><div className="h-6 w-32 bg-muted rounded" /></CardHeader>
               <CardContent><div className="h-32 bg-muted rounded" /></CardContent>
             </Card>

@@ -50,7 +50,6 @@ const navItems = [
   { href: '/student/community', icon: MessageSquare, label: 'Forums' },
   { href: '/student/resources', icon: Library, label: 'Resources' },
   { href: '/student/progress', icon: BarChart, label: 'Progress' },
-  { href: '/student/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function StudentSidebar() {
@@ -94,7 +93,7 @@ export function StudentSidebar() {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarMenu>
             {navItems.map((item) => {
-              const restricted = !!(profile && !profile.is_approved && item.href !== '/student' && item.href !== '/student/settings');
+              const restricted = !!(profile && !profile.is_approved && item.href !== '/student');
               
               const ButtonContent = (
                   <SidebarMenuButton

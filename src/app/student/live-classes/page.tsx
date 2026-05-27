@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { createClient } from '@/utils/supabase/client';
 import { LiveClass } from '@/lib/types';
 import { Users, Video, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { JoinClassButton } from '@/components/classroom/JoinClassButton';
@@ -29,45 +29,44 @@ export default function StudentLiveClassesPage() {
     const [classes, setClasses] = useState<LiveClass[]>([]);
     const [loading, setLoading] = useState(true);
     const { profile, loading: userLoading } = useUser();
-    const supabase = createClient();
+    // Stable supabase client — created once per component mount
+    const supabase = useMemo(() => createClient(), []);
+
+    const fetchClasses = useCallback(async () => {
+        const { data, error } = await supabase
+            .from('classes')
+            .select(`
+                *,
+                tutor:profiles!classes_tutor_id_fkey (
+                    full_name,
+                    avatar_url
+                )
+            `)
+            .order('schedule', { ascending: true });
+
+        if (data && !error) {
+            setClasses(data as any);
+        }
+        setLoading(false);
+    }, [supabase]);
 
     useEffect(() => {
-        const fetchClasses = async () => {
-            const { data, error } = await supabase
-                .from('classes')
-                .select(`
-                    *,
-                    tutor:profiles!classes_tutor_id_fkey (
-                        full_name,
-                        avatar_url
-                    )
-                `)
-                .order('schedule', { ascending: true });
-
-            if (data && !error) {
-                setClasses(data as any);
-            }
-            setLoading(false);
-        };
-
         fetchClasses();
 
-        // Subscribe to changes in the classes table
+        // Subscribe to real-time changes in the classes table
         const subscription = supabase
             .channel('live-classes-status')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'classes' },
-                () => {
-                    fetchClasses(); // Re-fetch on any change
-                }
+                fetchClasses
             )
             .subscribe();
 
         return () => {
             subscription.unsubscribe();
         };
-    }, []);
+    }, [fetchClasses, supabase]);
 
     if (loading || userLoading) {
         return (

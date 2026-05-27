@@ -40,7 +40,7 @@ export function DetailedProgressCard({
       );
 
   return (
-    <Card>
+    <Card className="shrink-0 w-[85vw] snap-center sm:w-auto rounded-[2rem] shadow-sm border-white/5">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
@@ -48,41 +48,47 @@ export function DetailedProgressCard({
             <CardDescription>Overall Progress</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-primary">{overallProgress}%</span>
-            <BookOpen className="h-6 w-6 text-accent" />
+            <span className="text-2xl font-bold text-fin-lime">{overallProgress}%</span>
+            <BookOpen className="h-6 w-6 text-fin-lime" />
           </div>
         </div>
         <Progress value={overallProgress} className="mt-2 h-2" />
       </CardHeader>
       <CardContent>
-        <Carousel
-          plugins={[plugin.current]}
-          onMouseEnter={plugin.current.stop}
-          onMouseLeave={plugin.current.reset}
-          opts={{
-            align: 'start',
-            loop: true,
-          }}
-          orientation="vertical"
-          className="w-full"
-        >
-          <CarouselContent className="-mt-1 h-20">
-            {topics.map((topic, index) => (
-              <CarouselItem key={index} className="pt-1">
-                <div className="p-1">
-                  <Card className="bg-muted/50">
-                    <CardContent className="flex items-center justify-between p-3">
-                      <p className="text-sm font-medium truncate">{topic.name}</p>
-                      <Badge variant={topic.progress > 70 ? 'default' : 'secondary'}>
-                        {topic.progress}%
-                      </Badge>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+        {topics.length > 0 ? (
+          <Carousel
+            plugins={[plugin.current]}
+            onMouseEnter={plugin.current.stop}
+            onMouseLeave={plugin.current.reset}
+            opts={{
+              align: 'start',
+              loop: true,
+            }}
+            orientation="vertical"
+            className="w-full"
+          >
+            <CarouselContent className="-mt-1 h-20">
+              {topics.map((topic, index) => (
+                <CarouselItem key={index} className="pt-1">
+                  <div className="p-1">
+                    <Card className="bg-muted/50 rounded-2xl border-none">
+                      <CardContent className="flex items-center justify-between p-3">
+                        <p className="text-sm font-medium truncate">{topic.name}</p>
+                        <Badge variant={topic.progress > 70 ? 'default' : 'secondary'} className={topic.progress > 70 ? "bg-fin-lime text-fin-green hover:bg-fin-lime/80" : ""}>
+                          {topic.progress}%
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        ) : (
+          <div className="h-20 flex items-center justify-center bg-muted/20 rounded-2xl">
+            <p className="text-sm text-muted-foreground">No specific topics yet.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
