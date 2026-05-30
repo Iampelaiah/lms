@@ -90,29 +90,41 @@ export default function StudyPanelPage() {
 
     useEffect(() => {
         const fetchSubjects = async () => {
-            const { data } = await supabase
-                .from('subjects')
-                .select('*')
-                .order('order_index', { ascending: true });
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                setLoading(false);
+                return;
+            }
 
-            if (data) setSubjects(data);
+            // Only fetch subjects where the student has an approved enrollment
+            const { data } = await supabase
+                .from('enrollments')
+                .select('subjects(*)')
+                .eq('student_id', user.id)
+                .eq('status', 'approved');
+
+            if (data) {
+                // extract the nested 'subjects' object
+                const enrolledSubjects = data.map((e: any) => e.subjects).filter(Boolean);
+                setSubjects(enrolledSubjects);
+            }
             setLoading(false);
         };
 
         fetchSubjects();
 
-        // Real-time: new subjects appear instantly without page refresh
+        // Real-time: update if an admin approves a subject while they are on the page
         const channel = supabase
-            .channel('subjects-live')
+            .channel('enrollments-live')
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
-                table: 'subjects'
+                table: 'enrollments'
             }, fetchSubjects)
             .subscribe();
 
         return () => { supabase.removeChannel(channel); };
-    }, []);
+    }, [supabase]);
 
     return (
         <div className="space-y-6 p-4 sm:p-6">

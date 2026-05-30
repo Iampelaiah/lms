@@ -46,7 +46,7 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
     const { toast } = useToast();
 
     const [allCourses, setAllCourses] = React.useState<any[]>([]);
-    const [enrolledIds, setEnrolledIds] = React.useState<Set<string>>(new Set());
+    const [enrollmentsList, setEnrollmentsList] = React.useState<any[]>([]);
     const [togglingId, setTogglingId] = React.useState<string | null>(null);
     const [loadingCourses, setLoadingCourses] = React.useState(true);
 
@@ -72,13 +72,13 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
         setLoadingCourses(true);
         try {
             const [{ data: courses }, { data: enrollments }, { data: parents }, { data: links }] = await Promise.all([
-                supabase.from('courses').select('id, title, status').eq('status', 'Published').order('title'),
-                supabase.from('enrollments').select('course_id').eq('student_id', student.id),
+                supabase.from('subjects').select('id, name, level').order('name'),
+                supabase.from('enrollments').select('id, subject_id, status').eq('student_id', student.id),
                 supabase.from('profiles').select('id, full_name').eq('role', 'Parent').order('full_name'),
                 supabase.from('parent_student_links').select('parent_id').eq('student_id', student.id).maybeSingle(),
             ]);
             setAllCourses(courses || []);
-            setEnrolledIds(new Set((enrollments || []).map((e: any) => e.course_id)));
+            setEnrollmentsList(enrollments || []);
             setAllParents(parents || []);
             
             if (links?.parent_id) {
@@ -105,40 +105,50 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
     }, [open, fetchData]);
 
     // ── Toggle enrollment ──────────────────────────────────────────────────
-    const toggleEnrollment = async (courseId: string) => {
+    const toggleEnrollment = async (courseId: string, enrollment: any) => {
         setTogglingId(courseId);
-        const isEnrolled = enrolledIds.has(courseId);
 
-        if (isEnrolled) {
-            // Remove enrollment
+        if (enrollment) {
             const { error } = await supabase
                 .from('enrollments')
                 .delete()
-                .eq('student_id', student.id)
-                .eq('course_id', courseId);
+                .eq('id', enrollment.id);
 
             if (error) {
-                toast({ title: 'Error removing subject', description: error.message, variant: 'destructive' });
+                toast({ title: 'Error', description: error.message, variant: 'destructive' });
             } else {
-                setEnrolledIds(prev => {
-                    const next = new Set(prev);
-                    next.delete(courseId);
-                    return next;
-                });
-                toast({ title: 'Subject removed', description: 'Student has been unenrolled from the subject.' });
+                setEnrollmentsList(prev => prev.filter(e => e.id !== enrollment.id));
+                toast({ title: 'Removed/Rejected', description: 'Subject enrollment removed.' });
             }
         } else {
-            // Add enrollment
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('enrollments')
-                .insert({ student_id: student.id, course_id: courseId });
+                .insert({ student_id: student.id, subject_id: courseId, status: 'approved' })
+                .select()
+                .single();
 
             if (error) {
                 toast({ title: 'Error adding subject', description: error.message, variant: 'destructive' });
             } else {
-                setEnrolledIds(prev => new Set([...prev, courseId]));
-                toast({ title: 'Subject added', description: 'Student has been enrolled in the subject.' });
+                setEnrollmentsList(prev => [...prev, data]);
+                toast({ title: 'Subject added', description: 'Student has been enrolled.' });
             }
+        }
+        setTogglingId(null);
+    };
+
+    const approveEnrollment = async (enrollmentId: string, courseId: string) => {
+        setTogglingId(courseId);
+        const { error } = await supabase
+            .from('enrollments')
+            .update({ status: 'approved', updated_at: new Date().toISOString() })
+            .eq('id', enrollmentId);
+
+        if (error) {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' });
+        } else {
+            setEnrollmentsList(prev => prev.map(e => e.id === enrollmentId ? { ...e, status: 'approved' } : e));
+            toast({ title: 'Approved', description: 'Enrollment has been approved.' });
         }
         setTogglingId(null);
     };
@@ -284,9 +294,14 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                             <BookOpen className="h-4 w-4 text-primary" />
                             <h3 className="font-semibold text-sm">Subject Enrollments</h3>
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                            {enrolledIds.size} enrolled
-                        </span>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {enrollmentsList.filter(e => e.status === 'pending').length > 0 && (
+                                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-200">
+                                    {enrollmentsList.filter(e => e.status === 'pending').length} pending
+                                </Badge>
+                            )}
+                            <span>{enrollmentsList.filter(e => e.status === 'approved').length} enrolled</span>
+                        </div>
                     </div>
 
                     {loadingCourses ? (
@@ -301,59 +316,74 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                         </div>
                     ) : allCourses.length === 0 ? (
                         <div className="p-6 flex flex-col items-center justify-center text-center gap-3 border rounded-lg border-dashed bg-muted/20">
-                            <p className="text-muted-foreground text-sm">No published subjects available to enroll.</p>
-                            <div className="flex w-full max-w-xs gap-2 mt-2">
-                                <Input 
-                                    placeholder="New subject name..." 
-                                    value={quickSubjectTitle}
-                                    onChange={(e) => setQuickSubjectTitle(e.target.value)}
-                                    disabled={isQuickAdding}
-                                    className="h-8 text-sm"
-                                />
-                                <Button size="sm" onClick={handleQuickAddSubject} disabled={isQuickAdding || !quickSubjectTitle.trim()}>
-                                    {isQuickAdding ? <Loader2 className="h-3 w-3 animate-spin" /> : "Create & Enroll"}
-                                </Button>
-                            </div>
+                            <p className="text-muted-foreground text-sm">No subjects available.</p>
                         </div>
                     ) : (
-                        <ScrollArea className="flex-1 -mx-1 px-1" style={{ maxHeight: '240px' }}>
+                        <ScrollArea type="always" className="flex-1 -mx-1 px-1 pr-4" style={{ maxHeight: '240px' }}>
                             <div className="space-y-2">
-                                {allCourses.map(course => {
-                                    const isEnrolled = enrolledIds.has(course.id);
+                                {[...allCourses].sort((a, b) => {
+                                    const aPending = enrollmentsList.find(e => e.subject_id === a.id)?.status === 'pending';
+                                    const bPending = enrollmentsList.find(e => e.subject_id === b.id)?.status === 'pending';
+                                    if (aPending && !bPending) return -1;
+                                    if (!aPending && bPending) return 1;
+                                    return 0; // fallback to original alphabetical order
+                                }).map(course => {
+                                    const enrollment = enrollmentsList.find(e => e.subject_id === course.id);
+                                    const isEnrolled = enrollment?.status === 'approved';
+                                    const isPending = enrollment?.status === 'pending';
                                     const isToggling = togglingId === course.id;
                                     return (
                                         <div
                                             key={course.id}
                                             className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${
-                                                isEnrolled ? 'bg-primary/5 border-primary/20' : 'bg-background'
+                                                isEnrolled ? 'bg-primary/5 border-primary/20' : isPending ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background'
                                             }`}
                                         >
                                             <div className="flex items-center gap-2 min-w-0">
                                                 {isEnrolled
                                                     ? <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                                                    : isPending
+                                                    ? <Loader2 className="h-4 w-4 text-amber-500 flex-shrink-0 animate-pulse" />
                                                     : <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                                 }
-                                                <span className="text-sm truncate font-medium">{course.title}</span>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-sm truncate font-medium">{course.name}</span>
+                                                    <span className="text-xs truncate text-muted-foreground">{course.level}</span>
+                                                </div>
                                             </div>
-                                            <Button
-                                                size="sm"
-                                                variant={isEnrolled ? 'destructive' : 'outline'}
-                                                className={`flex-shrink-0 h-8 px-3 text-xs ${
-                                                    isEnrolled
-                                                        ? 'bg-red-500/10 text-red-600 border-red-200 hover:bg-red-500/20 hover:text-red-700'
-                                                        : 'text-emerald-600 border-emerald-200 hover:bg-emerald-500/10'
-                                                }`}
-                                                onClick={() => toggleEnrollment(course.id)}
-                                                disabled={isToggling}
-                                            >
-                                                {isToggling ? (
-                                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                                ) : isEnrolled ? (
-                                                    <><BookMinus className="h-3 w-3 mr-1" />Remove</>
-                                                ) : (
-                                                    <><BookPlus className="h-3 w-3 mr-1" />Enroll</>
+                                            <div className="flex gap-2">
+                                                {isPending && (
+                                                    <Button
+                                                        size="sm"
+                                                        className="flex-shrink-0 h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                        onClick={() => approveEnrollment(enrollment.id, course.id)}
+                                                        disabled={isToggling}
+                                                    >
+                                                        {isToggling ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
+                                                    </Button>
                                                 )}
-                                            </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant={isEnrolled || isPending ? 'destructive' : 'outline'}
+                                                    className={`flex-shrink-0 h-8 px-3 text-xs ${
+                                                        isEnrolled || isPending
+                                                            ? 'bg-red-500/10 text-red-600 border-red-200 hover:bg-red-500/20 hover:text-red-700'
+                                                            : 'text-emerald-600 border-emerald-200 hover:bg-emerald-500/10'
+                                                    }`}
+                                                    onClick={() => toggleEnrollment(course.id, enrollment)}
+                                                    disabled={isToggling}
+                                                >
+                                                    {isToggling ? (
+                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                    ) : isEnrolled ? (
+                                                        <><BookMinus className="h-3 w-3 mr-1" />Remove</>
+                                                    ) : isPending ? (
+                                                        <><UserX className="h-3 w-3 mr-1" />Reject</>
+                                                    ) : (
+                                                        <><BookPlus className="h-3 w-3 mr-1" />Enroll</>
+                                                    )}
+                                                </Button>
+                                            </div>
                                         </div>
                                     );
                                 })}
