@@ -319,76 +319,74 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                             <p className="text-muted-foreground text-sm">No subjects available.</p>
                         </div>
                     ) : (
-                        <ScrollArea type="always" className="flex-1 -mx-1 px-1 pr-4" style={{ maxHeight: '240px' }}>
-                            <div className="space-y-2">
-                                {[...allCourses].sort((a, b) => {
-                                    const aPending = enrollmentsList.find(e => e.subject_id === a.id)?.status === 'pending';
-                                    const bPending = enrollmentsList.find(e => e.subject_id === b.id)?.status === 'pending';
-                                    if (aPending && !bPending) return -1;
-                                    if (!aPending && bPending) return 1;
-                                    return 0; // fallback to original alphabetical order
-                                }).map(course => {
-                                    const enrollment = enrollmentsList.find(e => e.subject_id === course.id);
-                                    const isEnrolled = enrollment?.status === 'approved';
-                                    const isPending = enrollment?.status === 'pending';
-                                    const isToggling = togglingId === course.id;
-                                    return (
-                                        <div
-                                            key={course.id}
-                                            className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${
-                                                isEnrolled ? 'bg-primary/5 border-primary/20' : isPending ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background'
-                                            }`}
-                                        >
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                {isEnrolled
-                                                    ? <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                                                    : isPending
-                                                    ? <Loader2 className="h-4 w-4 text-amber-500 flex-shrink-0 animate-pulse" />
-                                                    : <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                                }
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="text-sm truncate font-medium">{course.name}</span>
-                                                    <span className="text-xs truncate text-muted-foreground">{course.level}</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                {isPending && (
-                                                    <Button
-                                                        size="sm"
-                                                        className="flex-shrink-0 h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-                                                        onClick={() => approveEnrollment(enrollment.id, course.id)}
-                                                        disabled={isToggling}
-                                                    >
-                                                        {isToggling ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    size="sm"
-                                                    variant={isEnrolled || isPending ? 'destructive' : 'outline'}
-                                                    className={`flex-shrink-0 h-8 px-3 text-xs ${
-                                                        isEnrolled || isPending
-                                                            ? 'bg-red-500/10 text-red-600 border-red-200 hover:bg-red-500/20 hover:text-red-700'
-                                                            : 'text-emerald-600 border-emerald-200 hover:bg-emerald-500/10'
-                                                    }`}
-                                                    onClick={() => toggleEnrollment(course.id, enrollment)}
-                                                    disabled={isToggling}
-                                                >
-                                                    {isToggling ? (
-                                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                                    ) : isEnrolled ? (
-                                                        <><BookMinus className="h-3 w-3 mr-1" />Remove</>
-                                                    ) : isPending ? (
-                                                        <><UserX className="h-3 w-3 mr-1" />Reject</>
-                                                    ) : (
-                                                        <><BookPlus className="h-3 w-3 mr-1" />Enroll</>
-                                                    )}
-                                                </Button>
+                        <div className="flex-1 overflow-y-auto max-h-[300px] -mx-1 px-1 pr-2 space-y-2">
+                            {[...allCourses].sort((a, b) => {
+                                const aPending = enrollmentsList.find(e => e.subject_id === a.id)?.status === 'pending';
+                                const bPending = enrollmentsList.find(e => e.subject_id === b.id)?.status === 'pending';
+                                if (aPending && !bPending) return -1;
+                                if (!aPending && bPending) return 1;
+                                return 0; // fallback to original alphabetical order
+                            }).map(course => {
+                                const enrollment = enrollmentsList.find(e => e.subject_id === course.id);
+                                const isEnrolled = enrollment?.status === 'approved';
+                                const isPending = enrollment?.status === 'pending';
+                                const isToggling = togglingId === course.id;
+                                return (
+                                    <div
+                                        key={course.id}
+                                        className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${
+                                            isEnrolled ? 'bg-primary/5 border-primary/20' : isPending ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            {isEnrolled
+                                                ? <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                                                : isPending
+                                                ? <Loader2 className="h-4 w-4 text-amber-500 flex-shrink-0 animate-pulse" />
+                                                : <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                            }
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-sm truncate font-medium">{course.name}</span>
+                                                <span className="text-xs truncate text-muted-foreground">{course.level}</span>
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </ScrollArea>
+                                        <div className="flex gap-2">
+                                            {isPending && (
+                                                <Button
+                                                    size="sm"
+                                                    className="flex-shrink-0 h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                    onClick={() => approveEnrollment(enrollment.id, course.id)}
+                                                    disabled={isToggling}
+                                                >
+                                                    {isToggling ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
+                                                </Button>
+                                            )}
+                                            <Button
+                                                size="sm"
+                                                variant={isEnrolled || isPending ? 'destructive' : 'outline'}
+                                                className={`flex-shrink-0 h-8 px-3 text-xs ${
+                                                    isEnrolled || isPending
+                                                        ? 'bg-red-500/10 text-red-600 border-red-200 hover:bg-red-500/20 hover:text-red-700'
+                                                        : 'text-emerald-600 border-emerald-200 hover:bg-emerald-500/10'
+                                                }`}
+                                                onClick={() => toggleEnrollment(course.id, enrollment)}
+                                                disabled={isToggling}
+                                            >
+                                                {isToggling ? (
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                ) : isEnrolled ? (
+                                                    <><BookMinus className="h-3 w-3 mr-1" />Remove</>
+                                                ) : isPending ? (
+                                                    <><UserX className="h-3 w-3 mr-1" />Reject</>
+                                                ) : (
+                                                    <><BookPlus className="h-3 w-3 mr-1" />Enroll</>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     )}
                 </div>
 

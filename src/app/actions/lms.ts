@@ -149,3 +149,63 @@ export async function getTutorsForSubject(subjectId: string) {
   
   return { data }
 }
+
+export async function getEnrolledStudentsForSubjects(subjectIds: string[]) {
+  const supabase = await createClient()
+
+  if (!subjectIds || subjectIds.length === 0) return { data: [] }
+
+  const { data, error } = await supabase
+    .from('enrollments')
+    .select('id, student_id, subject_id, status, tutor_id, profiles!inner(full_name, email), subjects!inner(name, level)')
+    .in('subject_id', subjectIds)
+    .eq('status', 'approved')
+
+  if (error) {
+    console.error('Error fetching enrolled students:', error)
+    return { error: error.message }
+  }
+
+  return { data }
+}
+
+export async function batchAssignStudentsToTutor(enrollmentIdsToAssign: string[], enrollmentIdsToUnassign: string[], tutorId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'Not authenticated' }
+
+  // Ensure user is admin
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'admin') {
+    return { error: 'Unauthorized: Admin access required' }
+  }
+
+  try {
+    if (enrollmentIdsToAssign.length > 0) {
+      const { error: assignError } = await supabase
+        .from('enrollments')
+        .update({ tutor_id: tutorId, updated_at: new Date().toISOString() })
+        .in('id', enrollmentIdsToAssign)
+      if (assignError) throw assignError
+    }
+
+    if (enrollmentIdsToUnassign.length > 0) {
+      const { error: unassignError } = await supabase
+        .from('enrollments')
+        .update({ tutor_id: null, updated_at: new Date().toISOString() })
+        .in('id', enrollmentIdsToUnassign)
+      if (unassignError) throw unassignError
+    }
+
+    return { success: true }
+  } catch (error: any) {
+    console.error('Error batch updating students:', error)
+    return { error: error.message }
+  }
+}

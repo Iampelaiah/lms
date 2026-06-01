@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Copy, GraduationCap, Search } from "lucide-react";
+import { Copy, GraduationCap, Search, Loader2 } from "lucide-react";
 import { SchoolHeader } from "@/components/app/school-header";
 import * as React from "react";
 import { createClient } from "@/utils/supabase/client";
@@ -15,6 +15,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getEnrolledStudentsForSubjects, batchAssignStudentsToTutor } from "@/app/actions/lms";
 
 const INVITE_LINK = `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}/invite/tutor-a1b2-c3d4-e5f6`;
 
@@ -46,7 +48,17 @@ export default function TutorsPage() {
     // Dialog state
     const [selectedTutor, setSelectedTutor] = React.useState<any>(null);
     const [isAssignDialogOpen, setIsAssignDialogOpen] = React.useState(false);
+    
+    // Subjects Tab State
     const [tempSelectedSubjects, setTempSelectedSubjects] = React.useState<string[]>([]);
+    
+    // Students Tab State
+    const [enrolledStudents, setEnrolledStudents] = React.useState<any[]>([]);
+    const [loadingStudents, setLoadingStudents] = React.useState(false);
+    const [tempAssignedStudents, setTempAssignedStudents] = React.useState<string[]>([]);
+    const [originalAssignedStudents, setOriginalAssignedStudents] = React.useState<string[]>([]);
+    
+    const [isSaving, setIsSaving] = React.useState(false);
 
     // Stable Supabase client — not recreated on every render
     const supabase = React.useMemo(() => createClient(), []);
@@ -136,11 +148,36 @@ export default function TutorsPage() {
         }
     };
 
-    const openAssignDialog = (tutor: any) => {
+    const openAssignDialog = async (tutor: any) => {
         setSelectedTutor(tutor);
-        setTempSelectedSubjects(tutorSubjects[tutor.id] || []);
+        const assignedSubjectIds = tutorSubjects[tutor.id] || [];
+        setTempSelectedSubjects(assignedSubjectIds);
         setIsAssignDialogOpen(true);
     };
+
+    React.useEffect(() => {
+        if (!isAssignDialogOpen || !selectedTutor) return;
+
+        const fetchStudents = async () => {
+            if (tempSelectedSubjects.length > 0) {
+                setLoadingStudents(true);
+                const { data } = await getEnrolledStudentsForSubjects(tempSelectedSubjects);
+                if (data) {
+                    setEnrolledStudents(data);
+                    const currentlyAssigned = data.filter((e: any) => e.tutor_id === selectedTutor.id).map((e: any) => e.id);
+                    // Only update original once per dialog open
+                    setOriginalAssignedStudents(prev => prev.length === 0 ? currentlyAssigned : prev);
+                    setTempAssignedStudents(currentlyAssigned);
+                }
+                setLoadingStudents(false);
+            } else {
+                setEnrolledStudents([]);
+                setTempAssignedStudents([]);
+            }
+        };
+
+        fetchStudents();
+    }, [tempSelectedSubjects, isAssignDialogOpen, selectedTutor]);
 
     const handleSubjectToggle = (subjectId: string) => {
         setTempSelectedSubjects(prev => 
@@ -148,13 +185,18 @@ export default function TutorsPage() {
         );
     };
 
-    const saveTutorSubjects = async () => {
+    const handleStudentToggle = (enrollmentId: string) => {
+        setTempAssignedStudents(prev => 
+            prev.includes(enrollmentId) ? prev.filter(id => id !== enrollmentId) : [...prev, enrollmentId]
+        );
+    };
+
+    const saveAssignments = async () => {
         if (!selectedTutor) return;
+        setIsSaving(true);
         
-        // Delete existing
+        // 1. Save Subjects
         await supabase.from('tutor_subjects').delete().eq('tutor_id', selectedTutor.id);
-        
-        // Insert new
         if (tempSelectedSubjects.length > 0) {
             const inserts = tempSelectedSubjects.map(subId => ({
                 tutor_id: selectedTutor.id,
@@ -163,12 +205,25 @@ export default function TutorsPage() {
             const { error } = await supabase.from('tutor_subjects').insert(inserts);
             if (error) {
                 toast({ title: "Error assigning subjects", description: error.message, variant: "destructive" });
+                setIsSaving(false);
                 return;
             }
         }
-        
         setTutorSubjects(prev => ({ ...prev, [selectedTutor.id]: tempSelectedSubjects }));
-        toast({ title: "Subjects Assigned", description: `Successfully updated subjects for ${selectedTutor.full_name}.` });
+        
+        // 2. Save Students
+        const toAssign = tempAssignedStudents.filter(id => !originalAssignedStudents.includes(id));
+        const toUnassign = originalAssignedStudents.filter(id => !tempAssignedStudents.includes(id));
+        
+        if (toAssign.length > 0 || toUnassign.length > 0) {
+            const result = await batchAssignStudentsToTutor(toAssign, toUnassign, selectedTutor.id);
+            if (result.error) {
+                toast({ title: "Error assigning students", description: result.error, variant: "destructive" });
+            }
+        }
+
+        toast({ title: "Assignments Saved", description: `Successfully updated subjects and students for ${selectedTutor.full_name}.` });
+        setIsSaving(false);
         setIsAssignDialogOpen(false);
     };
 
@@ -177,6 +232,18 @@ export default function TutorsPage() {
         return (tutor.full_name || "").toLowerCase().includes(query) ||
                (tutor.email || "").toLowerCase().includes(query);
     }), [tutors, searchQuery]);
+
+    // Group students by subject for the Students Tab
+    const studentsBySubject = React.useMemo(() => {
+        const groups: Record<string, { subjectName: string, enrollments: any[] }> = {};
+        enrolledStudents.forEach(e => {
+            if (!groups[e.subject_id]) {
+                groups[e.subject_id] = { subjectName: e.subjects?.name || 'Unknown', enrollments: [] };
+            }
+            groups[e.subject_id].enrollments.push(e);
+        });
+        return groups;
+    }, [enrolledStudents]);
 
     return (
         <div className="p-4 sm:p-6 space-y-6">
@@ -297,7 +364,7 @@ export default function TutorsPage() {
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <Button size="sm" variant="outline" onClick={() => openAssignDialog(tutor)}>
-                                                        Assign Subjects
+                                                        Manage Assignments
                                                     </Button>
                                                     <Button 
                                                         size="sm" 
@@ -319,34 +386,103 @@ export default function TutorsPage() {
             )}
 
             <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Assign Subjects</DialogTitle>
+                <DialogContent className="max-w-2xl h-[80vh] flex flex-col overflow-hidden">
+                    <DialogHeader className="px-6 py-4 border-b">
+                        <DialogTitle>Manage Assignments for {selectedTutor?.full_name}</DialogTitle>
                         <DialogDescription>
-                            Select the subjects {selectedTutor?.full_name} is authorized to teach.
+                            Configure the subjects this tutor teaches and the students assigned to them.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
-                        {subjects.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No subjects found in the database.</p>
-                        ) : (
-                            subjects.map(subject => (
-                                <div key={subject.id} className="flex items-center space-x-2">
-                                    <Checkbox 
-                                        id={subject.id} 
-                                        checked={tempSelectedSubjects.includes(subject.id)}
-                                        onCheckedChange={() => handleSubjectToggle(subject.id)}
-                                    />
-                                    <Label htmlFor={subject.id} className="text-sm font-medium leading-none cursor-pointer">
-                                        {subject.name} <span className="text-muted-foreground text-xs font-normal">({subject.level})</span>
-                                    </Label>
+                    
+                    <div className="flex-1 overflow-hidden p-6">
+                        <Tabs defaultValue="subjects" className="h-full flex flex-col">
+                            <TabsList className="grid w-full grid-cols-2 mb-4">
+                                <TabsTrigger value="subjects">Assigned Subjects</TabsTrigger>
+                                <TabsTrigger value="students">Assigned Students</TabsTrigger>
+                            </TabsList>
+                            
+                            <TabsContent value="subjects" className="flex-1 overflow-y-auto">
+                                <div className="space-y-4">
+                                    {subjects.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground p-4 text-center border border-dashed rounded-lg">No subjects found in the database.</p>
+                                    ) : (
+                                        subjects.map(subject => (
+                                            <div key={subject.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                                                <Checkbox 
+                                                    id={`subject-${subject.id}`} 
+                                                    checked={tempSelectedSubjects.includes(subject.id)}
+                                                    onCheckedChange={() => handleSubjectToggle(subject.id)}
+                                                    className="w-5 h-5"
+                                                />
+                                                <Label htmlFor={`subject-${subject.id}`} className="text-sm font-medium leading-none cursor-pointer flex-1">
+                                                    {subject.name} <span className="text-muted-foreground text-xs font-normal ml-2">({subject.level})</span>
+                                                </Label>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
-                            ))
-                        )}
+                            </TabsContent>
+                            
+                            <TabsContent value="students" className="flex-1 overflow-y-auto">
+                                {loadingStudents ? (
+                                    <div className="flex items-center justify-center h-40">
+                                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                                    </div>
+                                ) : tempSelectedSubjects.length === 0 ? (
+                                    <div className="p-8 text-center border border-dashed rounded-lg bg-muted/20">
+                                        <GraduationCap className="w-8 h-8 text-muted-foreground mx-auto mb-3 opacity-50" />
+                                        <p className="text-sm text-muted-foreground">Assign subjects first to see enrolled students.</p>
+                                    </div>
+                                ) : enrolledStudents.length === 0 ? (
+                                    <div className="p-8 text-center border border-dashed rounded-lg bg-muted/20">
+                                        <p className="text-sm text-muted-foreground">No students are currently enrolled in these subjects.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        {Object.entries(studentsBySubject).map(([subId, group]) => (
+                                            <div key={subId} className="space-y-3">
+                                                <h4 className="font-semibold text-sm border-b pb-2 flex items-center justify-between">
+                                                    {group.subjectName}
+                                                    <Badge variant="secondary" className="text-[10px]">{group.enrollments.length} Enrolled</Badge>
+                                                </h4>
+                                                <div className="space-y-2">
+                                                    {group.enrollments.map(enrollment => {
+                                                        const isChecked = tempAssignedStudents.includes(enrollment.id);
+                                                        const isAssignedToOther = enrollment.tutor_id && enrollment.tutor_id !== selectedTutor.id;
+                                                        return (
+                                                            <div key={enrollment.id} className="flex items-center space-x-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
+                                                                <Checkbox 
+                                                                    id={`student-${enrollment.id}`} 
+                                                                    checked={isChecked}
+                                                                    onCheckedChange={() => handleStudentToggle(enrollment.id)}
+                                                                />
+                                                                <div className="flex-1">
+                                                                    <Label htmlFor={`student-${enrollment.id}`} className="text-sm font-medium leading-none cursor-pointer flex flex-col gap-1.5">
+                                                                        <span>{enrollment.profiles?.full_name || 'Unnamed Student'}</span>
+                                                                        <span className="text-muted-foreground text-xs font-normal">{enrollment.profiles?.email}</span>
+                                                                    </Label>
+                                                                </div>
+                                                                {isAssignedToOther && !isChecked && (
+                                                                    <Badge variant="outline" className="text-[10px] text-orange-500 border-orange-500/20 bg-orange-500/10 shrink-0">Assigned Elsewhere</Badge>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </TabsContent>
+                        </Tabs>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={saveTutorSubjects}>Save Assignments</Button>
+
+                    <DialogFooter className="px-6 py-4 border-t bg-muted/10 shrink-0">
+                        <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)} disabled={isSaving}>Cancel</Button>
+                        <Button onClick={saveAssignments} disabled={isSaving}>
+                            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            {isSaving ? "Saving..." : "Save Assignments"}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
