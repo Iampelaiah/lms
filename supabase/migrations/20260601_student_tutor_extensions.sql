@@ -47,3 +47,13 @@ CREATE POLICY "Users can view their own deadlines." ON public.student_deadlines
 DROP POLICY IF EXISTS "Tutors can manage deadlines." ON public.student_deadlines;
 CREATE POLICY "Tutors can manage deadlines." ON public.student_deadlines
     FOR ALL USING (auth.uid() = tutor_id);
+
+-- 3. Update Enrollments select policy to allow tutors to view their assigned students
+DROP POLICY IF EXISTS "Students can view their own enrollments." ON public.enrollments;
+CREATE POLICY "Students can view their own enrollments." 
+ON public.enrollments FOR SELECT USING (
+  auth.uid() = student_id OR
+  auth.uid() = tutor_id OR
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
