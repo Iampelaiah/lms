@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarPlus, Users, Video, Loader2 } from "lucide-react";
+import { CalendarPlus, Users, Video, Loader2, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useUser } from "@/components/providers/user-context";
 import { useEffect, useState } from "react";
 import { ScheduleClassDialog } from "@/components/app/tutor/schedule-class-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const statusVariantMap: Record<string, "default" | "secondary" | "destructive"> = {
     "upcoming": "default",
@@ -22,38 +23,83 @@ const statusVariantMap: Record<string, "default" | "secondary" | "destructive"> 
     "completed": "secondary",
 };
 
-function EditRecordingDialog({ 
-  classId, 
-  currentUrl, 
+function FinalizeClassDialog({ 
+  liveClass, 
   onSaved, 
   trigger 
 }: { 
-  classId: string; 
-  currentUrl?: string; 
+  liveClass: any; 
   onSaved: () => void; 
   trigger: React.ReactNode; 
 }) {
-  const [url, setUrl] = useState(currentUrl || '');
+  const [recordingUrl, setRecordingUrl] = useState(liveClass.recording_url || '');
+  const [presentationUrl, setPresentationUrl] = useState(liveClass.presentation_url || '');
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const supabase = createClient();
+  const { toast } = useToast();
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('classes')
-        .update({ recording_url: url.trim() || null })
-        .eq('id', classId);
+      const recUrl = recordingUrl.trim() || null;
+      const presUrl = presentationUrl.trim() || null;
 
-      if (error) throw error;
+      // 1. Update the live class
+      const { error: classError } = await supabase
+        .from('live_classes')
+        .update({ 
+            recording_url: recUrl,
+            presentation_url: presUrl,
+            status: 'completed'
+        })
+        .eq('id', liveClass.id);
+
+      if (classError) throw classError;
+
+      // 2. Insert into resources table so enrolled students get it
+      const resourcesToInsert = [];
+      if (recUrl) {
+          resourcesToInsert.push({
+              title: `${liveClass.title} - Recording`,
+              format: 'video',
+              source: 'live_class_automation',
+              file_url: recUrl,
+              live_class_id: liveClass.id,
+              subject_id: liveClass.subject_id,
+              uploaded_by: liveClass.tutor_id
+          });
+      }
+      if (presUrl) {
+          resourcesToInsert.push({
+              title: `${liveClass.title} - Presentation`,
+              format: 'ppt',
+              source: 'live_class_automation',
+              file_url: presUrl,
+              live_class_id: liveClass.id,
+              subject_id: liveClass.subject_id,
+              uploaded_by: liveClass.tutor_id
+          });
+      }
+
+      if (resourcesToInsert.length > 0) {
+          // Delete old automated resources for this class to prevent duplicates
+          await supabase.from('resources').delete().eq('live_class_id', liveClass.id);
+          
+          const { error: resError } = await supabase
+            .from('resources')
+            .insert(resourcesToInsert);
+            
+          if (resError) throw resError;
+      }
       
+      toast({ title: "Class Finalized", description: "Resources have been sent to all enrolled students." });
       onSaved();
       setOpen(false);
-    } catch (err) {
-      console.error('Error saving recording URL:', err);
-      alert('Failed to save recording URL. Please try again.');
+    } catch (err: any) {
+      console.error('Error finalizing class:', err);
+      toast({ title: "Error", description: err.message || "Failed to finalize class.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -67,20 +113,31 @@ function EditRecordingDialog({
       <DialogContent className="sm:max-w-[425px] bg-[#0A1A12] border-white/10 text-white rounded-3xl">
         <form onSubmit={handleSave}>
           <DialogHeader>
-            <DialogTitle>Add / Edit Recording</DialogTitle>
+            <DialogTitle>Finalize Class</DialogTitle>
             <DialogDescription className="text-white/40">
-              Provide a video recording link (YouTube, Zoom, Vimeo, or direct MP4 URL) for students to watch this class session.
+              Provide the recording and presentation links. These will be automatically distributed to all students enrolled in this subject.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="recording-url" className="text-white/60">Recording URL</Label>
+              <Label htmlFor="recording-url" className="text-white/60">Recording URL (Optional)</Label>
               <Input
                 id="recording-url"
                 type="url"
                 placeholder="https://example.com/recording.mp4"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                value={recordingUrl}
+                onChange={(e) => setRecordingUrl(e.target.value)}
+                className="bg-white/5 border-white/10 rounded-xl py-6 focus-visible:ring-1 focus-visible:ring-primary text-white"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="presentation-url" className="text-white/60">Presentation URL (Optional)</Label>
+              <Input
+                id="presentation-url"
+                type="url"
+                placeholder="https://example.com/slides.pdf"
+                value={presentationUrl}
+                onChange={(e) => setPresentationUrl(e.target.value)}
                 className="bg-white/5 border-white/10 rounded-xl py-6 focus-visible:ring-1 focus-visible:ring-primary text-white"
               />
             </div>
@@ -100,7 +157,7 @@ function EditRecordingDialog({
               disabled={saving}
               className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black font-bold rounded-xl"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Recording'}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Finalize & Send Resources'}
             </Button>
           </DialogFooter>
         </form>
@@ -142,38 +199,56 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                         <h3 className="text-lg font-bold truncate">{liveClass.title}</h3>
                         <p className="text-sm text-muted-foreground flex items-center gap-2">
                             <CalendarPlus className="w-4 h-4" />
-                            {liveClass.schedule ? new Date(liveClass.schedule).toLocaleString() : 'TBD'}
+                            {liveClass.start_time ? new Date(liveClass.start_time).toLocaleString() : 'TBD'}
                         </p>
                     </CardContent>
-                     <CardFooter className="p-4 pt-0">
+                     <CardFooter className="p-4 pt-0 flex-col gap-2">
                          {liveClass.status === "completed" ? (
                              <div className="flex gap-2 w-full">
                                  {liveClass.recording_url && (
                                      <Button className="flex-1 rounded-xl py-6 bg-white/5 hover:bg-white/10 text-white border-white/10" variant="outline" asChild>
                                          <a href={liveClass.recording_url} target="_blank" rel="noreferrer">
                                              <Video className="mr-2 h-4 w-4 text-[#00FFCC]" />
-                                             View
+                                             Video
                                          </a>
                                      </Button>
                                  )}
-                                 <EditRecordingDialog
-                                     classId={liveClass.id}
-                                     currentUrl={liveClass.recording_url}
+                                 {liveClass.presentation_url && (
+                                     <Button className="flex-1 rounded-xl py-6 bg-white/5 hover:bg-white/10 text-white border-white/10" variant="outline" asChild>
+                                         <a href={liveClass.presentation_url} target="_blank" rel="noreferrer">
+                                             <FileText className="mr-2 h-4 w-4 text-[#00FFCC]" />
+                                             Slides
+                                         </a>
+                                     </Button>
+                                 )}
+                                 <FinalizeClassDialog
+                                     liveClass={liveClass}
                                      onSaved={onUpdate}
                                      trigger={
                                          <Button className="flex-1 rounded-xl py-6 bg-white/5 hover:bg-white/10 text-white border-white/10">
-                                             {liveClass.recording_url ? 'Edit Recording' : 'Add Recording'}
+                                             Edit Resources
                                          </Button>
                                      }
                                  />
                              </div>
                          ) : (
-                             <Button className="w-full rounded-xl py-6" asChild variant={liveClass.status === "ongoing" ? "destructive" : "default"}>
-                                 <Link href={`/classroom/${liveClass.agora_channel_name || liveClass.id}?role=host`}>
-                                     <Video className="mr-2 h-4 w-4" />
-                                     {liveClass.status === "ongoing" ? "Join Now" : "Start Class"}
-                                 </Link>
-                             </Button>
+                             <div className="flex gap-2 w-full">
+                                <Button className="flex-1 rounded-xl py-6" asChild variant={liveClass.status === "ongoing" ? "destructive" : "default"}>
+                                    <Link href={`/classroom/${liveClass.meeting_link || liveClass.id}?role=host`}>
+                                        <Video className="mr-2 h-4 w-4" />
+                                        {liveClass.status === "ongoing" ? "Join Now" : "Start Class"}
+                                    </Link>
+                                </Button>
+                                <FinalizeClassDialog
+                                    liveClass={liveClass}
+                                    onSaved={onUpdate}
+                                    trigger={
+                                        <Button className="flex-1 rounded-xl py-6" variant="outline">
+                                            Finalize Class
+                                        </Button>
+                                    }
+                                />
+                             </div>
                          )}
                     </CardFooter>
                 </Card>
@@ -193,10 +268,10 @@ export default function TutorLiveClassesPage() {
         setLoading(true);
         try {
             const { data, error } = await supabase
-                .from('classes')
+                .from('live_classes')
                 .select('*')
                 .eq('tutor_id', profile.id)
-                .order('schedule', { ascending: true });
+                .order('start_time', { ascending: true });
 
             if (data && !error) {
                 setClasses(data);

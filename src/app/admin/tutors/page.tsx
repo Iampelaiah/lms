@@ -12,6 +12,9 @@ import * as React from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 const INVITE_LINK = `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}/invite/tutor-a1b2-c3d4-e5f6`;
 
@@ -35,31 +38,52 @@ function TutorListSkeleton() {
 
 export default function TutorsPage() {
     const [tutors, setTutors] = React.useState<any[]>([]);
+    const [subjects, setSubjects] = React.useState<any[]>([]);
+    const [tutorSubjects, setTutorSubjects] = React.useState<Record<string, string[]>>({});
     const [loading, setLoading] = React.useState(true);
     const [searchQuery, setSearchQuery] = React.useState("");
+
+    // Dialog state
+    const [selectedTutor, setSelectedTutor] = React.useState<any>(null);
+    const [isAssignDialogOpen, setIsAssignDialogOpen] = React.useState(false);
+    const [tempSelectedSubjects, setTempSelectedSubjects] = React.useState<string[]>([]);
 
     // Stable Supabase client — not recreated on every render
     const supabase = React.useMemo(() => createClient(), []);
     const { toast } = useToast();
 
-    const fetchTutors = React.useCallback(async () => {
+    const fetchTutorsAndSubjects = React.useCallback(async () => {
         setLoading(true);
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('id, full_name, email, avatar_url, role, is_approved, updated_at')
-            .eq('role', 'tutor')
-            .order('updated_at', { ascending: false });
+        const [{ data: tutorsData, error: tutorsError }, { data: subData }, { data: tsData }] = await Promise.all([
+            supabase.from('profiles').select('id, full_name, email, avatar_url, role, is_approved, updated_at').eq('role', 'tutor').order('updated_at', { ascending: false }),
+            supabase.from('subjects').select('*'),
+            supabase.from('tutor_subjects').select('*')
+        ]);
 
-        if (error) {
-            toast({ title: "Error fetching tutors", description: error.message, variant: "destructive" });
+        if (tutorsError) {
+            toast({ title: "Error fetching tutors", description: tutorsError.message, variant: "destructive" });
         } else {
-            setTutors(data || []);
+            setTutors(tutorsData || []);
         }
+
+        if (subData) {
+            setSubjects(subData);
+        }
+
+        if (tsData) {
+            const mapping: Record<string, string[]> = {};
+            tsData.forEach((ts: any) => {
+                if (!mapping[ts.tutor_id]) mapping[ts.tutor_id] = [];
+                mapping[ts.tutor_id].push(ts.subject_id);
+            });
+            setTutorSubjects(mapping);
+        }
+
         setLoading(false);
     }, [supabase, toast]);
 
     React.useEffect(() => {
-        fetchTutors();
+        fetchTutorsAndSubjects();
 
         const channel = supabase
             .channel('admin-tutors-realtime')
@@ -84,7 +108,7 @@ export default function TutorsPage() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [fetchTutors, supabase]);
+    }, [fetchTutorsAndSubjects, supabase]);
 
     const handleCopyLink = () => {
         navigator.clipboard.writeText(INVITE_LINK);
@@ -92,10 +116,8 @@ export default function TutorsPage() {
     };
 
     const toggleApproveTutor = async (tutorId: string, currentStatus: boolean) => {
-        // Optimistic update — instant UI response, no waiting for refetch
-        setTutors(prev =>
-            prev.map(t => t.id === tutorId ? { ...t, is_approved: !currentStatus } : t)
-        );
+        // Optimistic update
+        setTutors(prev => prev.map(t => t.id === tutorId ? { ...t, is_approved: !currentStatus } : t));
 
         const { error } = await supabase
             .from('profiles')
@@ -104,9 +126,7 @@ export default function TutorsPage() {
 
         if (error) {
             // Revert on error
-            setTutors(prev =>
-                prev.map(t => t.id === tutorId ? { ...t, is_approved: currentStatus } : t)
-            );
+            setTutors(prev => prev.map(t => t.id === tutorId ? { ...t, is_approved: currentStatus } : t));
             toast({ title: "Error updating status", description: error.message, variant: "destructive" });
         } else {
             toast({
@@ -114,6 +134,42 @@ export default function TutorsPage() {
                 description: `Successfully updated the tutor's access status.`,
             });
         }
+    };
+
+    const openAssignDialog = (tutor: any) => {
+        setSelectedTutor(tutor);
+        setTempSelectedSubjects(tutorSubjects[tutor.id] || []);
+        setIsAssignDialogOpen(true);
+    };
+
+    const handleSubjectToggle = (subjectId: string) => {
+        setTempSelectedSubjects(prev => 
+            prev.includes(subjectId) ? prev.filter(id => id !== subjectId) : [...prev, subjectId]
+        );
+    };
+
+    const saveTutorSubjects = async () => {
+        if (!selectedTutor) return;
+        
+        // Delete existing
+        await supabase.from('tutor_subjects').delete().eq('tutor_id', selectedTutor.id);
+        
+        // Insert new
+        if (tempSelectedSubjects.length > 0) {
+            const inserts = tempSelectedSubjects.map(subId => ({
+                tutor_id: selectedTutor.id,
+                subject_id: subId
+            }));
+            const { error } = await supabase.from('tutor_subjects').insert(inserts);
+            if (error) {
+                toast({ title: "Error assigning subjects", description: error.message, variant: "destructive" });
+                return;
+            }
+        }
+        
+        setTutorSubjects(prev => ({ ...prev, [selectedTutor.id]: tempSelectedSubjects }));
+        toast({ title: "Subjects Assigned", description: `Successfully updated subjects for ${selectedTutor.full_name}.` });
+        setIsAssignDialogOpen(false);
     };
 
     const filteredTutors = React.useMemo(() => tutors.filter(tutor => {
@@ -186,6 +242,7 @@ export default function TutorsPage() {
                                     <TableHead>Tutor</TableHead>
                                     <TableHead>Email</TableHead>
                                     <TableHead>Joined Date</TableHead>
+                                    <TableHead>Assigned Subjects</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -193,7 +250,7 @@ export default function TutorsPage() {
                             <TableBody>
                                 {filteredTutors.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                                        <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                                             No tutors match your search query.
                                         </TableCell>
                                     </TableRow>
@@ -214,6 +271,23 @@ export default function TutorsPage() {
                                             <TableCell>{tutor.email}</TableCell>
                                             <TableCell>{tutor.updated_at ? new Date(tutor.updated_at).toLocaleDateString() : 'N/A'}</TableCell>
                                             <TableCell>
+                                                <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                                    {(tutorSubjects[tutor.id] || []).length === 0 ? (
+                                                        <span className="text-xs text-muted-foreground italic">None</span>
+                                                    ) : (
+                                                        <>
+                                                            {(tutorSubjects[tutor.id] || []).slice(0, 2).map(subId => {
+                                                                const sub = subjects.find(s => s.id === subId);
+                                                                return <Badge key={subId} variant="secondary" className="text-[10px] font-normal px-1 py-0 h-4">{sub?.name}</Badge>;
+                                                            })}
+                                                            {(tutorSubjects[tutor.id] || []).length > 2 && (
+                                                                <Badge variant="secondary" className="text-[10px] font-normal px-1 py-0 h-4">+{tutorSubjects[tutor.id].length - 2} more</Badge>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
                                                 {tutor.is_approved ? (
                                                     <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Active</Badge>
                                                 ) : (
@@ -221,14 +295,19 @@ export default function TutorsPage() {
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <Button 
-                                                    size="sm" 
-                                                    variant="outline" 
-                                                    className={tutor.is_approved ? "text-red-500 border-red-500/20 hover:bg-red-500/10" : "text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10"}
-                                                    onClick={() => toggleApproveTutor(tutor.id, tutor.is_approved)}
-                                                >
-                                                    {tutor.is_approved ? "Suspend" : "Approve"}
-                                                </Button>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button size="sm" variant="outline" onClick={() => openAssignDialog(tutor)}>
+                                                        Assign Subjects
+                                                    </Button>
+                                                    <Button 
+                                                        size="sm" 
+                                                        variant="outline" 
+                                                        className={tutor.is_approved ? "text-red-500 border-red-500/20 hover:bg-red-500/10" : "text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10"}
+                                                        onClick={() => toggleApproveTutor(tutor.id, tutor.is_approved)}
+                                                    >
+                                                        {tutor.is_approved ? "Suspend" : "Approve"}
+                                                    </Button>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -238,6 +317,39 @@ export default function TutorsPage() {
                     </CardContent>
                 </Card>
             )}
+
+            <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Assign Subjects</DialogTitle>
+                        <DialogDescription>
+                            Select the subjects {selectedTutor?.full_name} is authorized to teach.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+                        {subjects.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No subjects found in the database.</p>
+                        ) : (
+                            subjects.map(subject => (
+                                <div key={subject.id} className="flex items-center space-x-2">
+                                    <Checkbox 
+                                        id={subject.id} 
+                                        checked={tempSelectedSubjects.includes(subject.id)}
+                                        onCheckedChange={() => handleSubjectToggle(subject.id)}
+                                    />
+                                    <Label htmlFor={subject.id} className="text-sm font-medium leading-none cursor-pointer">
+                                        {subject.name} <span className="text-muted-foreground text-xs font-normal">({subject.level})</span>
+                                    </Label>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={saveTutorSubjects}>Save Assignments</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

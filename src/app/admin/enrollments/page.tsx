@@ -65,7 +65,7 @@ export default async function AdminEnrollmentsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-end">
-                        <ActionButtons enrollmentId={enrollment.id} />
+                        <ActionButtons enrollmentId={enrollment.id} subjectId={enrollment.subject_id} />
                       </div>
                     </td>
                   </tr>

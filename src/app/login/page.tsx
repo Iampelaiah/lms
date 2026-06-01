@@ -170,7 +170,10 @@ function LoginForm() {
         <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-[#00FFCC]/5 rounded-full blur-[80px]" />
 
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1">
+              <Image src="/logo.png" alt="Dr Max Logo" width={32} height={32} className="object-contain" />
+            </div>
             <h2 className="text-2xl font-bold tracking-tight text-white">Dr Max</h2>
           </div>
           <div className="space-y-4 max-w-md mt-6">

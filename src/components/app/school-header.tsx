@@ -51,8 +51,8 @@ export function SchoolHeader() {
   return (
     <Card className="border-none shadow-none bg-transparent">
       <CardContent className="flex items-center gap-6 p-0 pb-6">
-        <Avatar className="h-16 w-16 border">
-          <AvatarImage src="https://picsum.photos/seed/drmax-logo/100/100" alt="Dr Max online school Logo" data-ai-hint="school logo" />
+        <Avatar className="h-16 w-16 border bg-white p-1">
+          <AvatarImage src="/logo.png" alt="Dr Max online school Logo" className="object-contain" />
           <AvatarFallback>{avatarFallback}</AvatarFallback>
         </Avatar>
         <div>

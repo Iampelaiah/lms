@@ -1,102 +1,103 @@
 'use client';
 
 import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
+  Area,
+  AreaChart,
   Pie,
   PieChart,
-  Sector,
+  Cell,
   CartesianGrid,
   ResponsiveContainer,
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
 } from 'recharts';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-} from '@/components/ui/chart';
+import { Card, CardContent } from '@/components/ui/card';
 import { createClient } from '@/utils/supabase/client';
 import { useUser } from '@/components/providers/user-context';
 import React, { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { 
+  Loader2, 
+  RefreshCw,
+  GraduationCap,
+  CheckCircle2,
+  Flag,
+  Zap,
+  ChevronDown,
+  Search,
+  Filter,
+  ArrowDownWideNarrow,
+  BrainCircuit,
+  Database,
+  Layout,
+  Code,
+  ChevronRight
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 
-const chartConfig = {
-  grade: {
-    label: 'Grade',
-    color: 'hsl(var(--primary))',
-  },
-  progress: {
-    label: 'Progress',
-    color: 'hsl(var(--accent))',
-  }
-};
+// Mock Data for Area Chart (Progress Overview)
+const areaData = [
+  { day: '1', value: 20 },
+  { day: '5', value: 25 },
+  { day: '10', value: 28 },
+  { day: '15', value: 50 },
+  { day: '20', value: 50 },
+  { day: '25', value: 65 },
+  { day: '30', value: 95 },
+];
+
+// Mock Data for Weekly Activity
+const activityData = [
+  { name: 'Courses Viewed', value: 45, color: '#f59e0b' },
+  { name: 'Assignments Done', value: 25, color: '#3b82f6' },
+  { name: 'Discussions Joined', value: 20, color: '#ec4899' },
+  { name: 'Live Sessions', value: 10, color: '#8b5cf6' },
+];
+
+// Mock Data for Upcoming Deadlines
+const deadlinesData = [
+  { course: 'Introduction to Python', date: '2025-10-08', type: 'Assignment', status: 'Pending', priority: 'High', color: 'bg-pink-500' },
+  { course: 'Modern Web Development', date: '2025-10-10', type: 'Quiz', status: 'Not Started', priority: 'Medium', color: 'bg-blue-500' },
+  { course: 'Data Science Fundamentals', date: '2025-10-12', type: 'Project', status: 'In Progress', priority: 'High', color: 'bg-amber-500' },
+];
 
 export function ProgressCharts() {
   const { profile } = useUser();
-  const [gradeData, setGradeData] = useState<any[]>([]);
-  const [assignmentStatusData, setAssignmentStatusData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Real data state
+  const [coursesEnrolled, setCoursesEnrolled] = useState(0);
+  const [lessonsCompleted, setLessonsCompleted] = useState(0);
+  const [averageScore, setAverageScore] = useState(0);
+
   const supabase = createClient();
 
   useEffect(() => {
     const fetchProgressData = async () => {
       if (!profile?.id) return;
 
-      const { data: progressData } = await supabase
-        .from('student_progress')
-        .select(`
-          score,
-          completed,
-          course:courses (name)
-        `)
-        .eq('student_id', profile.id);
+      const [enrollmentsResult, progressResult] = await Promise.all([
+        supabase.from('enrollments').select('id').eq('student_id', profile.id),
+        supabase.from('student_progress').select('score, completed').eq('student_id', profile.id)
+      ]);
 
-      if (progressData) {
-        // Group by course
-        const coursesMap: Record<string, { total: number, count: number, completed: number, notStarted: number }> = {};
-        
-        progressData.forEach((p: any) => {
-          const name = p.course?.name || 'Unknown';
-          if (!coursesMap[name]) {
-            coursesMap[name] = { total: 0, count: 0, completed: 0, notStarted: 0 };
-          }
-          if (p.score !== null) {
-            coursesMap[name].total += p.score;
-            coursesMap[name].count += 1;
-          }
-          if (p.completed) coursesMap[name].completed += 1;
-          else coursesMap[name].notStarted += 1;
-        });
-
-        const formattedGrades = Object.entries(coursesMap).map(([name, stats]) => ({
-          subject: name,
-          grade: stats.count > 0 ? Math.round(stats.total / stats.count) : 0
-        }));
-
-        setGradeData(formattedGrades);
-
-        const totalCompleted = progressData.filter((p: any) => p.completed).length;
-        const totalPending = progressData.filter((p: any) => !p.completed).length;
-
-        setAssignmentStatusData([
-          { status: 'Completed', value: totalCompleted, fill: 'hsl(var(--chart-1))' },
-          { status: 'In Progress', value: totalPending, fill: 'hsl(var(--chart-2))' },
-          { status: 'Not Started', value: 0, fill: 'hsl(var(--chart-5))' },
-        ]);
+      if (enrollmentsResult.data) {
+        setCoursesEnrolled(enrollmentsResult.data.length);
       }
+
+      if (progressResult.data) {
+        const completedCount = progressResult.data.filter((p: any) => p.completed).length;
+        setLessonsCompleted(completedCount);
+
+        const scoredItems = progressResult.data.filter((p: any) => p.score !== null);
+        if (scoredItems.length > 0) {
+          const totalScore = scoredItems.reduce((acc: number, curr: any) => acc + curr.score, 0);
+          setAverageScore(Math.round(totalScore / scoredItems.length));
+        }
+      }
+      
       setLoading(false);
     };
 
@@ -110,61 +111,334 @@ export function ProgressCharts() {
       </div>
     );
   }
-  return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Grades by Subject</CardTitle>
-          <CardDescription>A comparison of your current grades.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {gradeData.length > 0 ? (
-            <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={gradeData}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis dataKey="subject" tickLine={false} axisLine={false} />
-                  <YAxis />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dashed" />}
-                  />
-                  <Bar dataKey="grade" fill="var(--color-grade)" radius={4} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground bg-muted/5 rounded-lg border border-dashed">
-              <p>No grade data available.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Assignment Completion</CardTitle>
-          <CardDescription>A breakdown of your lesson completion.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center">
-            {assignmentStatusData.some(d => d.value > 0) ? (
-              <ChartContainer config={{}} className="min-h-[250px] w-full max-w-sm">
-                   <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                      <RechartsTooltip content={<ChartTooltipContent nameKey="status" hideLabel />} />
-                      <Pie data={assignmentStatusData} dataKey="value" nameKey="status" innerRadius={60} />
-                      <ChartLegend content={<ChartLegendContent nameKey="status"/>} />
-                      </PieChart>
-                  </ResponsiveContainer>
-              </ChartContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-[250px] w-full text-muted-foreground bg-muted/5 rounded-lg border border-dashed">
-                <p>No completion data.</p>
-              </div>
-            )}
-        </CardContent>
-      </Card>
 
+  return (
+    <div className="space-y-6">
+      
+      {/* Highlights Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold">Highlights</h2>
+        <Button variant="ghost" size="sm" className="text-muted-foreground gap-2 rounded-full hover:bg-neutral-100">
+          <RefreshCw className="w-4 h-4" />
+          Refresh Data
+        </Button>
+      </div>
+
+      {/* Highlights Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1 */}
+        <Card className="rounded-[1.5rem] border-neutral-200/60 dark:border-neutral-800/60 shadow-sm">
+          <CardContent className="p-5 flex flex-col justify-between h-full gap-4">
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                 <GraduationCap className="w-4 h-4" />
+                 Courses Enrolled
+               </div>
+               <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 border-none rounded-sm px-1.5 text-[10px]">+12%</Badge>
+            </div>
+            <div className="flex items-end justify-between">
+               <span className="text-4xl font-bold">{coursesEnrolled.toString().padStart(2, '0')}</span>
+               {/* Mini Bar Chart Mock */}
+               <div className="flex items-end gap-1 h-8">
+                 <div className="w-2 bg-orange-200 rounded-t-sm h-[40%]"></div>
+                 <div className="w-2 bg-orange-300 rounded-t-sm h-[60%]"></div>
+                 <div className="w-2 bg-orange-400 rounded-t-sm h-[80%]"></div>
+                 <div className="w-2 bg-orange-500 rounded-t-sm h-[100%]"></div>
+               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 2 */}
+        <Card className="rounded-[1.5rem] border-neutral-200/60 dark:border-neutral-800/60 shadow-sm">
+          <CardContent className="p-5 flex flex-col justify-between h-full gap-4">
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                 <CheckCircle2 className="w-4 h-4" />
+                 Lessons Completed
+               </div>
+               <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 border-none rounded-sm px-1.5 text-[10px]">+5%</Badge>
+            </div>
+            <div className="flex items-end justify-between">
+               <span className="text-4xl font-bold">{lessonsCompleted}</span>
+               {/* Mini Line Chart Mock */}
+               <svg width="40" height="20" viewBox="0 0 40 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                 <path d="M2 18L12 12L20 15L38 2" stroke="#f97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+               </svg>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 3 */}
+        <Card className="rounded-[1.5rem] border-neutral-200/60 dark:border-neutral-800/60 shadow-sm">
+          <CardContent className="p-5 flex flex-col justify-between h-full gap-4">
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                 <Flag className="w-4 h-4" />
+                 Average Score
+               </div>
+               <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 border-none rounded-sm px-1.5 text-[10px]">+10%</Badge>
+            </div>
+            <div className="flex items-end justify-between">
+               <span className="text-4xl font-bold">{averageScore}%</span>
+               {/* Mini Chart Mock */}
+               <div className="relative w-10 h-8">
+                  <svg width="100%" height="100%" viewBox="0 0 40 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 2V26C2 27.1046 2.89543 28 4 28H38" stroke="#d4d4d8" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M8 12C12 12 14 22 20 22C26 22 28 14 34 14" stroke="#eab308" strokeWidth="2" strokeLinecap="round"/>
+                    <circle cx="34" cy="14" r="2" fill="#eab308"/>
+                  </svg>
+               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 4 */}
+        <Card className="rounded-[1.5rem] border-neutral-200/60 dark:border-neutral-800/60 shadow-sm">
+          <CardContent className="p-5 flex flex-col justify-between h-full gap-4">
+            <div className="flex items-center justify-between">
+               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                 <Zap className="w-4 h-4" />
+                 Learning Streak
+               </div>
+               <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 border-none rounded-sm px-1.5 text-[10px]">+6%</Badge>
+            </div>
+            <div className="flex items-end justify-between">
+               <span className="text-4xl font-bold">07<span className="text-lg font-medium text-muted-foreground ml-1">Days</span></span>
+               {/* Mini Streak Circles */}
+               <div className="flex items-center gap-1 mb-2">
+                 <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+                 <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+                 <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+                 <div className="w-2.5 h-2.5 rounded-full border border-neutral-300 dark:border-neutral-700"></div>
+               </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Middle Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Area Chart: Progress Overview */}
+        <Card className="lg:col-span-2 rounded-[1.5rem] border-neutral-200/60 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
+              <div>
+                <h3 className="font-bold text-lg">Progress Overview</h3>
+                <p className="text-sm text-muted-foreground">Your learning activity and completion trends.</p>
+              </div>
+              <div className="flex gap-2 mt-4 sm:mt-0">
+                <Button variant="outline" size="sm" className="rounded-full gap-2 text-xs font-medium h-8">
+                  Intro to Python <ChevronDown className="w-3 h-3" />
+                </Button>
+                <Button variant="outline" size="sm" className="rounded-full gap-2 text-xs font-medium h-8">
+                  October <ChevronDown className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={areaData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorProgress" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground))" strokeOpacity={0.2} />
+                  <XAxis 
+                    dataKey="day" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <RechartsTooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-3 rounded-xl shadow-lg flex flex-col gap-1 min-w-[120px]">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-medium text-muted-foreground">Oct 15, 2025</span>
+                              <span className="text-[10px] text-green-600 bg-green-100 px-1 rounded font-bold">+5%</span>
+                            </div>
+                            <span className="font-bold text-lg">{payload[0].value}%</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#f97316" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorProgress)" 
+                    activeDot={{ r: 6, fill: "#f97316", stroke: "#fff", strokeWidth: 3 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Donut Chart: Weekly Activity Split */}
+        <Card className="rounded-[1.5rem] border-neutral-200/60 shadow-sm flex flex-col">
+          <CardContent className="p-6 flex-1 flex flex-col">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-base flex items-center gap-2">
+                <PieChart className="w-4 h-4 text-muted-foreground" />
+                Weekly Activity Split
+              </h3>
+              <div className="flex items-center gap-1">
+                 <Button variant="ghost" size="icon" className="w-6 h-6 rounded border"><Search className="w-3 h-3" /></Button>
+                 <Button variant="ghost" size="icon" className="w-6 h-6 rounded border"><ChevronRight className="w-3 h-3" /></Button>
+              </div>
+            </div>
+
+            <div className="relative flex-1 flex items-center justify-center min-h-[180px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={activityData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {activityData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Inner Text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xs font-medium text-muted-foreground">Total Hrs</span>
+                <span className="text-3xl font-bold">42</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-y-3 mt-4">
+              {activityData.map((item, i) => (
+                 <div key={i} className="flex items-center gap-2 text-[10px] sm:text-xs">
+                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
+                   <span className="text-muted-foreground truncate">{item.name}: {item.value}%</span>
+                 </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bottom Section */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        
+        {/* Table: Upcoming Deadlines */}
+        <Card className="xl:col-span-2 rounded-[1.5rem] border-neutral-200/60 shadow-sm overflow-hidden">
+          <CardContent className="p-0">
+            <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-neutral-100 dark:border-neutral-800/50 gap-4">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                 <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-muted-foreground">
+                    <path d="M13 1V15M1 1V15M1 4H13M1 12H13M4 1L10 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                 </svg>
+                 Upcoming Deadlines
+              </h3>
+              <div className="flex gap-2">
+                 <Button variant="outline" size="sm" className="rounded-md h-8 text-xs gap-1"><Search className="w-3 h-3" /></Button>
+                 <Button variant="outline" size="sm" className="rounded-md h-8 text-xs gap-1"><ArrowDownWideNarrow className="w-3 h-3" /> Sort</Button>
+                 <Button variant="outline" size="sm" className="rounded-md h-8 text-xs gap-1"><Filter className="w-3 h-3" /> Filter</Button>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-neutral-50/50 dark:bg-neutral-900/50 text-muted-foreground text-xs font-medium">
+                  <tr>
+                    <th className="px-6 py-4 font-medium">Course / Task</th>
+                    <th className="px-6 py-4 font-medium">Due Date</th>
+                    <th className="px-6 py-4 font-medium">Type</th>
+                    <th className="px-6 py-4 font-medium">Status</th>
+                    <th className="px-6 py-4 font-medium">Priority</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/50">
+                  {deadlinesData.map((row, i) => (
+                    <tr key={i} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-900/20 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${row.color}`}></div>
+                          <span className="font-medium text-neutral-900 dark:text-neutral-100">{row.course}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">{row.date}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{row.type}</td>
+                      <td className="px-6 py-4">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-md ${
+                          row.status === 'Pending' ? 'text-orange-600 bg-orange-100/50 dark:bg-orange-900/20 dark:text-orange-400' :
+                          row.status === 'Not Started' ? 'text-blue-600 bg-blue-100/50 dark:bg-blue-900/20 dark:text-blue-400' :
+                          'text-green-600 bg-green-100/50 dark:bg-green-900/20 dark:text-green-400'
+                        }`}>
+                          {row.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">{row.priority}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Review Widget */}
+        <Card className="rounded-[1.5rem] border-neutral-200/60 shadow-sm bg-neutral-50/50 dark:bg-neutral-900/30">
+          <CardContent className="p-6">
+            <h3 className="font-bold text-lg mb-1">Quick Review</h3>
+            <p className="text-sm text-muted-foreground mb-6">Sharpen your knowledge in 2 minutes!</p>
+            
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder="Choose a topic to review..." 
+                className="pl-9 h-11 bg-white dark:bg-neutral-900 border-none rounded-xl shadow-sm text-sm"
+              />
+            </div>
+            
+            <p className="text-[10px] text-muted-foreground mb-6 font-medium">Recent: Data Visualization in Python</p>
+            
+            <div className="flex items-center justify-between mb-8 px-2">
+               <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center border border-white shadow-sm"><BrainCircuit className="w-4 h-4" /></div>
+               <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
+               <div className="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Database className="w-4 h-4" /></div>
+               <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Layout className="w-4 h-4" /></div>
+               <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
+               <div className="w-8 h-8 rounded-full flex items-center justify-center ml-auto text-muted-foreground hover:bg-neutral-200 transition-colors cursor-pointer"><ChevronRight className="w-4 h-4" /></div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button variant="outline" className="flex-1 rounded-xl h-11 font-semibold border-neutral-200 shadow-sm">
+                 Practice
+              </Button>
+              <Button className="flex-1 rounded-xl h-11 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
+                 Start Quiz →
+              </Button>
+            </div>
+
+          </CardContent>
+        </Card>
+
+      </div>
     </div>
   );
 }

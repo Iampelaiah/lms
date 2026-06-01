@@ -99,7 +99,7 @@ export async function getPendingEnrollments() {
   return { data }
 }
 
-export async function updateEnrollmentStatus(enrollmentId: string, status: 'approved' | 'rejected') {
+export async function updateEnrollmentStatus(enrollmentId: string, status: 'approved' | 'rejected', tutorId?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -118,7 +118,11 @@ export async function updateEnrollmentStatus(enrollmentId: string, status: 'appr
 
   const { error } = await supabase
     .from('enrollments')
-    .update({ status, updated_at: new Date().toISOString() })
+    .update({ 
+      status, 
+      tutor_id: tutorId || null,
+      updated_at: new Date().toISOString() 
+    })
     .eq('id', enrollmentId)
 
   if (error) {
@@ -128,4 +132,20 @@ export async function updateEnrollmentStatus(enrollmentId: string, status: 'appr
 
   revalidatePath('/admin')
   return { success: true }
+}
+
+export async function getTutorsForSubject(subjectId: string) {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('tutor_subjects')
+    .select('tutor_id, profiles!inner(id, email)')
+    .eq('subject_id', subjectId)
+    
+  if (error) {
+    console.error('Error fetching tutors for subject:', error)
+    return { error: error.message }
+  }
+  
+  return { data }
 }

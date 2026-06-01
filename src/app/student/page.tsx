@@ -216,14 +216,13 @@ export default function StudentDashboardPage() {
           supabase
             .from('enrollments')
             .select(`
-              course:courses (
+              subject:subjects (
                 id,
-                title,
-                lessons (id),
-                student_progress (completed)
+                name
               )
             `)
-            .eq('student_id', profile.id),
+            .eq('student_id', profile.id)
+            .eq('status', 'approved'),
           supabase
             .from('classes')
             .select(`
@@ -241,15 +240,12 @@ export default function StudentDashboardPage() {
         const enrollments = enrollmentsResult.data;
         if (enrollments) {
           const formatted = enrollments
-            .map(e => e.course)
+            .map(e => e.subject)
             .filter(Boolean)
-            .map((course: any) => {
-              const totalLessons = course.lessons?.length || 0;
-              const completedLessons = course.student_progress?.filter((p: any) => p.completed).length || 0;
-              const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+            .map((subject: any) => {
               return {
-                name: course.title,
-                overallProgress: progress,
+                name: subject.name,
+                overallProgress: 0, // Placeholder, progress tracking to be implemented
                 topics: []
               };
             });

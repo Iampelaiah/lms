@@ -9,6 +9,7 @@ import React from 'react';
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 
 function AdminSidebar() {
   const [userName, setUserName] = React.useState('Admin User');
@@ -25,42 +26,34 @@ function AdminSidebar() {
   };
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const email = localStorage.getItem('loggedInUser');
-      if (email) {
-        // e.g. pngarande@northwood.lq.zw -> Pelaiah Ngarande
-        const namePart = email.split('@')[0];
-        
-        let formattedName = 'User';
-        let formattedInitial = 'U';
-
-        if (email.toLowerCase().startsWith('pngarande')) {
-            formattedName = 'Pelaiah Ngarande';
-            formattedInitial = 'PN';
-        } else if (email.toLowerCase().startsWith('jsmith')) {
-            formattedName = 'John Smith';
-            formattedInitial = 'JS';
-        } else {
-             try {
-                const nameParts = namePart.split('.');
-                if (nameParts.length > 1) {
-                    const firstName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
-                    const lastName = nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1);
-                    formattedName = `${firstName} ${lastName}`;
-                    formattedInitial = `${firstName.charAt(0)}${lastName.charAt(0)}`;
-                } else {
-                    formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-                    formattedInitial = namePart.substring(0, 2).toUpperCase();
-                }
-            } catch (e) {
-                // fallback
-            }
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+        if (data?.full_name) {
+          setUserName(data.full_name);
+          
+          const nameParts = data.full_name.trim().split(/\s+/);
+          if (nameParts.length > 1) {
+            setUserInitial(`${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase());
+          } else {
+            setUserInitial(data.full_name.substring(0, 2).toUpperCase());
+          }
         }
-        
-        setUserName(formattedName);
-        setUserInitial(formattedInitial);
+      } else if (typeof window !== 'undefined') {
+        // Fallback to localStorage if no session
+        const email = localStorage.getItem('loggedInUser');
+        if (email) {
+          const namePart = email.split('@')[0];
+          setUserName(namePart.charAt(0).toUpperCase() + namePart.slice(1));
+          setUserInitial(namePart.substring(0, 2).toUpperCase());
+        }
       }
-    }
+    };
+
+    fetchUser();
   }, []);
 
   return (

@@ -540,8 +540,8 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-16 pt-32 border-t border-white/5">
           <div className="col-span-2">
             <div className="flex items-center gap-3 mb-10">
-              <div className="w-10 h-10 bg-fin-lime rounded-full flex items-center justify-center">
-                <GraduationCap className="w-6 h-6 text-fin-green" />
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center p-2">
+                <Image src="/logo.png" alt="Dr Max Logo" width={48} height={48} className="object-contain" />
               </div>
               <div className="flex flex-col leading-tight">
                 <span className="font-headline font-bold text-3xl">Dr Max</span>

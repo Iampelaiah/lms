@@ -1,9 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Lock, BookOpen, PlayCircle, FileText } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { ArrowLeft, Lock, BookOpen } from 'lucide-react'
+import { CurriculumTree } from './curriculum-tree'
 
 export default async function CoursePage({ params }: { params: Promise<{ subjectId: string }> }) {
   const { subjectId } = await params
@@ -53,18 +52,37 @@ export default async function CoursePage({ params }: { params: Promise<{ subject
 
   const subject = enrollment.subjects
 
-  // Optional: Fetch lessons if using a lessons table
-  let lessons: any[] = []
-  try {
-    const res = await supabase
-      .from('lessons')
+  // Fetch Curriculum Modules and Items
+  const { data: modulesData } = await supabase
+    .from('modules')
+    .select('*')
+    .eq('subject_id', subjectId)
+    .order('sequence_order', { ascending: true })
+
+  let modules = []
+  if (modulesData && modulesData.length > 0) {
+    const { data: itemsData } = await supabase
+      .from('module_items')
       .select('*')
-      .eq('course_id', subjectId)
-      .order('order_index', { ascending: true })
-    if (res.data) lessons = res.data
-  } catch (e) {
-    // fallback if lessons table doesn't map yet
+      .in('module_id', modulesData.map(m => m.id))
+      .order('sequence_order', { ascending: true })
+    
+    modules = modulesData.map(m => ({
+      ...m,
+      items: (itemsData || []).filter(i => i.module_id === m.id)
+    }))
   }
+
+  // Fetch Progress and Completions
+  const { data: progressData } = await supabase
+    .from('student_module_progress')
+    .select('*')
+    .eq('student_id', user.id)
+
+  const { data: itemCompletionsData } = await supabase
+    .from('student_item_completions')
+    .select('*')
+    .eq('student_id', user.id)
 
   // 4. Render protected content
   return (
@@ -84,48 +102,13 @@ export default async function CoursePage({ params }: { params: Promise<{ subject
         <p className="text-muted-foreground mt-2">Welcome to the protected course materials for {subject?.name}.</p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-6 mt-8">
         <h2 className="text-2xl font-bold">Curriculum</h2>
-        {lessons && lessons.length > 0 ? (
-          <div className="space-y-4">
-            {lessons.map((lesson: any, index: number) => (
-              <Card key={lesson.id} className="hover:border-primary transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between py-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">{lesson.title}</CardTitle>
-                      <CardDescription className="flex items-center gap-2">
-                        {lesson.video_url ? (
-                          <>
-                            <PlayCircle className="h-3 w-3" />
-                            <span>Video Lesson</span>
-                          </>
-                        ) : (
-                          <>
-                            <FileText className="h-3 w-3" />
-                            <span>Reading Material</span>
-                          </>
-                        )}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href={`/student/courses/${subject.id}/${lesson.id}`}>
-                      Start Lesson
-                    </Link>
-                  </Button>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="p-12 text-center bg-muted/50">
-            <p className="text-muted-foreground">Course modules are currently being prepared by the instructor.</p>
-          </Card>
-        )}
+        <CurriculumTree 
+          modules={modules} 
+          progress={progressData || []} 
+          itemCompletions={itemCompletionsData || []} 
+        />
       </div>
     </div>
   )
