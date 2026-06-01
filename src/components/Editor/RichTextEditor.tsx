@@ -1,19 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Placeholder from '@tiptap/extension-placeholder';
-import Collaboration from '@tiptap/extension-collaboration';
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
-import * as Y from 'yjs';
-import { LiveblocksYjsProvider } from '@liveblocks/yjs';
-import { useRoom, useSelf } from '@/liveblocks.config';
-import { 
-  Bold, Italic, Underline as UnderlineIcon, Strikethrough, Code, 
-  Heading1, Heading2, Heading3, List, ListOrdered, Code2, RefreshCw 
+import {
+  Bold, Italic, Underline as UnderlineIcon, Strikethrough, Code,
+  Heading1, Heading2, Heading3, List, ListOrdered, Code2, RefreshCw
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -23,71 +17,21 @@ interface RichTextEditorProps {
   placeholder?: string;
 }
 
-const COLORS = [
-  '#FF5733', '#33FF57', '#3357FF', '#F3FF33', 
-  '#FF33F3', '#33FFF3', '#FFAF33', '#AF33FF'
-];
-
 export default function RichTextEditor({
   onChange,
   initialContent = '',
   readOnly = false,
   placeholder = 'Write your submission here...'
 }: RichTextEditorProps) {
-  const room = useRoom();
-  const self = useSelf();
-  
-  const [doc, setDoc] = useState<Y.Doc | null>(null);
-  const [provider, setProvider] = useState<any>(null);
-  const [isConnected, setIsConnected] = useState(false);
 
-  // Set up Yjs document and Liveblocks provider
-  useEffect(() => {
-    if (readOnly) return;
-
-    const ydoc = new Y.Doc();
-    const yprovider = new LiveblocksYjsProvider(room, ydoc);
-
-    yprovider.on('sync', (isSynced: boolean) => {
-      setIsConnected(isSynced);
-    });
-
-    setDoc(ydoc);
-    setProvider(yprovider);
-
-    return () => {
-      ydoc.destroy();
-      yprovider.destroy();
-    };
-  }, [room, readOnly]);
-
-  const userName = self?.info?.name || 'Anonymous Student';
-  const userColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-
-  // Initialize Tiptap editor
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        // If collaborative, disable local history so Yjs handles undo/redo
-        history: !doc ? false : undefined,
-      } as any),
+      StarterKit.configure({} as any),
       Underline,
       Placeholder.configure({
         placeholder,
         emptyEditorClass: 'is-editor-empty',
       }),
-      ...(doc && provider ? [
-        Collaboration.configure({
-          document: doc,
-        }),
-        CollaborationCursor.configure({
-          provider: provider,
-          user: {
-            name: userName,
-            color: userColor,
-          },
-        }),
-      ] : []),
     ],
     content: initialContent,
     editable: !readOnly,
@@ -96,9 +40,10 @@ export default function RichTextEditor({
         onChange(editor.getHTML());
       }
     },
-  }, [doc, provider]);
+    immediatelyRender: false,
+  });
 
-  // Handle setting active content when readOnly changes or initialContent changes
+  // Sync readOnly content changes
   useEffect(() => {
     if (editor && readOnly && initialContent !== editor.getHTML()) {
       editor.commands.setContent(initialContent);
@@ -109,247 +54,174 @@ export default function RichTextEditor({
     return (
       <div className="flex items-center justify-center py-12 text-slate-400">
         <RefreshCw className="w-5 h-5 animate-spin mr-2" />
-        Initializing editor workspace...
+        Initializing editor...
       </div>
     );
   }
 
-  const BubbleMenuComp = BubbleMenu as any;
-
   return (
     <div className="w-full rounded-xl border border-white/10 bg-slate-950/60 overflow-hidden flex flex-col">
-      {/* Editor styles overrides */}
-      <style jsx global>{`
-        .ProseMirror {
+      {/* Inline styles for ProseMirror */}
+      <style>{`
+        .tiptap-editor .ProseMirror {
           min-height: 150px;
           outline: none;
+          padding: 1rem;
+          color: rgba(255,255,255,0.9);
+          font-size: 0.875rem;
+          line-height: 1.6;
         }
-        .ProseMirror p.is-editor-empty:first-child::before {
+        .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           float: left;
           color: rgba(255, 255, 255, 0.3);
           pointer-events: none;
           height: 0;
         }
-        /* Caret overlay styling */
-        .ProseMirror .collaboration-cursor__caret {
-          position: relative;
-          margin-left: -1px;
-          margin-right: -1px;
-          border-left: 2px solid;
-          border-right: 2px solid;
-          border-color: currentColor;
-          word-break: normal;
-          pointer-events: none;
-        }
-        .ProseMirror .collaboration-cursor__label {
-          position: absolute;
-          top: -1.4em;
-          left: -1px;
-          font-size: 10px;
-          font-weight: bold;
-          line-height: 1;
-          user-select: none;
-          color: #fff;
-          padding: 2px 4px;
-          border-radius: 3px;
-          white-space: nowrap;
-          pointer-events: none;
-        }
+        .tiptap-editor .ProseMirror h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: white; }
+        .tiptap-editor .ProseMirror h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: white; }
+        .tiptap-editor .ProseMirror h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; color: white; }
+        .tiptap-editor .ProseMirror ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+        .tiptap-editor .ProseMirror ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+        .tiptap-editor .ProseMirror code { background: rgba(255,255,255,0.1); padding: 0.1em 0.3em; border-radius: 3px; font-family: monospace; font-size: 0.85em; }
+        .tiptap-editor .ProseMirror pre { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; margin: 0.5rem 0; }
+        .tiptap-editor .ProseMirror pre code { background: none; padding: 0; font-family: monospace; }
+        .tiptap-editor .ProseMirror strong { font-weight: 700; }
+        .tiptap-editor .ProseMirror em { font-style: italic; }
+        .tiptap-editor .ProseMirror s { text-decoration: line-through; }
+        .tiptap-editor .ProseMirror u { text-decoration: underline; }
+        .tiptap-editor .ProseMirror blockquote { border-left: 3px solid rgba(255,255,255,0.2); padding-left: 1rem; color: rgba(255,255,255,0.6); margin: 0.5rem 0; }
       `}</style>
 
-      {/* Main Header Toolbar */}
+      {/* Toolbar — only in edit mode */}
       {!readOnly && (
-        <div className="flex flex-wrap items-center gap-1 p-2 bg-slate-900/80 border-b border-white/10">
-          <button
-            type="button"
+        <div className="flex flex-wrap items-center gap-0.5 p-2 bg-slate-900/80 border-b border-white/10">
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('bold') ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('bold')}
             title="Bold"
           >
             <Bold className="w-4 h-4" />
-          </button>
-          
-          <button
-            type="button"
+          </ToolbarButton>
+
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('italic') ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('italic')}
             title="Italic"
           >
             <Italic className="w-4 h-4" />
-          </button>
+          </ToolbarButton>
 
-          <button
-            type="button"
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleUnderline().run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('underline') ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('underline')}
             title="Underline"
           >
             <UnderlineIcon className="w-4 h-4" />
-          </button>
+          </ToolbarButton>
 
-          <button
-            type="button"
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleStrike().run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('strike') ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('strike')}
             title="Strikethrough"
           >
             <Strikethrough className="w-4 h-4" />
-          </button>
+          </ToolbarButton>
 
-          <div className="w-[1px] h-6 bg-white/10 mx-1" />
+          <Divider />
 
-          <button
-            type="button"
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('heading', { level: 1 }) ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('heading', { level: 1 })}
             title="Heading 1"
           >
             <Heading1 className="w-4 h-4" />
-          </button>
+          </ToolbarButton>
 
-          <button
-            type="button"
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('heading', { level: 2 }) ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('heading', { level: 2 })}
             title="Heading 2"
           >
             <Heading2 className="w-4 h-4" />
-          </button>
+          </ToolbarButton>
 
-          <button
-            type="button"
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('heading', { level: 3 }) ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('heading', { level: 3 })}
             title="Heading 3"
           >
             <Heading3 className="w-4 h-4" />
-          </button>
+          </ToolbarButton>
 
-          <div className="w-[1px] h-6 bg-white/10 mx-1" />
+          <Divider />
 
-          <button
-            type="button"
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('bulletList') ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('bulletList')}
             title="Bullet List"
           >
             <List className="w-4 h-4" />
-          </button>
+          </ToolbarButton>
 
-          <button
-            type="button"
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('orderedList') ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('orderedList')}
             title="Ordered List"
           >
             <ListOrdered className="w-4 h-4" />
-          </button>
+          </ToolbarButton>
 
-          <div className="w-[1px] h-6 bg-white/10 mx-1" />
+          <Divider />
 
-          <button
-            type="button"
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleCode().run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('code') ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('code')}
             title="Inline Code"
           >
             <Code className="w-4 h-4" />
-          </button>
+          </ToolbarButton>
 
-          <button
-            type="button"
+          <ToolbarButton
             onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-            className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-              editor.isActive('codeBlock') ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
-            }`}
+            active={editor.isActive('codeBlock')}
             title="Code Block"
           >
             <Code2 className="w-4 h-4" />
-          </button>
-
-          {/* Sync indicator */}
-          {doc && (
-            <div className="ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/5 border border-white/5 text-[10px]">
-              <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
-              <span className="text-slate-400 font-mono">
-                {isConnected ? 'Collaborating' : 'Connecting...'}
-              </span>
-            </div>
-          )}
+          </ToolbarButton>
         </div>
       )}
 
-      {/* Bubble Menu for quick text highlights */}
-      {editor && !readOnly && (
-        <BubbleMenuComp
-          editor={editor}
-          tippyOptions={{ duration: 150 }}
-          className="flex items-center gap-0.5 bg-slate-900 border border-white/10 p-1 rounded-lg shadow-xl"
-        >
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`p-1 rounded hover:bg-white/5 transition-colors ${
-              editor.isActive('bold') ? 'text-[#00FFCC]' : 'text-slate-300'
-            }`}
-          >
-            <Bold className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`p-1 rounded hover:bg-white/5 transition-colors ${
-              editor.isActive('italic') ? 'text-[#00FFCC]' : 'text-slate-300'
-            }`}
-          >
-            <Italic className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            className={`p-1 rounded hover:bg-white/5 transition-colors ${
-              editor.isActive('underline') ? 'text-[#00FFCC]' : 'text-slate-300'
-            }`}
-          >
-            <UnderlineIcon className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            className={`p-1 rounded hover:bg-white/5 transition-colors ${
-              editor.isActive('strike') ? 'text-[#00FFCC]' : 'text-slate-300'
-            }`}
-          >
-            <Strikethrough className="w-3.5 h-3.5" />
-          </button>
-        </BubbleMenuComp>
-      )}
-
-      {/* Editor Content Area */}
-      <div className="p-4 overflow-y-auto max-h-[300px] min-h-[160px] bg-slate-900/20 text-white/90">
+      {/* Editor content */}
+      <div className="tiptap-editor overflow-y-auto max-h-[300px] min-h-[160px] bg-slate-900/20">
         <EditorContent editor={editor} />
       </div>
     </div>
   );
+}
+
+function ToolbarButton({
+  onClick, active, title, children
+}: {
+  onClick: () => void;
+  active: boolean;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
+        active ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Divider() {
+  return <div className="w-[1px] h-6 bg-white/10 mx-1" />;
 }
