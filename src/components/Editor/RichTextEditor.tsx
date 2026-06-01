@@ -15,13 +15,15 @@ interface RichTextEditorProps {
   initialContent?: string;
   readOnly?: boolean;
   placeholder?: string;
+  expanded?: boolean;
 }
 
 export default function RichTextEditor({
   onChange,
   initialContent = '',
   readOnly = false,
-  placeholder = 'Write your submission here...'
+  placeholder = 'Write your submission here...',
+  expanded = false,
 }: RichTextEditorProps) {
 
   const editor = useEditor({
@@ -193,7 +195,9 @@ export default function RichTextEditor({
       )}
 
       {/* Editor content */}
-      <div className="tiptap-editor overflow-y-auto max-h-[300px] min-h-[160px] bg-slate-900/20">
+      <div className={`tiptap-editor overflow-y-auto bg-slate-900/20 ${
+        expanded ? 'flex-1 min-h-0' : 'max-h-[300px] min-h-[160px]'
+      }`}>
         <EditorContent editor={editor} />
       </div>
     </div>

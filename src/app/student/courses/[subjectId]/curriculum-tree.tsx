@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Calendar, CheckCircle2, Clock, PlayCircle, FileText, CheckCircle, Award, Loader2 } from "lucide-react"
+import { Calendar, CheckCircle2, Clock, PlayCircle, FileText, CheckCircle, Award, Loader2, Maximize2, Minimize2 } from "lucide-react"
 import { format } from "date-fns"
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
@@ -42,6 +42,10 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
 
   // Preview feedback modal state
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  // Expand/collapse the submission editor dialog
+  const [isEditorExpanded, setIsEditorExpanded] = useState(false);
+
 
   // Selected assignment for submit/preview
   const [selectedAssignment, setSelectedAssignment] = useState<{
@@ -460,25 +464,42 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
       </Accordion>
 
       {/* Student Submission Dialog */}
-      <Dialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
-        <DialogContent className="sm:max-w-[550px] border-white/10 bg-slate-900/95 backdrop-blur-md">
+      <Dialog open={isSubmitOpen} onOpenChange={(open) => { setIsSubmitOpen(open); if (!open) setIsEditorExpanded(false); }}>
+        <DialogContent className={`transition-all duration-300 border-white/10 bg-slate-900/95 backdrop-blur-md ${
+          isEditorExpanded ? 'sm:max-w-[92vw] h-[90vh] flex flex-col' : 'sm:max-w-[550px]'
+        }`}>
           <DialogHeader>
-            <DialogTitle className="text-white text-lg flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" />
-              <span>Submit Assignment {selectedAssignment?.assignmentNum}</span>
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-white text-lg flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
+                <span>Submit Assignment {selectedAssignment?.assignmentNum}</span>
+              </DialogTitle>
+              <button
+                type="button"
+                onClick={() => setIsEditorExpanded(prev => !prev)}
+                title={isEditorExpanded ? 'Collapse editor' : 'Expand editor'}
+                className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+              >
+                {isEditorExpanded
+                  ? <Minimize2 className="w-4 h-4" />
+                  : <Maximize2 className="w-4 h-4" />}
+              </button>
+            </div>
             <DialogDescription className="text-slate-400">
               Submit your work for topic: "{selectedAssignment?.topicTitle}". Your tutor will review and provide feedback.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmission} className="space-y-4 py-2">
+          <form onSubmit={handleSubmission} className={`space-y-4 py-2 ${
+            isEditorExpanded ? 'flex-1 flex flex-col min-h-0' : ''
+          }`}>
               <CollaborativeEditor 
                 roomId={`student-assignment-${profile?.id || 'guest'}-${selectedAssignment?.topicId || 'default'}-${selectedAssignment?.assignmentNum || 1}`}
                 onChange={(html) => setSubmissionText(html)}
                 initialContent=""
                 placeholder="Type or paste your homework, essay, or exercises here..."
+                expanded={isEditorExpanded}
               />
-            <DialogFooter>
+            <DialogFooter className={isEditorExpanded ? 'mt-auto' : ''}>
               <Button type="button" variant="outline" onClick={() => setIsSubmitOpen(false)} className="border-white/10 text-white hover:bg-white/10">
                 Cancel
               </Button>

@@ -20,6 +20,7 @@ interface CollaborativeEditorProps {
   initialContent?: string;
   readOnly?: boolean;
   placeholder?: string;
+  expanded?: boolean;
 }
 
 export default function CollaborativeEditor({
@@ -27,6 +28,7 @@ export default function CollaborativeEditor({
   initialContent = '',
   readOnly = false,
   placeholder,
+  expanded = false,
 }: CollaborativeEditorProps) {
   return (
     <RichTextEditor
@@ -34,6 +36,7 @@ export default function CollaborativeEditor({
       initialContent={initialContent}
       readOnly={readOnly}
       placeholder={placeholder}
+      expanded={expanded}
     />
   );
 }
