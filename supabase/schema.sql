@@ -100,6 +100,12 @@ ON public.enrollments FOR INSERT WITH CHECK (
   auth.uid() = student_id AND status = 'pending'
 );
 
+DROP POLICY IF EXISTS "Admins can create enrollments." ON public.enrollments;
+CREATE POLICY "Admins can create enrollments." 
+ON public.enrollments FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
 DROP POLICY IF EXISTS "Only admins can update enrollments." ON public.enrollments;
 CREATE POLICY "Only admins can update enrollments." 
 ON public.enrollments FOR UPDATE USING (
