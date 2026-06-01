@@ -355,9 +355,10 @@ export default function TutorAssignmentsPage() {
 
               <div className="flex-1 flex flex-col min-h-0 space-y-1.5">
                 <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Student's Submitted Work:</label>
-                <div className="flex-1 bg-black/60 border border-white/10 rounded-lg p-4 font-mono text-sm text-slate-200 overflow-y-auto leading-relaxed max-h-[220px] whitespace-pre-wrap">
-                  {selectedSubmission.student_submission}
-                </div>
+                <div 
+                  className="flex-1 bg-black/60 border border-white/10 rounded-lg p-4 text-sm text-slate-200 overflow-y-auto leading-relaxed max-h-[220px] prose prose-invert prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: selectedSubmission.student_submission || '' }}
+                />
               </div>
 
               <div className="space-y-1.5">

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { getSubjectAssignments, submitAssignment } from "@/app/actions/student-assignments"
+import CollaborativeEditor from "@/components/Editor/CollaborativeEditor"
 
 export function CurriculumTree({ modules, progress, itemCompletions }: { 
   modules: any[], 
@@ -471,16 +472,12 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmission} className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Your Submission Work *</label>
-              <Textarea 
+              <CollaborativeEditor 
+                roomId={`student-assignment-${profile?.id || 'guest'}-${selectedAssignment?.topicId || 'default'}-${selectedAssignment?.assignmentNum || 1}`}
+                onChange={(html) => setSubmissionText(html)}
+                initialContent=""
                 placeholder="Type or paste your homework, essay, or exercises here..."
-                value={submissionText}
-                onChange={e => setSubmissionText(e.target.value)}
-                className="bg-background/60 border-white/10 text-white/90 text-sm h-48 focus:border-primary/50"
-                required
               />
-            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsSubmitOpen(false)} className="border-white/10 text-white hover:bg-white/10">
                 Cancel
@@ -510,9 +507,10 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <span className="text-xs font-bold text-amber-200/80 uppercase tracking-wider block">Your Submission:</span>
-              <div className="bg-black/50 border border-white/5 rounded-lg p-3 max-h-[150px] overflow-y-auto text-sm text-slate-300 font-mono whitespace-pre-wrap">
-                {selectedAssignment?.submission}
-              </div>
+              <div 
+                className="bg-black/50 border border-white/5 rounded-lg p-4 max-h-[200px] overflow-y-auto text-sm text-slate-300 prose prose-invert prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: selectedAssignment?.submission || '' }}
+              />
             </div>
 
             <div className="space-y-1.5 p-4 rounded-lg bg-amber-500/5 border border-amber-500/25">
