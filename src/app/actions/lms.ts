@@ -87,7 +87,7 @@ export async function getPendingEnrollments() {
 
   const { data, error } = await supabase
     .from('enrollments')
-    .select('*, subjects(*), profiles(*)')
+    .select('*, subjects(*), profiles!student_id(*)')
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
 
@@ -157,7 +157,7 @@ export async function getEnrolledStudentsForSubjects(subjectIds: string[]) {
 
   const { data, error } = await supabase
     .from('enrollments')
-    .select('id, student_id, subject_id, status, tutor_id, profiles!inner(full_name, email), subjects!inner(name, level)')
+    .select('id, student_id, subject_id, status, tutor_id, profiles!student_id!inner(full_name, email), subjects!inner(name, level)')
     .in('subject_id', subjectIds)
     .eq('status', 'approved')
 

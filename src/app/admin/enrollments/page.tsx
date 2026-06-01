@@ -50,7 +50,7 @@ export default async function AdminEnrollmentsPage() {
                           <UserCircle className="w-5 h-5" />
                         </div>
                         <span className="font-medium text-foreground">
-                          {enrollment.student_id.substring(0, 8)}... {/* In a real app, join with profiles to get name */}
+                          {enrollment.profiles?.full_name || `${enrollment.student_id.substring(0, 8)}...`}
                         </span>
                       </div>
                     </td>
