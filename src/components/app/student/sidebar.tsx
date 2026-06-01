@@ -74,7 +74,7 @@ export function StudentSidebar() {
     .substring(0, 2) || 'S';
 
   return (
-    <Sidebar variant="floating" collapsible="icon">
+    <Sidebar variant="floating" collapsible="icon" className="bg-white/60 dark:bg-neutral-900/40 backdrop-blur-xl border-white/20 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
       <SidebarHeader>
         <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -147,10 +147,10 @@ export function StudentSidebar() {
                     </div>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <Button className="w-full h-12 mt-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0" asChild>
+                    <Button className="w-full h-12 mt-2 group relative flex items-center justify-center gap-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-neutral-900/20 dark:hover:shadow-white/20 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0" asChild>
                         <Link href="#">
-                            <Plus className="group-data-[collapsible=icon]:w-6 group-data-[collapsible=icon]:h-6" />
-                            <span className="group-data-[collapsible=icon]:hidden">Create new task</span>
+                            <Plus className="transition-transform group-hover:rotate-90 group-data-[collapsible=icon]:w-6 group-data-[collapsible=icon]:h-6" />
+                            <span className="group-data-[collapsible=icon]:hidden">Create New Task</span>
                         </Link>
                     </Button>
                 </SidebarMenuItem>
