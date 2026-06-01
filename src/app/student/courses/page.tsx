@@ -44,7 +44,7 @@ export default async function CoursesPage() {
               </div>
               
               <div className="space-y-12">
-                {Object.entries(categories).map(([category, subs]) => (
+                {Object.entries(categories as Record<string, any[]>).map(([category, subs]) => (
                   <div key={category} className="space-y-6">
                     <h3 className="text-xl font-semibold flex items-center gap-2 text-muted-foreground">
                       <BookOpen className="w-5 h-5" />

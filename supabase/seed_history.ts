@@ -228,6 +228,8 @@ async function seed() {
     .eq('level', 'A-Level')
     .single();
 
+  let subjectId: string;
+
   if (subjectError || !subject) {
     console.error("Could not find History A-Level subject. Creating it...");
     const { data: newSubject, error: createError } = await supabase
@@ -245,10 +247,11 @@ async function seed() {
       console.error("Failed to create subject:", createError);
       process.exit(1);
     }
-    subject = newSubject;
+    subjectId = newSubject.id;
+  } else {
+    subjectId = subject.id;
   }
 
-  const subjectId = subject.id;
   console.log(`Found/Created History subject with ID: ${subjectId}`);
 
   // Clear existing modules for this subject to be idempotent
@@ -282,7 +285,8 @@ async function seed() {
     let startDate = new Date();
     startDate.setDate(startDate.getDate() - 10); // Start 10 days ago
 
-    for (const sub of mod.sub_modules) {
+    for (const subItem of mod.sub_modules) {
+      const sub = subItem as any;
       const isDepthStudy = !!sub.depth_study;
       const itemTitle = isDepthStudy ? sub.depth_study : sub.topic;
       

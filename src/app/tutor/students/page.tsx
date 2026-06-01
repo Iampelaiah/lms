@@ -13,6 +13,7 @@ import {
   toggleDeadlineStatus, 
   deleteDeadline 
 } from '@/app/actions/student-tutor';
+import { getSubjectAssignments, getSubjectTopics } from '@/app/actions/student-assignments';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -104,6 +105,12 @@ export default function TutorStudentsPage() {
   const [newDeadlineSubjectId, setNewDeadlineSubjectId] = useState('');
   const [newDeadlineDate, setNewDeadlineDate] = useState('');
   const [submittingDeadline, setSubmittingDeadline] = useState(false);
+
+  // Pending assignments state
+  const [isPendingAssignmentsOpen, setIsPendingAssignmentsOpen] = useState(false);
+  const [pendingAssignmentsSubject, setPendingAssignmentsSubject] = useState<Subject | null>(null);
+  const [pendingAssignmentsLoading, setPendingAssignmentsLoading] = useState(false);
+  const [pendingAssignmentsList, setPendingAssignmentsList] = useState<any[]>([]);
 
   const tutorId = profile?.id || '';
 
@@ -376,6 +383,89 @@ export default function TutorStudentsPage() {
     }
   };
 
+  const handleSubjectClick = async (subject: Subject) => {
+    if (!selectedStudentId) return;
+    setPendingAssignmentsSubject(subject);
+    setIsPendingAssignmentsOpen(true);
+    setPendingAssignmentsLoading(true);
+
+    try {
+      const topicsRes = await getSubjectTopics(subject.id);
+      let topics = topicsRes.data || [];
+
+      if (topics.length === 0) {
+        topics = [
+          { id: 'fallback-topic-1', title: 'France, 1774–1814', sequence_order: 1, module_id: 'fallback-module' },
+          { id: 'fallback-topic-2', title: 'The Industrial Revolution in Britain, 1750–1850', sequence_order: 2, module_id: 'fallback-module' },
+          { id: 'fallback-topic-3', title: 'Liberalism and nationalism in Germany, 1815–71', sequence_order: 3, module_id: 'fallback-module' },
+          { id: 'fallback-topic-4', title: 'The Russian Revolution, 1894–1921', sequence_order: 4, module_id: 'fallback-module' }
+        ];
+      }
+
+      let submissions: any[] = [];
+      const subRes = await getSubjectAssignments(subject.id, selectedStudentId);
+      if (subRes.data) {
+        submissions = subRes.data;
+      } else {
+        const stored = localStorage.getItem(`drmax_submissions_${selectedStudentId}_${subject.id}`);
+        if (stored) {
+          try {
+            submissions = JSON.parse(stored);
+          } catch {
+            submissions = [];
+          }
+        }
+      }
+
+      const pending: any[] = [];
+      topics.forEach((topic: any) => {
+        for (let num = 1; num <= 4; num++) {
+          const existing = submissions.find(
+            s => s.module_item_id === topic.id && s.assignment_number === num
+          );
+          
+          if (!existing || existing.status === 'not_started') {
+            pending.push({
+              topicId: topic.id,
+              topicTitle: topic.title,
+              assignmentNum: num,
+              status: 'not_started'
+            });
+          }
+        }
+      });
+
+      setPendingAssignmentsList(pending);
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: 'Error loading assignments',
+        description: 'Could not load pending assignments list.',
+        variant: 'destructive'
+      });
+    } finally {
+      setPendingAssignmentsLoading(false);
+    }
+  };
+
+  const handleRemindShortcut = (item: any) => {
+    if (!pendingAssignmentsSubject) return;
+    
+    setIsPendingAssignmentsOpen(false);
+    
+    setNewDeadlineTitle(`Submit ${pendingAssignmentsSubject.name} - ${item.topicTitle} (Assignment ${item.assignmentNum})`);
+    setNewDeadlineSubjectId(pendingAssignmentsSubject.id);
+    setNewDeadlineDesc(`Reminder for ${selectedGroup?.student.full_name} to submit Assignment ${item.assignmentNum} for topic: "${item.topicTitle}".`);
+    
+    const threeDaysLater = new Date();
+    threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+    const formattedDate = threeDaysLater.toISOString().slice(0, 16);
+    setNewDeadlineDate(formattedDate);
+    
+    setActiveTab('deadlines');
+    setIsDeadlineDialogOpen(true);
+  };
+
   // Filter students based on search
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
@@ -514,9 +604,14 @@ export default function TutorStudentsPage() {
                         </CardHeader>
                         <CardContent className="space-y-2">
                           {selectedGroup.subjects.map(s => (
-                            <div key={s.id} className="flex items-center justify-between p-2 rounded-lg bg-background/30 border border-white/5">
-                              <span className="font-medium text-sm text-white/90">{s.name}</span>
-                              <Badge variant="outline" className="text-xs border-white/15 text-white/60">{s.level}</Badge>
+                            <div 
+                              key={s.id} 
+                              onClick={() => handleSubjectClick(s)}
+                              className="flex items-center justify-between p-2.5 rounded-lg bg-background/30 border border-white/5 hover:border-primary/50 hover:bg-primary/5 cursor-pointer transition-all duration-200 group"
+                              title="Click to view pending assignments"
+                            >
+                              <span className="font-medium text-sm text-white/90 group-hover:text-primary transition-colors">{s.name}</span>
+                              <Badge variant="outline" className="text-xs border-white/15 text-white/60 group-hover:border-primary/30 group-hover:text-primary/80">{s.level}</Badge>
                             </div>
                           ))}
                         </CardContent>
@@ -797,6 +892,62 @@ export default function TutorStudentsPage() {
 
         </div>
       )}
+
+      {/* Pending Assignments Modal */}
+      <Dialog open={isPendingAssignmentsOpen} onOpenChange={setIsPendingAssignmentsOpen}>
+        <DialogContent className="sm:max-w-[550px] max-h-[80vh] flex flex-col border-white/10 bg-slate-900/95 backdrop-blur-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white text-xl">
+              <FileText className="w-5 h-5 text-[#00FFCC]" />
+              <span>Pending Assignments - {pendingAssignmentsSubject?.name}</span>
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              View assignments not yet submitted by {selectedGroup?.student.full_name}. Set a deadline as a reminder.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto my-4 pr-1 space-y-3">
+            {pendingAssignmentsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : pendingAssignmentsList.length === 0 ? (
+              <div className="text-center py-12 border border-dashed border-white/10 rounded-xl bg-white/5">
+                <CheckCircle2 className="w-12 h-12 text-[#00FFCC] mx-auto mb-3" />
+                <h4 className="font-semibold text-white">All Completed!</h4>
+                <p className="text-sm text-slate-400 mt-1">This student has submitted all assignments for this subject.</p>
+              </div>
+            ) : (
+              pendingAssignmentsList.map((item, idx) => (
+                <div 
+                  key={idx} 
+                  className="flex items-center justify-between gap-4 p-3 rounded-lg border border-white/5 bg-white/5 hover:border-[#00FFCC]/30 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <h4 className="font-semibold text-sm text-white/90">Assignment {item.assignmentNum}</h4>
+                    <p className="text-xs text-slate-400 truncate mt-0.5">Topic: {item.topicTitle}</p>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="border-[#00FFCC]/20 text-[#00FFCC] hover:bg-[#00FFCC]/10 hover:text-[#00FFCC] gap-1.5 whitespace-nowrap text-xs h-8"
+                    onClick={() => handleRemindShortcut(item)}
+                  >
+                    <CalendarClock className="w-3.5 h-3.5" />
+                    Remind / Set Deadline
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setIsPendingAssignmentsOpen(false)} className="border-white/10 hover:bg-white/10">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -50,7 +50,7 @@ export default async function CoursePage({ params }: { params: Promise<{ subject
     )
   }
 
-  const subject = enrollment.subjects
+  const subject = enrollment.subjects as any
 
   // Fetch Curriculum Modules and Items
   const { data: modulesData } = await supabase
