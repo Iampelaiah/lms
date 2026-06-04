@@ -90,6 +90,1073 @@ if (typeof window !== 'undefined') {
 }
 
 interface AgoraClassroomProps {
+  appId: string;
+  channelName: string;
+  token: string;
+  rtmToken?: string;
+  uid: number;
+  userName: string;
+  role?: string;
+  teacherUid?: number;
+  subjectId?: string;
+  onLeave?: () => void;
+  sessionMode?: 'rtc' | 'live';
+  voiceOnly?: boolean;
+}
+
+export function AgoraClassroom(props: AgoraClassroomProps) {
+  const { sessionMode = 'rtc' } = props;
+  // Stable client instance for the lifetime of this component.
+  // Do NOT manually call agoraClient.leave() here — useJoin inside
+  // ClassroomInner is the sole owner of the join/leave lifecycle.
+  // A competing leave() causes UID_CONFLICT on the next join attempt.
+  const [agoraClient] = useState(() => AgoraRTC.createClient({ mode: sessionMode, codec: 'vp8' }));
+
+  return (
+    <AgoraRTCProvider client={agoraClient}>
+      <ClassroomInner {...props} />
+    </AgoraRTCProvider>
+  );
+}
+
+function ClassroomInner({
+  appId,
+  channelName,
+  token,
+  rtmToken,
+  uid,
+  userName,
+  role,
+  teacherUid,
+  onLeave,
+  subjectId,
+  sessionMode = 'rtc',
+  voiceOnly = false,
+}: AgoraClassroomProps) {
+  const [micOn, setMic] = useState(false);
+  const [videoOn, setVideo] = useState(false);
+  const { profile, loading: loadingProfile } = useUser();
+  const { messages, sendMessage } = useChat(channelName);
+  const [msgInput, setMsgInput] = useState('');
+  const [spotlightedUid, setSpotlightedUid] = useState<number | null>(null);
+  const [screenTrack, setScreenTrack] = useState<any>(null);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenPermissionRevoked, setScreenPermissionRevoked] = useState(false);
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
+  // UID of the remote participant currently sharing screen
+  const [remoteScreenUid, setRemoteScreenUid] = useState<number | null>(null);
+  const [classData, setClassData] = useState<any>(null);
+  const [showFinalizeDialog, setShowFinalizeDialog] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
+  // Map of uid -> { name, role } for showing real names on tiles
+  const [participantMap, setParticipantMap] = useState<Record<number, { name: string; role: string }>>({});  
+  const [activeTab, setActiveTab] = useState<'chat' | 'notes' | 'docs' | 'assignments' | 'whiteboard'>('chat');
+  const [notes, setNotes] = useState('');
+  const [classResources, setClassResources] = useState<any[]>([]);
+  const [uploadedResources, setUploadedResources] = useState<Array<{ title: string, format: string, file_url: string, size_mb: string }>>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isVoiceOnly, setIsVoiceOnly] = useState(voiceOnly);
+  const [raisedHands, setRaisedHands] = useState<{ uid: number; name: string }[]>([]);
+
+  // Determine if the CURRENT user is the tutor/host using ALL available signals
+  const iAmTutor = useMemo(() => {
+    const fromProp = role === 'tutor';
+    const fromProfile = profile?.role === 'tutor';
+    const fromUid = uid >= 1000 && uid <= 2000;
+    return fromProp || fromProfile || fromUid;
+  }, [role, profile?.role, uid]);
+
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
+  
+  // Phase 4: Conversational AI
+  const { isAgentActive, isStarting: isAiStarting, startAgent, stopAgent } = useConvoAI(channelName, uid);
+
+  // Phase 5: Agora Chat
+  const { messages: agoraChatMessages, sendTextMessage: sendAgoraChat, initChat } = useAgoraChat({
+    appKey: process.env.NEXT_PUBLIC_AGORA_CHAT_APP_KEY || '', 
+    userId: String(uid),
+    channelName,
+  });
+
+  // Phase 1: RTM for Signaling (Replacing Supabase Broadcast)
+  const { joinRTM, leaveRTM, sendMessage: sendRTM, registerListeners } = useAgoraRTM({
+    appId,
+    channelName,
+    uid,
+    userName: profile?.full_name || userName,
+    token: rtmToken,
+  });
+
+  useEffect(() => {
+    initChat();
+    joinRTM();
+    return () => { leaveRTM(); };
+  }, [initChat, joinRTM, leaveRTM]);
+
+  useEffect(() => {
+    registerListeners({
+      onClassEnded: () => { if (!iAmTutor) onLeave?.(); },
+      onSpotlight: (payload) => setSpotlightedUid(payload.uid),
+      onScreenShare: (payload) => {
+        if (payload.sharing) setRemoteScreenUid(Number(payload.uid));
+        else if (Number(payload.uid) === remoteScreenUid) setRemoteScreenUid(null);
+      },
+      onHandRaise: (payload) => {
+        const { uid: raiserUid, name, raised } = payload;
+        setRaisedHands(prev => raised 
+          ? [...prev.filter(h => h.uid !== raiserUid), { uid: raiserUid, name }]
+          : prev.filter(h => h.uid !== raiserUid));
+      }
+    });
+  }, [registerListeners, iAmTutor, onLeave, remoteScreenUid]);
+
+  // Keep for backwards compatibility if needed, but RTM takes over
+  const broadcastChannelRef = useRef<any>(null);
+  // Stable ref to the Supabase Presence channel (participant roster).
+  const presenceChannelRef = useRef<any>(null);
+
+  // Combine local/Supabase and Agora Chat message feeds into a unified chronological feed
+  const combinedMessages = useMemo(() => {
+    const all: any[] = [];
+    const ids = new Set<string>();
+
+    // Add Supabase broadcast messages
+    messages.forEach((msg) => {
+      if (msg.id && !ids.has(msg.id)) {
+        ids.add(msg.id);
+        all.push({
+          ...msg,
+          source: 'supabase'
+        });
+      }
+    });
+
+    // Add Agora Chat messages
+    agoraChatMessages.forEach((msg: any) => {
+      const senderUid = msg.from || msg.sender_id;
+      if (!senderUid) return;
+
+      const isMe = String(senderUid) === String(uid);
+      const info = participantMap[Number(senderUid)];
+      const name = isMe ? (profile?.full_name || userName) : (info?.name || `User ${senderUid}`);
+      const content = msg.msg || msg.content || '';
+      const createdTime = msg.time 
+        ? new Date(msg.time).toISOString() 
+        : (msg.created_at || new Date().toISOString());
+      
+      const msgId = msg.id || `${senderUid}-${createdTime}-${content.substring(0, 10)}`;
+
+      if (!ids.has(msgId)) {
+        ids.add(msgId);
+        all.push({
+          id: msgId,
+          content: content,
+          sender_id: String(senderUid),
+          created_at: createdTime,
+          profiles: {
+            full_name: name,
+            avatar_url: isMe ? profile?.avatar_url : `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`
+          },
+          source: 'agora'
+        });
+      }
+    });
+
+    // Sort chronologically
+    return all.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  }, [messages, agoraChatMessages, uid, profile, userName, participantMap]);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [combinedMessages]);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val as any);
+    if (val === 'whiteboard') {
+      setShowWhiteboard(true);
+    }
+  };
+
+  // Agora Hooks — explicit encoder config for low latency
+  const { localMicrophoneTrack, error: micError } = useLocalMicrophoneTrack(micOn, {
+    AEC: true, ANS: true, AGC: true,
+  });
+  const { localCameraTrack, error: camError } = useLocalCameraTrack(videoOn, {
+    encoderConfig: { width: 640, height: 360, frameRate: 24, bitrateMin: 200, bitrateMax: 600 },
+    optimizationMode: 'motion',
+  });
+  const remoteUsers = useRemoteUsers();
+  const client = useRTCClient();
+
+  const isPermissionDeniedError = useCallback((err: any): boolean => {
+    if (!err) return false;
+    const errMsg = String(err.message || err).toLowerCase();
+    const errCode = String(err.code || '').toLowerCase();
+    return (
+      errMsg.includes('notallowederror') ||
+      errMsg.includes('permission denied') ||
+      errMsg.includes('permission_denied') ||
+      errCode.includes('permission_denied') ||
+      errCode.includes('notallowederror')
+    );
+  }, []);
+
+  const micPermissionRevoked = useMemo(() => isPermissionDeniedError(micError), [micError, isPermissionDeniedError]);
+  const camPermissionRevoked = useMemo(() => isPermissionDeniedError(camError), [camError, isPermissionDeniedError]);
+
+  // Handle permission errors
+  useEffect(() => {
+    if (micError) {
+      if (isPermissionDeniedError(micError)) {
+        console.warn('[Classroom] Microphone permission revoked by user.');
+      } else {
+        console.error('Mic:', micError);
+      }
+      setMic(false);
+    }
+  }, [micError, isPermissionDeniedError]);
+
+  useEffect(() => {
+    if (camError) {
+      if (isPermissionDeniedError(camError)) {
+        console.warn('[Classroom] Camera permission revoked by user.');
+      } else {
+        console.error('Cam:', camError);
+      }
+      setVideo(false);
+    }
+  }, [camError, isPermissionDeniedError]);
+
+  // --- MANUAL JOIN WITH UID_CONFLICT RECOVERY ---
+  useEffect(() => {
+    if (client) {
+      if (sessionMode === 'live') {
+        client.setClientRole(iAmTutor ? 'host' : 'audience').catch(console.error);
+      }
+    }
+  }, [client, sessionMode, iAmTutor]);
+
+  const { isJoined, isLoading: isJoinLoading, error: joinError, recovering, manualJoin } = useAgoraManualJoin({
+    client, appId, channel: channelName, token: token || null, uid,
+  });
+
+  // Fetch Class Data
+  useEffect(() => {
+    if (!channelName) return;
+    supabase.from('classes').select('*').eq('id', channelName).single()
+      .then(({ data }) => { if (data) setClassData(data); });
+  }, [channelName, supabase]);
+
+  // ─── SINGLE unified Supabase broadcast channel ─────────────────────────────
+  // All real-time events (class end, spotlight, screen share, hand raise,
+  // participant identity) go through one channel to minimise WS connections.
+  useEffect(() => {
+    if (!channelName) return;
+    const ch = supabase.channel(`classroom:${channelName}`, {
+      config: { broadcast: { self: false } },
+    })
+      // Class ended — kick students out
+      .on('broadcast', { event: 'CLASS_ENDED' }, () => {
+        if (!iAmTutor) onLeave?.();
+      })
+      // Spotlight sync
+      .on('broadcast', { event: 'spotlight' }, ({ payload }) => {
+        setSpotlightedUid(payload.uid);
+      })
+      // Screen share: track which remote UID is sharing
+      .on('broadcast', { event: 'screen-share' }, ({ payload }) => {
+        if (payload.sharing) {
+          setRemoteScreenUid(Number(payload.uid));
+        } else if (Number(payload.uid) === remoteScreenUid) {
+          setRemoteScreenUid(null);
+        }
+      })
+      // Hand raise
+      .on('broadcast', { event: 'hand-raise' }, ({ payload }) => {
+        const { uid: raiserUid, name, raised } = payload;
+        setRaisedHands(prev =>
+          raised
+            ? [...prev.filter(h => h.uid !== raiserUid), { uid: raiserUid, name }]
+            : prev.filter(h => h.uid !== raiserUid)
+        );
+      })
+      .subscribe();
+
+    broadcastChannelRef.current = ch;
+
+    return () => {
+      broadcastChannelRef.current = null;
+      supabase.removeChannel(ch);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelName]);
+
+  // ─── SUPABASE PRESENCE — real-time participant roster ───────────────────────
+  useEffect(() => {
+    if (!channelName || !profile) return;
+
+    // Use a unique key for presence (our UID) to avoid duplicates and simplify lookup
+    const ch = supabase.channel(`presence:${channelName}`, {
+      config: {
+        presence: {
+          key: uid.toString(),
+        },
+      },
+    });
+
+    ch.on('presence', { event: 'sync' }, () => {
+      const state = ch.presenceState<{ uid: number; name: string; role: string }>();
+      const map: Record<number, { name: string; role: string }> = {};
+      
+      Object.entries(state).forEach(([key, presences]) => {
+        const p = presences[0]; // Take the latest presence for this key
+        if (p) {
+          map[Number(key)] = { name: p.name, role: p.role };
+        }
+      });
+      
+      setParticipantMap(map);
+    });
+
+    ch.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log(`[Presence] Subscribed. Tracking UID: ${uid} as ${profile.full_name}`);
+        await ch.track({
+          uid,
+          name: profile.full_name || userName,
+          role: iAmTutor ? 'tutor' : 'student',
+        });
+      }
+    });
+
+    presenceChannelRef.current = ch;
+
+    return () => {
+      presenceChannelRef.current = null;
+      supabase.removeChannel(ch);
+    };
+  }, [channelName, profile, uid, userName, iAmTutor, supabase]);
+
+  // Clear hand-raise and screen-share state when a remote user disconnects
+  useEffect(() => {
+    if (!client) return;
+    const onUserLeft = (user: any) => {
+      setRaisedHands(prev => prev.filter(h => h.uid !== Number(user.uid)));
+      setRemoteScreenUid(prev => (prev === Number(user.uid) ? null : prev));
+    };
+    client.on('user-left', onUserLeft);
+    return () => { client.off('user-left', onUserLeft); };
+  }, [client]);
+
+  const handleFinalize = async () => {
+    setIsEnding(true);
+    try {
+      // 1. Update Class Status
+      await supabase.from('classes').update({ status: 'completed' }).eq('id', channelName);
+      
+      // 2. Export Notes as a Resource
+      if (notes.trim()) {
+        await supabase.from('resources').insert({
+          title: `Class Notes: ${classData?.title || channelName}`,
+          format: 'pdf',
+          file_url: 'data:text/plain;base64,' + btoa(notes), 
+          subject_id: subjectId,
+          live_class_id: channelName,
+          source: 'tutor_upload',
+          uploaded_by: profile?.id
+        });
+      }
+
+      // 3. Export Recording (Placeholder)
+      await supabase.from('resources').insert({
+        title: `Recording: ${classData?.title || channelName}`,
+        format: 'video',
+        file_url: `https://agora-recordings.vercel.app/${channelName}`, // Simulated recording URL
+        subject_id: subjectId,
+        live_class_id: channelName,
+        source: 'live_class_automation',
+        uploaded_by: profile?.id
+      });
+      
+      // 3.5 Export Uploaded Documents
+      if (uploadedResources.length > 0) {
+        const resourcesToInsert = uploadedResources.map(res => ({
+          title: res.title,
+          format: res.format,
+          file_url: res.file_url,
+          size_mb: res.size_mb,
+          subject_id: subjectId,
+          live_class_id: channelName,
+          source: 'tutor_upload',
+          uploaded_by: profile?.id
+        }));
+        await supabase.from('resources').insert(resourcesToInsert);
+      }
+
+      // 4. Signal Class End to all participants via RTM
+      await sendRTM('CLASS_ENDED', { endedAt: new Date().toISOString() });
+      await broadcastChannelRef.current?.send({
+        type: 'broadcast', event: 'CLASS_ENDED',
+        payload: { endedAt: new Date().toISOString() },
+      });
+      
+      onLeave?.();
+    } catch (err) {
+      console.error('Failed to finalize class:', err);
+    } finally {
+      setIsEnding(false);
+      setShowFinalizeDialog(false);
+    }
+  };
+
+  const handleLeaveClick = () => {
+    if (iAmTutor) setShowFinalizeDialog(true);
+    else onLeave?.();
+  };
+
+  // During screen share, exclude camera from usePublish so it doesn't
+  // conflict with the manually-published screen track (Agora only allows
+  // one video track per client in RTC mode). Mic stays published always.
+  const tracksToPublish = useMemo(() => {
+    if (isVoiceOnly) return [localMicrophoneTrack].filter(Boolean) as any[];
+    if (isScreenSharing) return [localMicrophoneTrack].filter(Boolean) as any[];
+    return [localMicrophoneTrack, localCameraTrack].filter(Boolean) as any[];
+  }, [localMicrophoneTrack, localCameraTrack, isScreenSharing, isVoiceOnly]);
+  
+  usePublish(isJoined ? tracksToPublish : []);
+
+  // Track if dual stream has been enabled to avoid redundant calls
+  const dualStreamEnabledRef = useRef(false);
+
+  // Enable Dual Stream Mode for adaptive bitrate (reduces latency under poor network)
+  useEffect(() => {
+    if (!client || dualStreamEnabledRef.current) return;
+    dualStreamEnabledRef.current = true;
+    client.enableDualStream().catch((err: any) => {
+      if (!err?.message?.includes('already enabled')) console.error('Dual stream:', err);
+    });
+  }, [client]);
+
+  const toggleSpotlight = (targetUid: number | null) => {
+    if (!iAmTutor) return;
+    setSpotlightedUid(targetUid);
+    sendRTM('spotlight', { uid: targetUid });
+  };
+
+  const teacherUser = useMemo(() => {
+    if (iAmTutor) return 'local';
+    return remoteUsers.find(u => Number(u.uid) >= 1000 && Number(u.uid) <= 2000);
+  }, [remoteUsers, iAmTutor]);
+
+  const studentUsers = useMemo(() => {
+    return remoteUsers.filter(u => !(Number(u.uid) >= 1000 && Number(u.uid) <= 2000));
+  }, [remoteUsers]);
+
+  // --- SCREEN SHARING & UI STATE ---
+  const [handRaised, setHandRaised] = useState(false);
+  const screenVideoRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!stageRef.current) return;
+    if (!document.fullscreenElement) {
+      stageRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(console.error);
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(console.error);
+    }
+  };
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const startScreenShare = async () => {
+    setScreenPermissionRevoked(false);
+    try {
+      const track = await AgoraRTC.createScreenVideoTrack(
+        { encoderConfig: { width: 1280, height: 720, frameRate: 15, bitrateMax: 2000 } },
+        'disable'
+      );
+      const videoTrack = Array.isArray(track) ? track[0] : track;
+
+      // Agora RTC mode only supports one video track per client.
+      // Manually unpublish the camera before publishing screen.
+      // (usePublish will stop managing camera once isScreenSharing=true)
+      if (localCameraTrack && client && isJoined) {
+        try { await client.unpublish(localCameraTrack); } catch {}
+      }
+
+      if (client && isJoined) await client.publish(videoTrack);
+
+      // Set state BEFORE sending broadcast so React flushes
+      // isScreenSharing=true → tracksToPublish excludes camera
+      setScreenTrack(videoTrack);
+      setIsScreenSharing(true);
+
+      sendRTM('screen-share', { uid, sharing: true });
+
+      videoTrack.on('track-ended', () => stopScreenShare(videoTrack));
+    } catch (err: any) {
+      // User cancelled screen picker — not a real error
+      if (isPermissionDeniedError(err)) {
+        console.warn('[Classroom] Screen sharing casting permission denied or cancelled by user.');
+        setScreenPermissionRevoked(true);
+      } else {
+        console.error('Screen share failed:', err);
+      }
+    }
+  };
+
+  const stopScreenShare = async (track?: any) => {
+    const t = track || screenTrack;
+    if (t) {
+      try {
+        if (client && isJoined) await client.unpublish(t);
+        t.close();
+      } catch (e) { console.error(e); }
+    }
+    setScreenTrack(null);
+    // Setting isScreenSharing=false restores camera to tracksToPublish,
+    // so usePublish automatically re-publishes the camera track.
+    setIsScreenSharing(false);
+    sendRTM('screen-share', { uid, sharing: false });
+  };
+
+  // Play LOCAL screen track into the ref div
+  useEffect(() => {
+    if (screenTrack && screenVideoRef.current) screenTrack.play(screenVideoRef.current);
+  }, [screenTrack]);
+
+  // --- HAND RAISE ---
+  const toggleHandRaise = () => {
+    const newState = !handRaised;
+    setHandRaised(newState);
+    sendRTM('hand-raise', { uid, name: profile?.full_name || userName, raised: newState });
+  };
+
+  // --- LOADING STATE ---
+  if (loadingProfile) {
+    return (
+      <div className="h-screen bg-obsidian flex flex-col items-center justify-center">
+        <div className="w-16 h-16 border-4 border-royal border-t-transparent rounded-full animate-spin mb-6" />
+        <p className="text-white/40 text-lg animate-pulse font-medium">Verifying identity...</p>
+      </div>
+    );
+  }
+
+  // --- PRE-JOIN LOBBY ---
+  if (!isJoined) {
+    return (
+      <LobbyScreen
+        userName={userName}
+        channelName={channelName}
+        micOn={micOn}
+        videoOn={videoOn}
+        micError={micError}
+        camError={camError}
+        micPermissionRevoked={micPermissionRevoked}
+        camPermissionRevoked={camPermissionRevoked}
+        localCameraTrack={localCameraTrack}
+        onToggleMic={() => setMic(m => !m)}
+        onToggleVideo={() => setVideo(v => !v)}
+        onJoin={manualJoin}
+        onLeave={onLeave}
+        isLoading={isJoinLoading}
+        recovering={recovering}
+        error={joinError}
+        profile={profile}
+        classBanner={classData?.imageUrl}
+      />
+    );
+  }
+
+
+  return (
+    <div className="flex h-screen bg-obsidian text-white overflow-hidden font-sans">
+      {/* --- MAIN CONTENT AREA --- */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="px-4 md:px-8 py-4 md:py-6 flex flex-wrap items-center justify-between gap-4 z-20">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold font-serif text-white/90">Hello, {profile?.full_name || userName}!</h1>
+            <p className="text-xs text-white/40 font-sans mt-1">Team Collaboration Meeting | Live Now</p>
+          </div>
+
+          <div className="flex items-center gap-4">
+             <div className="relative w-full max-w-[20rem] hidden md:block">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <input 
+                  className="flex h-10 w-full border border-input px-3 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm file:ml-auto file:pl-4 bg-white/5 border-none rounded-full pl-11 py-5 text-sm focus-visible:ring-1 focus-visible:ring-white/20 transition-all placeholder:text-white/20" 
+                  placeholder="Search meetings..." 
+                />
+             </div>
+             <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:text-accent-foreground rounded-full bg-[#D9ED92] hover:bg-[#E8C85E] text-[#0B0C10] w-10 h-10 shadow-lg shadow-[#D9ED92]/20 shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bell w-5 h-5 text-[#0B0C10]">
+                  <path d="M10.268 21a2 2 0 0 0 3.464 0"></path>
+                  <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path>
+                </svg>
+             </button>
+          </div>
+        </header>
+
+        {/* Content Scrollable */}
+        <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-4 md:pb-8 custom-scrollbar">
+          <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
+            
+            {/* LEFT COLUMN: Video & Insights */}
+            <div className="flex-1 flex flex-col gap-4 md:gap-8">
+              
+              {/* PRESENTATION STAGE — whiteboard has priority, then screen share, then tutor camera */}
+              <div ref={stageRef} className={cn("relative rounded-[2.5rem] overflow-hidden border border-white/5 bg-[#07120C] shadow-2xl group group/stage", isFullscreen ? 'rounded-none' : 'aspect-video')}>
+                {showWhiteboard ? (
+                  /* Priority 1: Interactive Whiteboard */
+                  <div className="absolute inset-0 w-full h-full p-2 bg-[#07120C] z-10">
+                    <AgoraWhiteboard
+                      appIdentifier={process.env.NEXT_PUBLIC_AGORA_WHITEBOARD_APP_ID || ''}
+                      sdkToken={process.env.NEXT_PUBLIC_AGORA_WHITEBOARD_SDK_TOKEN || ''}
+                      roomToken="temp_room_token" 
+                      uuid={channelName}
+                      uid={String(uid)}
+                      isTutor={iAmTutor}
+                    />
+                    
+                    {/* Floating Close Button inside Stage */}
+                    <button 
+                      onClick={() => setShowWhiteboard(false)}
+                      className="absolute top-6 right-20 inline-flex items-center justify-center rounded-full bg-obsidian/60 backdrop-blur-md hover:bg-obsidian/80 px-4 py-2 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white transition-all hover:scale-105 active:scale-95 z-20"
+                    >
+                      Close Board
+                    </button>
+                  </div>
+                ) : isScreenSharing && screenTrack ? (
+                  /* Priority 2: LOCAL screen share (tutor sharing their screen) */
+                  <div ref={screenVideoRef} className="absolute inset-0" style={{ width: '100%', height: '100%' }} />
+                ) : remoteScreenUid ? (
+                  /* Priority 3: REMOTE screen share (someone else sharing) */
+                  (() => {
+                    const sharingUser = remoteUsers.find(u => Number(u.uid) === remoteScreenUid);
+                    return sharingUser ? (
+                      <div className="absolute inset-0">
+                        <RemoteUser user={sharingUser} playVideo playAudio style={{ width: '100%', height: '100%' }} />
+                      </div>
+                    ) : null;
+                  })()
+                ) : iAmTutor && videoOn && localCameraTrack ? (
+                  /* Priority 4: TUTOR's own camera (they see themselves in stage) */
+                  <div className="absolute inset-0">
+                    <LocalVideoTrack track={localCameraTrack} play style={{ width: '100%', height: '100%' }} />
+                  </div>
+                ) : !iAmTutor && teacherUser && teacherUser !== 'local' ? (
+                  /* Priority 4 (student view): Show REMOTE tutor's camera in the stage */
+                  <div className="absolute inset-0">
+                    <RemoteUser user={teacherUser as any} playVideo playAudio style={{ width: '100%', height: '100%' }} />
+                  </div>
+                ) : (
+                  /* Fallback: idle state */
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0B0C10] to-[#132E1B]">
+                    <div className="w-28 h-28 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover/stage:scale-110 transition-transform duration-500">
+                      <Presentation className="w-14 h-14 text-white/10" />
+                    </div>
+                    <p className="text-white/30 font-bold tracking-widest uppercase text-xs mb-2">
+                      {iAmTutor ? 'You are Live' : 'Waiting for Tutor'}
+                    </p>
+                    <p className="text-white/15 text-[10px] tracking-wide max-w-xs text-center">
+                      {iAmTutor
+                        ? 'Turn on your camera or share your screen to begin'
+                        : 'The tutor will appear here when they turn on their camera'}
+                    </p>
+                    {iAmTutor && (
+                      <div className="flex gap-3 mt-6">
+                        <button
+                          onClick={() => setVideo(true)}
+                          className="px-5 py-2.5 bg-royal/20 hover:bg-royal/30 border border-royal/30 rounded-full text-royal text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                        >
+                          <VideoIcon className="w-4 h-4" />
+                          Camera
+                        </button>
+                        <button
+                          onClick={startScreenShare}
+                          className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/60 text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                        >
+                          <Monitor className="w-4 h-4" />
+                          Present
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Stage Overlays */}
+                <div className="absolute top-6 left-6 flex flex-col gap-2">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-obsidian/60 backdrop-blur-md rounded-full border border-white/10">
+                    <div className="w-2 h-2 rounded-full bg-burgundy animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Live</span>
+                  </div>
+                  {isScreenSharing && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-royal/20 backdrop-blur-md rounded-full border border-royal/30">
+                      <Monitor className="w-3 h-3 text-royal" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-royal">Presenting</span>
+                      {iAmTutor && (
+                        <button
+                          onClick={() => stopScreenShare()}
+                          className="ml-2 text-white/40 hover:text-white transition-colors"
+                        >
+                          <MonitorOff className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Hand Raise Notifications (Tutor only) */}
+                {iAmTutor && raisedHands.length > 0 && (
+                  <div className="absolute top-6 right-6 flex flex-col gap-2">
+                    {raisedHands.map(h => (
+                      <div key={h.uid} className="flex items-center gap-2 px-4 py-2 bg-royal/20 backdrop-blur-md rounded-full border border-royal/30 animate-pulse">
+                        <Hand className="w-3 h-3 text-royal" />
+                        <span className="text-[10px] font-bold text-royal/80">{h.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="absolute top-6 right-6">
+                  <button className="inline-flex items-center justify-center rounded-full bg-obsidian/60 backdrop-blur-md hover:bg-obsidian/80 w-10 h-10 border border-white/10 transition-all hover:scale-105 active:scale-95" onClick={toggleFullscreen}>
+                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white/80">
+                        <path d="M15 3H21V9M9 21H3V15M21 3L14 10M3 21L10 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                     </svg>
+                  </button>
+                </div>
+
+                {/* Right Edge: Vertical Volume Slider */}
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 bg-obsidian/60 backdrop-blur-md px-2.5 py-5 rounded-full border border-white/10 z-20">
+                  <div className="h-24 w-1 bg-white/10 rounded-full relative overflow-hidden">
+                    <div className="absolute bottom-0 left-0 right-0 h-3/4 bg-royal rounded-full shadow-[0_0_8px_rgba(167,201,87,0.5)]" />
+                  </div>
+                  <Volume2 className="w-4 h-4 text-white/60 animate-pulse" />
+                </div>
+
+                {/* MAIN CONTROLS */}
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-4 bg-obsidian/60 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-2xl transition-transform hover:scale-105 duration-300 z-20">
+                    <ControlButton
+                      active={micOn}
+                      isError={!!micError}
+                      isWarning={micPermissionRevoked}
+                      icon={micOn ? Mic : MicOff}
+                      onClick={() => setMic(!micOn)}
+                    />
+                    <ControlButton
+                      active={videoOn}
+                      isError={!!camError}
+                      isWarning={camPermissionRevoked}
+                      icon={videoOn ? VideoIcon : VideoOff}
+                      onClick={() => setVideo(!videoOn)}
+                    />
+                    <ControlButton
+                      active={isScreenSharing}
+                      isWarning={screenPermissionRevoked}
+                      icon={isScreenSharing ? MonitorOff : Monitor}
+                      onClick={isScreenSharing ? () => stopScreenShare() : startScreenShare}
+                    />
+                    <ControlButton
+                      active={showWhiteboard}
+                      icon={Presentation}
+                      onClick={() => setShowWhiteboard(!showWhiteboard)}
+                    />
+                    <ControlButton
+                      active={handRaised}
+                      icon={Hand}
+                      onClick={toggleHandRaise}
+                    />
+                    {iAmTutor && (
+                      <>
+                        <ControlButton
+                          active={isVoiceOnly}
+                          icon={Headphones}
+                          onClick={() => setIsVoiceOnly(!isVoiceOnly)}
+                        />
+                        <Button
+                          variant={isAgentActive ? "default" : "ghost"}
+                          className={cn(
+                            "w-14 h-14 rounded-full transition-all border border-white/10 backdrop-blur-md",
+                            isAgentActive ? "bg-royal text-[#0B0C10] hover:bg-royal/90" : "bg-obsidian/20 text-white/40 hover:bg-white/5 hover:text-white"
+                          )}
+                          onClick={isAgentActive ? stopAgent : startAgent}
+                          disabled={isAiStarting}
+                        >
+                          {isAiStarting ? <Loader2 className="w-6 h-6 animate-spin" /> : <Sparkles className="w-6 h-6" />}
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      variant="destructive"
+                      className="w-14 h-14 rounded-full bg-burgundy/80 hover:bg-burgundy transition-all flex items-center justify-center border border-white/10"
+                      onClick={handleLeaveClick}
+                    >
+                      <LogOut className="w-6 h-6" />
+                    </Button>
+                </div>
+
+                {/* Programmatic Finalize Dialog — opened by handleLeaveClick for tutors */}
+                <AlertDialog open={showFinalizeDialog} onOpenChange={setShowFinalizeDialog}>
+                  <AlertDialogContent className="bg-obsidian border-white/10 text-white rounded-3xl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-xl font-bold">Ready to wrap up?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-white/40">
+                        This will end the class for everyone and publish all uploaded documents and notes as resources for students.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-3">
+                      <AlertDialogCancel className="bg-white/5 border-white/10 rounded-xl hover:bg-white/10 hover:text-white">Stay Live</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleFinalize}
+                        disabled={isEnding}
+                        className="bg-burgundy hover:bg-burgundy rounded-xl font-bold px-8"
+                      >
+                        {isEnding ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                        End & Export Everything
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+
+              {/* PARTICIPANT GRID — ALL users including tutor */}
+              <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+                 {/* Local user (always visible) */}
+                 <div className="w-44 shrink-0 aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-white/5 relative group cursor-pointer">
+                   {videoOn && localCameraTrack ? (
+                     <div className="absolute inset-0 transition-transform group-hover:scale-110">
+                       <LocalVideoTrack
+                         track={localCameraTrack}
+                         play
+                         style={{ width: '100%', height: '100%' }}
+                       />
+                     </div>
+                   ) : (
+                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-obsidian/30">
+                       <Avatar className="w-16 h-16 border-2 border-white/10 mb-2">
+                         <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || userName}`} />
+                         <AvatarFallback className="text-lg">{(profile?.full_name || userName)[0]}</AvatarFallback>
+                       </Avatar>
+                       <span className="text-[9px] text-white/20 uppercase tracking-widest">Camera off</span>
+                     </div>
+                   )}
+                   <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-obsidian/60 backdrop-blur-md rounded-lg border border-white/10">
+                     <div className={cn("w-1.5 h-1.5 rounded-full", micOn ? "bg-royal" : "bg-white/20")} />
+                     <span className="text-[10px] font-medium tracking-tight">{profile?.full_name || userName}</span>
+                   </div>
+                   {iAmTutor && (
+                     <div className="absolute top-2 right-2 px-2 py-0.5 bg-royal/20 rounded-full border border-royal/30">
+                       <span className="text-[8px] font-bold text-royal uppercase tracking-widest">Host</span>
+                     </div>
+                   )}
+                 </div>
+
+                 {/* All Remote Participants */}
+                 {remoteUsers.map(user => {
+                   const info = participantMap[Number(user.uid)];
+                   const isUserTutor = info?.role === 'tutor' ||
+                     (Number(user.uid) >= 1000 && Number(user.uid) <= 2000);
+                   const displayName = info?.name || `User ${user.uid}`;
+                   const hasHandRaised = !!raisedHands.find(h => h.uid === Number(user.uid));
+                   return (
+                    <div key={user.uid} className="w-44 shrink-0 aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-white/5 relative group cursor-pointer">
+                      <div className="absolute inset-0 transition-transform group-hover:scale-110">
+                        <RemoteUser user={user} playVideo playAudio style={{ width: '100%', height: '100%' }} />
+                      </div>
+                      <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 bg-obsidian/60 backdrop-blur-md rounded-lg border border-white/10">
+                        <div className={cn("w-1.5 h-1.5 rounded-full", user.hasAudio ? 'bg-royal animate-pulse' : 'bg-white/20')} />
+                        <span className="text-[10px] font-medium tracking-tight">{displayName}</span>
+                      </div>
+                      {isUserTutor && (
+                        <div className="absolute top-2 left-2 px-2 py-0.5 bg-royal/20 rounded-full border border-royal/30">
+                          <span className="text-[8px] font-bold text-royal uppercase tracking-widest">Host</span>
+                        </div>
+                      )}
+                      {hasHandRaised && (
+                        <div className="absolute top-2 right-2 w-7 h-7 bg-royal/30 rounded-full flex items-center justify-center border border-royal/40 animate-bounce">
+                          <Hand className="w-3.5 h-3.5 text-royal" />
+                        </div>
+                      )}
+                    </div>
+                   );
+                 })}
+              </div>
+
+              {/* CLASSROOM INSIGHTS & KPIs */}
+              <div className="flex flex-col gap-6">
+                 <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-white/80">Classroom KPIs</h2>
+                    <Button variant="link" className="text-royal text-sm font-medium p-0 h-auto">Goal Progress</Button>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <InsightCard 
+                      title="Assignment Submissions" 
+                      time="Due today" 
+                      tasks="12 Pending" 
+                      accomplished="28/40" 
+                      progress={70}
+                      icon={FileText}
+                    />
+                    <InsightCard 
+                      title="Course Objectives" 
+                      time="Current Module" 
+                      tasks="3 Remaining" 
+                      accomplished="7/10" 
+                      progress={70}
+                      icon={Sparkles}
+                    />
+                  </div>
+               </div>
+            </div>
+
+            {/* RIGHT COLUMN: Chat/Tabs — full-height, at the far right */}
+            <div className="w-full lg:w-[420px] flex flex-col gap-6 self-stretch">
+               <div className="flex flex-col flex-1 min-h-[500px] bg-[#07140D] rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden group/chat">
+                  <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#D4AF37] via-[#800000] to-[#D4AF37] opacity-0 group-hover/chat:opacity-100 transition-opacity" />
+                  
+                  <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col flex-1 min-h-0">
+                  <div className="px-8 pt-8 pb-4 border-b border-white/5">
+                    <TabsList className="bg-white/5 border-white/10 rounded-xl w-full p-1 h-12">
+                      <TabsTrigger value="chat" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-royal data-[state=active]:text-[#0B0C10]">Chat</TabsTrigger>
+                      <TabsTrigger value="notes" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-royal data-[state=active]:text-[#0B0C10]">Notes</TabsTrigger>
+                      <TabsTrigger value="docs" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-royal data-[state=active]:text-[#0B0C10]">Docs</TabsTrigger>
+                      <TabsTrigger value="assignments" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-royal data-[state=active]:text-[#0B0C10]">Tasks</TabsTrigger>
+                      <TabsTrigger value="whiteboard" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-royal data-[state=active]:text-[#0B0C10]">Board</TabsTrigger>
+                    </TabsList>
+                  </div>
+
+                  <TabsContent value="chat" className="flex-1 data-[state=active]:!flex flex-col min-h-0 m-0 relative">
+                    <div 
+                      ref={chatScrollRef}
+                      className="h-[70%] overflow-y-auto px-8 pt-4 pb-[70px] flex flex-col gap-4 custom-scrollbar"
+                    >
+                      {combinedMessages.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center opacity-20 h-full min-h-[200px]">
+                          <Sparkles className="w-12 h-12 mb-4" />
+                          <p className="text-sm font-medium">No messages yet. Be the first to say hi!</p>
+                        </div>
+                      ) : (
+                        combinedMessages.map((msg) => (
+                          <ChatMessage 
+                            key={msg.id}
+                            user={msg.profiles?.full_name || 'Unknown'} 
+                            time={new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
+                            msg={msg.content} 
+                            isMe={msg.sender_id === profile?.id}
+                            avatar={msg.profiles?.avatar_url}
+                          />
+                        ))
+                      )}
+                    </div>
+
+                    <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-10 bg-gradient-to-t from-[#07140D] from-70% to-transparent pointer-events-none">
+                        <form 
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            if (msgInput.trim() && profile?.id) {
+                              sendMessage(msgInput, profile.id, { 
+                                full_name: profile.full_name, 
+                                avatar_url: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.full_name}`
+                              });
+                              sendAgoraChat(msgInput);
+                              setMsgInput('');
+                            }
+                          }}
+                          className="relative pointer-events-auto"
+                        >
+                          <Input 
+                            value={msgInput}
+                            onChange={(e) => setMsgInput(e.target.value)}
+                            placeholder="Type your message..." 
+                            className="bg-white/5 border-none rounded-2xl py-7 pl-6 pr-14 text-sm focus-visible:ring-1 focus-visible:ring-white/20 transition-all placeholder:text-white/10"
+                          />
+                          <Button 
+                            type="submit"
+                            size="icon" 
+                            disabled={!msgInput.trim()}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 bg-royal hover:bg-[#800000] rounded-xl w-10 h-10 transition-transform active:scale-95 disabled:opacity-50"
+                          >
+                              <Send className="w-4 h-4 text-[#0B0C10]" />
+                          </Button>
+                        </form>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="notes" className="flex-1 data-[state=active]:!flex flex-col min-h-0 m-0 p-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-white/40">Collaborative Notes</h3>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-royal animate-pulse" />
+                        <span className="text-[10px] text-white/20">Syncing...</span>
+                      </div>
+                    </div>
+                    <Textarea 
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Start capturing key insights from the session..."
+                      className="flex-1 bg-white/5 border-white/5 rounded-2xl p-6 text-sm focus-visible:ring-1 focus-visible:ring-[#D4AF37]/20 transition-all placeholder:text-white/10 resize-none leading-relaxed"
+                    />
+                    <p className="text-[10px] text-white/20 mt-4 leading-relaxed italic">
+                      * These notes will be automatically exported to the Resource Library when the class ends.
+                    </p>
+                  </TabsContent>
+
+                  <TabsContent value="docs" className="flex-1 data-[state=active]:!flex flex-col min-h-0 m-0 p-8">
+                     <div className="flex flex-col gap-6">
+                        <div className="bg-white/5 border border-dashed border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 group/upload cursor-pointer hover:bg-white/[0.07] transition-all relative overflow-hidden">
+                           <div className="w-14 h-14 rounded-2xl bg-royal/10 flex items-center justify-center group-hover/upload:scale-110 transition-transform duration-500">
+                             <Upload className="w-7 h-7 text-royal" />
+                           </div>
+                           <div className="text-center">
+                              <p className="text-sm font-bold text-white/80">Upload Class Resource</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest mt-1">PDF, DOCX, PPT (Max 10MB)</p>
+                           </div>
+                           <input 
+                            type="file" 
+                            className="absolute inset-0 opacity-0 cursor-pointer" 
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setIsUploading(true);
+                              
+                              const fileExt = file.name.split('.').pop() || 'pdf';
+                              const fileName = `${Math.random()}.${fileExt}`;
+                              const filePath = `${channelName}/${fileName}`;
+                              
+                              const { error: uploadError } = await supabase.storage.from('class_resources').upload(filePath, file);
+                              
+                              if (!uploadError) {
+                                const { data: { publicUrl } } = supabase.storage.from('class_resources').getPublicUrl(filePath);
+                                
+                                setUploadedResources(prev => [...prev, {
+                                  title: file.name,
+                                  format: fileExt.toLowerCase(),
+                                  file_url: publicUrl,
+                                  size_mb: (file.size / 1024 / 1024).toFixed(1)
+                                }]);
+                                setClassResources(prev => [...prev, { name: file.name, type: fileExt.toLowerCase(), size: (file.size / 1024 / 1024).toFixed(1) + 'MB' }]);
+                              } else {
+                                console.error('Upload Error', uploadError);
+                              }
+                              
+                              setIsUploading(false);
+                            }}
+                           />
+                        </div>
+
                         {isUploading && (
                           <div className="space-y-2">
                              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
