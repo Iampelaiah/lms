@@ -36,6 +36,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Link from 'next/link';
 
 // Mock Data for Area Chart (Progress Overview)
 const areaData = [
@@ -56,11 +58,11 @@ const activityData = [
   { name: 'Live Sessions', value: 10, color: '#8b5cf6' },
 ];
 
-// Mock Data for Upcoming Deadlines
-const deadlinesData = [
-  { course: 'Introduction to Python', date: '2025-10-08', type: 'Assignment', status: 'Pending', priority: 'High', color: 'bg-pink-500' },
-  { course: 'Modern Web Development', date: '2025-10-10', type: 'Quiz', status: 'Not Started', priority: 'Medium', color: 'bg-blue-500' },
-  { course: 'Data Science Fundamentals', date: '2025-10-12', type: 'Project', status: 'In Progress', priority: 'High', color: 'bg-amber-500' },
+// Mock Data for Upcoming Deadlines (Fallback)
+const initialDeadlinesData = [
+  { course: 'History', subject_id: '84897f2d-8b01-443b-aa58-5d2bc51d8b76', date: '2026-06-15', type: 'Essay on World War II', status: 'Pending', priority: 'High', color: 'bg-pink-500' },
+  { course: 'Geography', subject_id: 'e44c6883-93bb-403d-aa8c-7f5dd17c0a87', date: '2026-06-20', type: 'Map Reading Quiz', status: 'Not Started', priority: 'Medium', color: 'bg-blue-500' },
+  { course: 'Divinity', subject_id: '', date: '2026-07-05', type: 'Theological Project', status: 'In Progress', priority: 'High', color: 'bg-amber-500' },
 ];
 
 export function ProgressCharts() {
@@ -71,38 +73,94 @@ export function ProgressCharts() {
   const [coursesEnrolled, setCoursesEnrolled] = useState(0);
   const [lessonsCompleted, setLessonsCompleted] = useState(0);
   const [averageScore, setAverageScore] = useState(0);
+  const [deadlines, setDeadlines] = useState<any[]>([]);
+  const [enrolledSubjects, setEnrolledSubjects] = useState<{id: string, name: string}[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>('all');
 
-  const supabase = createClient();
+  const months = React.useMemo(() => {
+    const result = [];
+    const d = new Date();
+    for (let i = 0; i < 6; i++) {
+      result.push({
+        value: `${d.getFullYear()}-${d.getMonth()}`,
+        label: d.toLocaleString('default', { month: 'long', year: 'numeric' })
+      });
+      d.setMonth(d.getMonth() - 1);
+    }
+    return result;
+  }, []);
+  const [selectedMonth, setSelectedMonth] = useState<string>(months[0].value);
+
+  const supabase = React.useMemo(() => createClient(), []);
+
+  const fetchProgressData = React.useCallback(async () => {
+    if (!profile?.id) return;
+
+    const [enrollmentsResult, assignmentsResult, deadlinesResult] = await Promise.all([
+      supabase.from('enrollments').select('id, subject:subjects(id, name)').eq('student_id', profile.id),
+      supabase.from('student_assignments').select('status, total_score').eq('student_id', profile.id),
+      supabase.from('student_deadlines').select(`
+        id, title, due_date, status, subject_id,
+        subject:subjects(name)
+      `).eq('student_id', profile.id).order('due_date', { ascending: true })
+    ]);
+
+    if (enrollmentsResult.data) {
+      setCoursesEnrolled(enrollmentsResult.data.length);
+      const subjects = enrollmentsResult.data
+        .filter((e: any) => e.subject)
+        .map((e: any) => ({ id: e.subject.id, name: e.subject.name }));
+      setEnrolledSubjects(subjects);
+    }
+
+    if (assignmentsResult.data) {
+      const completedCount = assignmentsResult.data.filter((p: any) => p.status === 'completed').length;
+      setLessonsCompleted(completedCount);
+
+      const scoredItems = assignmentsResult.data.filter((p: any) => p.total_score !== null);
+      if (scoredItems.length > 0) {
+        const totalScore = scoredItems.reduce((acc: number, curr: any) => acc + curr.total_score, 0);
+        setAverageScore(Math.round(totalScore / scoredItems.length));
+      }
+    }
+
+    if (deadlinesResult.data && deadlinesResult.data.length > 0) {
+      const formattedDeadlines = deadlinesResult.data.map((d: any, index) => {
+        const colors = ['bg-pink-500', 'bg-blue-500', 'bg-amber-500', 'bg-purple-500'];
+        return {
+          id: d.id,
+          subject_id: d.subject_id,
+          course: d.subject?.name || 'Unknown Subject',
+          date: new Date(d.due_date).toISOString().split('T')[0],
+          type: d.title,
+          status: d.status === 'completed' ? 'Completed' : d.status === 'pending' ? 'Pending' : 'Overdue',
+          priority: 'High',
+          color: colors[index % colors.length]
+        };
+      });
+      setDeadlines(formattedDeadlines);
+    } else {
+      // Use fallback if no real deadlines exist yet
+      setDeadlines(initialDeadlinesData);
+    }
+    
+    setLoading(false);
+  }, [profile?.id, supabase]);
 
   useEffect(() => {
-    const fetchProgressData = async () => {
-      if (!profile?.id) return;
-
-      const [enrollmentsResult, progressResult] = await Promise.all([
-        supabase.from('enrollments').select('id').eq('student_id', profile.id),
-        supabase.from('student_progress').select('score, completed').eq('student_id', profile.id)
-      ]);
-
-      if (enrollmentsResult.data) {
-        setCoursesEnrolled(enrollmentsResult.data.length);
-      }
-
-      if (progressResult.data) {
-        const completedCount = progressResult.data.filter((p: any) => p.completed).length;
-        setLessonsCompleted(completedCount);
-
-        const scoredItems = progressResult.data.filter((p: any) => p.score !== null);
-        if (scoredItems.length > 0) {
-          const totalScore = scoredItems.reduce((acc: number, curr: any) => acc + curr.score, 0);
-          setAverageScore(Math.round(totalScore / scoredItems.length));
-        }
-      }
-      
-      setLoading(false);
-    };
-
     fetchProgressData();
-  }, [profile?.id]);
+    
+    if (!profile?.id) return;
+
+    const channel = supabase
+      .channel(`student-progress-${profile.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'enrollments', filter: `student_id=eq.${profile.id}` }, () => fetchProgressData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_assignments', filter: `student_id=eq.${profile.id}` }, () => fetchProgressData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_deadlines', filter: `student_id=eq.${profile.id}` }, () => fetchProgressData())
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchProgressData, profile?.id, supabase]);
 
   if (loading) {
     return (
@@ -228,12 +286,27 @@ export function ProgressCharts() {
                 <p className="text-sm text-muted-foreground">Your learning activity and completion trends.</p>
               </div>
               <div className="flex gap-2 mt-4 sm:mt-0">
-                <Button variant="outline" size="sm" className="rounded-full gap-2 text-xs font-medium h-8">
-                  Intro to Python <ChevronDown className="w-3 h-3" />
-                </Button>
-                <Button variant="outline" size="sm" className="rounded-full gap-2 text-xs font-medium h-8">
-                  October <ChevronDown className="w-3 h-3" />
-                </Button>
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger className="h-8 text-xs font-medium rounded-full bg-transparent border-input hover:bg-accent hover:text-accent-foreground min-w-[140px]">
+                    <SelectValue placeholder="Select Course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Courses</SelectItem>
+                    {enrolledSubjects.map(sub => (
+                      <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="h-8 text-xs font-medium rounded-full bg-transparent border-input hover:bg-accent hover:text-accent-foreground min-w-[120px]">
+                    <SelectValue placeholder="Select Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map(m => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -373,12 +446,14 @@ export function ProgressCharts() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/50">
-                  {deadlinesData.map((row, i) => (
+                  {deadlines.map((row, i) => (
                     <tr key={i} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-900/20 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-2 h-2 rounded-full ${row.color}`}></div>
-                          <span className="font-medium text-neutral-900 dark:text-neutral-100">{row.course}</span>
+                          <Link href={row.subject_id ? `/student/courses/${row.subject_id}` : '#'} className="hover:underline decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">
+                            <span className="font-medium text-neutral-900 dark:text-neutral-100">{row.course}</span>
+                          </Link>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-muted-foreground">{row.date}</td>
@@ -400,44 +475,6 @@ export function ProgressCharts() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Quick Review Widget */}
-        <Card className="rounded-[1.5rem] border-neutral-200/60 shadow-sm bg-neutral-50/50 dark:bg-neutral-900/30">
-          <CardContent className="p-6">
-            <h3 className="font-bold text-lg mb-1">Quick Review</h3>
-            <p className="text-sm text-muted-foreground mb-6">Sharpen your knowledge in 2 minutes!</p>
-            
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Choose a topic to review..." 
-                className="pl-9 h-11 bg-white dark:bg-neutral-900 border-none rounded-xl shadow-sm text-sm"
-              />
-            </div>
-            
-            <p className="text-[10px] text-muted-foreground mb-6 font-medium">Recent: Data Visualization in Python</p>
-            
-            <div className="flex items-center justify-between mb-8 px-2">
-               <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center border border-white shadow-sm"><BrainCircuit className="w-4 h-4" /></div>
-               <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
-               <div className="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Database className="w-4 h-4" /></div>
-               <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Layout className="w-4 h-4" /></div>
-               <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
-               <div className="w-8 h-8 rounded-full flex items-center justify-center ml-auto text-muted-foreground hover:bg-neutral-200 transition-colors cursor-pointer"><ChevronRight className="w-4 h-4" /></div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Button variant="outline" className="flex-1 rounded-xl h-11 font-semibold border-neutral-200 shadow-sm">
-                 Practice
-              </Button>
-              <Button className="flex-1 rounded-xl h-11 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
-                 Start Quiz →
-              </Button>
-            </div>
-
-          </CardContent>
-        </Card>
-
       </div>
     </div>
   );

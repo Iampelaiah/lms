@@ -22,6 +22,9 @@ export default {
         code: ['monospace'],
       },
       colors: {
+        obsidian: '#0B0C10',
+        royal: '#D4AF37',
+        burgundy: '#800000',
         'fin-green': '#1A1A1A',
         'fin-lime': '#D4AF37',
         'fin-beige': '#242424',

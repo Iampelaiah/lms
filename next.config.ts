@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   compress: true,
 
   experimental: {
+    reactCompiler: true,
     serverActions: {
       allowedOrigins: ['localhost:9002', '*.vercel.app'],
     },
@@ -45,6 +46,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
         port: '',
         pathname: '/**',
       },

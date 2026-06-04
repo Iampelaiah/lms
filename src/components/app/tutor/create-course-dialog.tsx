@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { PlusCircle, Loader2, Upload, Trash2, Calendar, Clock, BookOpen, Video, FileQuestion } from "lucide-react";
+import { PlusCircle, Loader2, Upload, Trash2, Calendar, Clock, BookOpen, Video, FileQuestion, FileText, Layers, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import {
     Sheet,
     SheetContent,
@@ -23,15 +24,19 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 type ModuleItem = {
     title: string;
-    item_type: 'live_class' | 'test';
-    due_date: string;
+    item_type: 'topic' | 'live_class' | 'test';
+    start_date: string;
     duration_minutes: number;
+    exam_allocation_2026: string;
+    key_questions: string[];
+    assignments: { assignment_number: number; title: string; description: string }[];
 };
 
 type ModuleBlock = {
     title: string;
     description: string;
     sequence_order: number;
+    course_level: string;
     items: ModuleItem[];
 };
 
@@ -42,6 +47,7 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
 }) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
     
     // Context Selection
     const [subjects, setSubjects] = useState<any[]>([]);
@@ -104,7 +110,8 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
         setModules([...modules, { 
             title: "", 
             description: "", 
-            sequence_order: modules.length + 1, 
+            sequence_order: modules.length + 1,
+            course_level: "O-Level", // default
             items: [] 
         }]);
     };
@@ -119,13 +126,23 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
         setModules(modules.filter((_, i) => i !== mIndex).map((m, i) => ({ ...m, sequence_order: i + 1 })));
     };
 
-    const addItem = (mIndex: number, type: 'live_class' | 'test') => {
+    const addItem = (mIndex: number, type: 'topic' | 'live_class' | 'test') => {
         const newMods = [...modules];
+        const defaultAssignments = type === 'topic' ? [
+            { assignment_number: 1, title: 'Assignment 1', description: 'Interactive assignment' },
+            { assignment_number: 2, title: 'Assignment 2', description: 'Interactive assignment' },
+            { assignment_number: 3, title: 'Assignment 3', description: 'Interactive assignment' },
+            { assignment_number: 4, title: 'Assignment 4', description: 'Interactive assignment' }
+        ] : [];
+
         newMods[mIndex].items.push({
             title: "",
             item_type: type,
-            due_date: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
-            duration_minutes: type === 'live_class' ? 60 : 30
+            start_date: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+            duration_minutes: type === 'live_class' ? 60 : 30,
+            exam_allocation_2026: "Paper 1",
+            key_questions: [""],
+            assignments: defaultAssignments
         });
         setModules(newMods);
     };
@@ -142,17 +159,45 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
         setModules(newMods);
     };
 
+    const updateKeyQuestion = (mIndex: number, iIndex: number, qIndex: number, value: string) => {
+        const newMods = [...modules];
+        newMods[mIndex].items[iIndex].key_questions[qIndex] = value;
+        setModules(newMods);
+    };
+
+    const addKeyQuestion = (mIndex: number, iIndex: number) => {
+        const newMods = [...modules];
+        newMods[mIndex].items[iIndex].key_questions.push("");
+        setModules(newMods);
+    };
+
+    const removeKeyQuestion = (mIndex: number, iIndex: number, qIndex: number) => {
+        const newMods = [...modules];
+        newMods[mIndex].items[iIndex].key_questions = newMods[mIndex].items[iIndex].key_questions.filter((_, idx) => idx !== qIndex);
+        setModules(newMods);
+    };
+
     const handleCreate = async () => {
         if (!selectedSubjectId || !tutorId) return;
         setLoading(true);
         
         try {
-            // Transform date strings to standard ISO format for Postgres
+            // Transform and package metadata for Postgres JSONB
             const payload = modules.map(m => ({
-                ...m,
+                title: m.title,
+                description: m.description,
+                sequence_order: m.sequence_order,
+                course_level: m.course_level,
                 items: m.items.map(i => ({
-                    ...i,
-                    due_date: new Date(i.due_date).toISOString()
+                    title: i.title,
+                    item_type: i.item_type,
+                    start_date: new Date(i.start_date).toISOString(),
+                    duration_minutes: i.duration_minutes,
+                    metadata: {
+                        exam_allocation_2026: i.exam_allocation_2026,
+                        key_questions: i.key_questions.filter(q => q.trim() !== '')
+                    },
+                    assignments: i.assignments
                 }))
             }));
 
@@ -165,13 +210,23 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
 
             if (error) throw error;
 
+            toast({
+                title: "Submitted for Review",
+                description: "Your curriculum has been sent to the admin for approval.",
+            });
+
             setOpen(false);
             setModules([]);
             setSelectedSubjectId("");
             setImageUrl("");
             if (onCourseCreated) onCourseCreated();
-        } catch (err) {
+        } catch (err: any) {
             console.error("Failed to create curriculum:", err);
+            toast({
+                title: "Failed to submit curriculum",
+                description: err.message || "An unexpected error occurred",
+                variant: "destructive"
+            });
         } finally {
             setLoading(false);
         }
@@ -275,6 +330,16 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                                             <div className="flex-1 space-y-3 mr-4">
                                                 <div className="flex items-center gap-2">
                                                     <Badge variant="default" className="text-[10px] uppercase">Module {mod.sequence_order}</Badge>
+                                                    <Select value={mod.course_level} onValueChange={(v) => updateModule(mIdx, 'course_level', v)}>
+                                                        <SelectTrigger className="h-6 text-xs w-[120px] bg-background">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="O-Level">O-Level</SelectItem>
+                                                            <SelectItem value="AS-Level">AS-Level</SelectItem>
+                                                            <SelectItem value="A-Level">A-Level</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                                 <Input 
                                                     value={mod.title} 
@@ -296,14 +361,28 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                                         
                                         <CardContent className="pt-4 space-y-4">
                                             {mod.items.map((item, iIdx) => (
-                                                <div key={iIdx} className="p-4 border rounded-lg bg-background shadow-sm space-y-3">
+                                                <div key={iIdx} className="p-4 border rounded-lg bg-background shadow-sm space-y-4">
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
                                                             {item.item_type === 'live_class' ? (
                                                                 <Badge variant="secondary" className="bg-blue-500/10 text-blue-600"><Video className="w-3 h-3 mr-1"/> Live Class</Badge>
-                                                            ) : (
+                                                            ) : item.item_type === 'test' ? (
                                                                 <Badge variant="secondary" className="bg-orange-500/10 text-orange-600"><FileQuestion className="w-3 h-3 mr-1"/> Test</Badge>
+                                                            ) : (
+                                                                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600"><BookOpen className="w-3 h-3 mr-1"/> Topic</Badge>
                                                             )}
+                                                            
+                                                            <Select value={item.exam_allocation_2026} onValueChange={(v) => updateItem(mIdx, iIdx, 'exam_allocation_2026', v)}>
+                                                                <SelectTrigger className="h-6 text-xs w-[120px] bg-background">
+                                                                    <SelectValue placeholder="Paper Type" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="Paper 1">Paper 1</SelectItem>
+                                                                    <SelectItem value="Paper 2">Paper 2</SelectItem>
+                                                                    <SelectItem value="Paper 3">Paper 3</SelectItem>
+                                                                    <SelectItem value="Paper 4">Paper 4</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
                                                         </div>
                                                         <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" onClick={() => removeItem(mIdx, iIdx)}>
                                                             &times;
@@ -315,7 +394,7 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                                                             <Input 
                                                                 value={item.title} 
                                                                 onChange={(e) => updateItem(mIdx, iIdx, 'title', e.target.value)} 
-                                                                placeholder={item.item_type === 'live_class' ? "Class Topic" : "Test Name"} 
+                                                                placeholder={item.item_type === 'live_class' ? "Class Topic" : item.item_type === 'test' ? "Test Name" : "Topic Title"} 
                                                             />
                                                         </div>
                                                         <div className="sm:col-span-7">
@@ -324,8 +403,8 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                                                                 <Input 
                                                                     type="datetime-local" 
                                                                     className="pl-9"
-                                                                    value={item.due_date}
-                                                                    onChange={(e) => updateItem(mIdx, iIdx, 'due_date', e.target.value)}
+                                                                    value={item.start_date}
+                                                                    onChange={(e) => updateItem(mIdx, iIdx, 'start_date', e.target.value)}
                                                                 />
                                                             </div>
                                                         </div>
@@ -342,14 +421,73 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    {/* Key Questions Array */}
+                                                    <div className="space-y-2 border-t pt-3">
+                                                        <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1"><Tag className="w-3 h-3" /> Key Questions</Label>
+                                                        {item.key_questions.map((q, qIdx) => (
+                                                            <div key={qIdx} className="flex items-center gap-2">
+                                                                <span className="text-primary text-sm">•</span>
+                                                                <Input 
+                                                                    value={q} 
+                                                                    onChange={(e) => updateKeyQuestion(mIdx, iIdx, qIdx, e.target.value)}
+                                                                    placeholder="e.g. What were the causes of WWII?"
+                                                                    className="h-8 text-sm flex-1"
+                                                                />
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0" onClick={() => removeKeyQuestion(mIdx, iIdx, qIdx)}>
+                                                                    <Trash2 className="w-3 h-3" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                        <Button variant="ghost" size="sm" className="h-8 text-xs text-primary" onClick={() => addKeyQuestion(mIdx, iIdx)}>
+                                                            + Add Question
+                                                        </Button>
+                                                    </div>
+
+                                                    {/* Assignments Section */}
+                                                    {item.item_type === 'topic' && item.assignments && item.assignments.length > 0 && (
+                                                        <div className="space-y-2 border-t pt-3">
+                                                            <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1"><FileText className="w-3 h-3" /> Interactive Assignments</Label>
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                {item.assignments.map((assignment, aIdx) => (
+                                                                    <div key={aIdx} className="bg-muted/30 p-2 rounded border text-sm">
+                                                                        <div className="font-medium text-xs mb-1">Assignment {assignment.assignment_number}</div>
+                                                                        <Input 
+                                                                            value={assignment.title} 
+                                                                            onChange={(e) => {
+                                                                                const newMods = [...modules];
+                                                                                newMods[mIdx].items[iIdx].assignments[aIdx].title = e.target.value;
+                                                                                setModules(newMods);
+                                                                            }}
+                                                                            placeholder="Title"
+                                                                            className="h-7 text-xs bg-background mb-1"
+                                                                        />
+                                                                        <Input 
+                                                                            value={assignment.description} 
+                                                                            onChange={(e) => {
+                                                                                const newMods = [...modules];
+                                                                                newMods[mIdx].items[iIdx].assignments[aIdx].description = e.target.value;
+                                                                                setModules(newMods);
+                                                                            }}
+                                                                            placeholder="Description (Optional)"
+                                                                            className="h-7 text-xs bg-background"
+                                                                        />
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
 
-                                            <div className="flex gap-2 pt-2">
-                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'live_class')} className="w-full bg-blue-500/5 text-blue-600 hover:bg-blue-500/10 border border-blue-500/20">
+                                            <div className="flex flex-wrap gap-2 pt-2">
+                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'topic')} className="flex-1 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500/10 border border-emerald-500/20">
+                                                    <BookOpen className="w-3 h-3 mr-2" /> Add Topic
+                                                </Button>
+                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'live_class')} className="flex-1 bg-blue-500/5 text-blue-600 hover:bg-blue-500/10 border border-blue-500/20">
                                                     <Video className="w-3 h-3 mr-2" /> Add Live Class
                                                 </Button>
-                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'test')} className="w-full bg-orange-500/5 text-orange-600 hover:bg-orange-500/10 border border-orange-500/20">
+                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'test')} className="flex-1 bg-orange-500/5 text-orange-600 hover:bg-orange-500/10 border border-orange-500/20">
                                                     <FileQuestion className="w-3 h-3 mr-2" /> Add Test
                                                 </Button>
                                             </div>
@@ -375,7 +513,7 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                 <SheetFooter className="px-6 py-4 border-t bg-background shrink-0">
                     <Button onClick={handleCreate} disabled={loading || !selectedSubjectId || modules.length === 0} className="w-full sm:w-auto">
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Submit Curriculum & Contents
+                        Submit for Admin Review
                     </Button>
                 </SheetFooter>
             </SheetContent>

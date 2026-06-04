@@ -703,7 +703,7 @@ export default function TutorStudentsPage() {
                             onChange={e => setNewMessage(e.target.value)}
                             className="bg-background/60 border-white/10 text-white/95"
                           />
-                          <Button type="submit" size="icon" className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black">
+                          <Button type="submit" size="icon" className="bg-royal hover:bg-royal/80 text-black">
                             <Send className="w-4 h-4" />
                           </Button>
                         </form>
@@ -730,7 +730,7 @@ export default function TutorStudentsPage() {
                       {/* Set Deadline Dialog */}
                       <Dialog open={isDeadlineDialogOpen} onOpenChange={setIsDeadlineDialogOpen}>
                         <DialogTrigger asChild>
-                          <Button size="sm" className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black font-bold">
+                          <Button size="sm" className="bg-royal hover:bg-royal/80 text-black font-bold">
                             <Plus className="w-4 h-4 mr-1" />
                             Set Deadline
                           </Button>
@@ -784,7 +784,7 @@ export default function TutorStudentsPage() {
                             </div>
                             <DialogFooter>
                               <Button type="button" variant="outline" onClick={resetDeadlineForm}>Cancel</Button>
-                              <Button type="submit" disabled={submittingDeadline} className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black font-bold">
+                              <Button type="submit" disabled={submittingDeadline} className="bg-royal hover:bg-royal/80 text-black font-bold">
                                 {submittingDeadline && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                 Assign Task
                               </Button>
@@ -816,7 +816,7 @@ export default function TutorStudentsPage() {
                                   completed 
                                     ? 'bg-green-500/5 border-green-500/10 opacity-70' 
                                     : isOverdue
-                                    ? 'bg-red-500/5 border-red-500/10'
+                                    ? 'bg-burgundy/5 border-burgundy/10'
                                     : 'bg-background/30 border-white/5 hover:border-white/10'
                                 }`}
                               >
@@ -865,7 +865,7 @@ export default function TutorStudentsPage() {
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
-                                  className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 h-8 w-8"
+                                  className="text-muted-foreground hover:text-burgundy hover:bg-burgundy/10 h-8 w-8"
                                   onClick={() => handleDeleteDeadline(deadline.id)}
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -898,7 +898,7 @@ export default function TutorStudentsPage() {
         <DialogContent className="sm:max-w-[550px] max-h-[80vh] flex flex-col border-white/10 bg-slate-900/95 backdrop-blur-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white text-xl">
-              <FileText className="w-5 h-5 text-[#00FFCC]" />
+              <FileText className="w-5 h-5 text-royal" />
               <span>Pending Assignments - {pendingAssignmentsSubject?.name}</span>
             </DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -913,7 +913,7 @@ export default function TutorStudentsPage() {
               </div>
             ) : pendingAssignmentsList.length === 0 ? (
               <div className="text-center py-12 border border-dashed border-white/10 rounded-xl bg-white/5">
-                <CheckCircle2 className="w-12 h-12 text-[#00FFCC] mx-auto mb-3" />
+                <CheckCircle2 className="w-12 h-12 text-royal mx-auto mb-3" />
                 <h4 className="font-semibold text-white">All Completed!</h4>
                 <p className="text-sm text-slate-400 mt-1">This student has submitted all assignments for this subject.</p>
               </div>
@@ -921,7 +921,7 @@ export default function TutorStudentsPage() {
               pendingAssignmentsList.map((item, idx) => (
                 <div 
                   key={idx} 
-                  className="flex items-center justify-between gap-4 p-3 rounded-lg border border-white/5 bg-white/5 hover:border-[#00FFCC]/30 transition-colors"
+                  className="flex items-center justify-between gap-4 p-3 rounded-lg border border-white/5 bg-white/5 hover:border-royal/30 transition-colors"
                 >
                   <div className="min-w-0">
                     <h4 className="font-semibold text-sm text-white/90">Assignment {item.assignmentNum}</h4>
@@ -930,7 +930,7 @@ export default function TutorStudentsPage() {
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    className="border-[#00FFCC]/20 text-[#00FFCC] hover:bg-[#00FFCC]/10 hover:text-[#00FFCC] gap-1.5 whitespace-nowrap text-xs h-8"
+                    className="border-royal/20 text-royal hover:bg-royal/10 hover:text-royal gap-1.5 whitespace-nowrap text-xs h-8"
                     onClick={() => handleRemindShortcut(item)}
                   >
                     <CalendarClock className="w-3.5 h-3.5" />
@@ -951,3 +951,5 @@ export default function TutorStudentsPage() {
     </div>
   );
 }
+
+

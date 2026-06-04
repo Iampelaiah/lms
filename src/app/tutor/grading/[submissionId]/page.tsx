@@ -1,0 +1,218 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
+import GradingHeader from '@/components/TutorGrading/GradingHeader';
+import LeftPanel, { MarkingData } from '@/components/TutorGrading/LeftPanel';
+import RightPanel from '@/components/TutorGrading/RightPanel';
+import GradingEditor from '@/components/TutorGrading/GradingEditor';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
+
+export default function GradingPage() {
+  const params = useParams();
+  const router = useRouter();
+  const submissionId = params.submissionId as string;
+  const { toast } = useToast();
+  const supabase = createClient();
+
+  const [loading, setLoading] = useState(true);
+  const [submission, setSubmission] = useState<any>(null);
+  const [annotations, setAnnotations] = useState<any[]>([]);
+  const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null);
+  const [overallFeedback, setOverallFeedback] = useState<string>('');
+  const [marksData, setMarksData] = useState<MarkingData | null>(null);
+
+  useEffect(() => {
+    if (!submissionId) return;
+
+    const fetchSubmission = async () => {
+      setLoading(true);
+
+      if (submissionId === 'mock-assignment-id-1') {
+        setSubmission({
+          id: 'mock-assignment-id-1',
+          student_id: 'mock-student-id',
+          assignment_id: 'mock-assignment-id-1',
+          raw_text: `France was on the brink of bankruptcy in 1789 due to its involvement in the American Revolutionary War and the extravagant spending of the royal court at Versailles. The tax system was regressive, exempting the nobility and clergy while placing the burden entirely on the Third Estate (peasants and bourgeoisie). This, coupled with poor harvests leading to high bread prices, triggered widespread famine and discontent, forcing King Louis XVI to summon the Estates-General.`,
+          overall_grade: null,
+          overall_feedback: null,
+          status: 'grading',
+          profiles: { full_name: 'Pelaiah Tadiwanashe Tapera Ngarande' }
+        });
+        setAnnotations([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data: subData, error: subError } = await supabase
+        .from('submissions')
+        .select(`
+          *,
+          profiles (full_name)
+        `)
+        .eq('id', submissionId)
+        .single();
+
+      if (subError) {
+        console.error("Error fetching submission:", JSON.stringify(subError, null, 2));
+        toast({ title: 'Error', description: 'Could not load submission', variant: 'destructive' });
+        router.push('/tutor/assignments');
+        return;
+      }
+
+      setSubmission(subData);
+      if (subData?.overall_feedback) {
+        setOverallFeedback(subData.overall_feedback);
+      }
+
+      const { data: annData, error: annError } = await supabase
+        .from('annotations')
+        .select('*')
+        .eq('submission_id', submissionId)
+        .order('start_offset', { ascending: true });
+
+      if (annError) {
+        console.error("Error fetching annotations:", annError);
+      } else {
+        setAnnotations(annData || []);
+      }
+
+      setLoading(false);
+    };
+
+    fetchSubmission();
+  }, [submissionId, supabase, toast, router]);
+
+  const handleAddAnnotation = async (annotation: any) => {
+    // In a real app we'd save to DB here, but for now we'll just update state
+    const newAnnotation = {
+      ...annotation,
+      id: crypto.randomUUID(),
+      submission_id: submissionId,
+      tutor_id: 'tutor-123', // placeholder
+      created_at: new Date().toISOString()
+    };
+    
+    setAnnotations(prev => [...prev, newAnnotation]);
+  };
+
+  const handlePublishGrades = async () => {
+    try {
+      setLoading(true);
+
+      if (submissionId !== 'mock-assignment-id-1') {
+        // 1. Update the submissions table
+        const { error: subError } = await supabase
+          .from('submissions')
+          .update({
+            status: 'graded',
+            overall_feedback: overallFeedback,
+            overall_grade: marksData?.grade || null,
+            component_scores: marksData as any,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', submissionId);
+          
+        if (subError) throw subError;
+
+        // 2. Save annotations
+        await supabase.from('annotations').delete().eq('submission_id', submissionId);
+        if (annotations.length > 0) {
+          const { error: annError } = await supabase.from('annotations').insert(
+            annotations.map((a, idx) => ({
+              ...a,
+              marker_number: idx + 1,
+            }))
+          );
+          if (annError) throw annError;
+        }
+
+        // 3. update legacy student_assignments
+        if (submission?.assignment_id) {
+          await supabase
+            .from('student_assignments')
+            .update({
+              status: 'completed',
+              tutor_feedback: overallFeedback,
+              grade: marksData?.grade || null,
+              total_score: marksData?.totalMark || null,
+              component_scores: marksData as any,
+              marked_at: new Date().toISOString()
+            })
+            .eq('id', submission.assignment_id);
+        }
+      } else {
+        // Mock flow updates local storage
+        const key = `drmax_submissions_mock-student-id_mock-subject-id`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const updated = parsed.map((item: any) => {
+            if (item.id === 'mock-assignment-id-1') {
+              return { 
+                ...item, 
+                status: 'completed', 
+                tutor_feedback: overallFeedback, 
+                grade: marksData?.grade,
+                total_score: marksData?.totalMark,
+                component_scores: marksData,
+                marked_at: new Date().toISOString() 
+              };
+            }
+            return item;
+          });
+          localStorage.setItem(key, JSON.stringify(updated));
+        }
+      }
+
+      toast({ title: 'Success', description: 'Marks published successfully!' });
+      router.push('/tutor/assignments'); // We'll rename this to grading soon
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: 'Error', description: 'Failed to publish marks.', variant: 'destructive' });
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-obsidian">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-screen w-full overflow-hidden bg-obsidian">
+      <GradingHeader 
+        studentName={submission?.profiles?.full_name || 'Student'}
+        submissionTitle={`Assignment`}
+        onClose={() => router.push('/tutor/assignments')}
+        onSubmit={handlePublishGrades}
+        isLoading={false}
+      />
+      
+      <div className="flex flex-1 overflow-hidden">
+        <LeftPanel onMarksChange={setMarksData} initialMarks={submission?.component_scores} />
+        
+        <GradingEditor 
+          initialContent={submission?.raw_text || ''} 
+          activeAnnotationId={activeAnnotationId}
+          onAnnotationClick={(id) => setActiveAnnotationId(id)}
+          onAddAnnotation={handleAddAnnotation}
+        />
+        
+        <RightPanel 
+          activeAnnotationId={activeAnnotationId}
+          onCommentClick={(id) => setActiveAnnotationId(id)}
+          overallFeedback={overallFeedback}
+          onFeedbackChange={setOverallFeedback}
+          annotations={annotations}
+        />
+      </div>
+    </div>
+  );
+}
+

@@ -180,10 +180,15 @@ export default function RoleLoginPage() {
 
   return (
     <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-black overflow-hidden">
-      {/* Left Column - Decorative */}
-      <div className="hidden lg:flex relative bg-gradient-to-br from-[#0A2E2E] via-[#051C1C] to-black p-10 flex-col justify-between overflow-hidden">
-        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[#00FFCC]/10 rounded-full blur-[80px]" />
-        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-[#00FFCC]/5 rounded-full blur-[80px]" />
+      {/* Left Column */}
+      <div className="hidden lg:flex relative bg-obsidian p-10 flex-col justify-between overflow-hidden">
+        {/* Background Video Placeholder */}
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-20 mix-blend-screen pointer-events-none">
+          <source src="/make_it_a_male_voice___the_ui.mp4" type="video/mp4" />
+        </video>
+
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-royal/10 rounded-full blur-[80px] z-0 pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-royal/5 rounded-full blur-[80px] z-0 pointer-events-none" />
 
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-8">
@@ -207,13 +212,13 @@ export default function RoleLoginPage() {
               onClick={() => router.push(`/login/${r.id}`)}
               className={`relative rounded-[1.5rem] p-3 flex flex-col justify-between h-28 transition-all duration-200 text-left overflow-hidden ${
                 role === r.id
-                  ? 'bg-[#00FFCC]/10 border border-[#00FFCC] shadow-[0_0_15px_rgba(0,255,204,0.2)] ring-1 ring-[#00FFCC] scale-105'
+                  ? 'bg-royal/10 border border-royal shadow-[0_0_15px_rgba(0,255,204,0.2)] ring-1 ring-royal scale-105'
                   : 'bg-white/5 border border-white/10 hover:bg-white/10'
               }`}
             >
               <div className="flex flex-col h-full justify-between">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                  role === r.id ? 'bg-[#00FFCC] text-black' : 'bg-white/20 text-white'
+                  role === r.id ? 'bg-royal text-black' : 'bg-white/20 text-white'
                 }`}>
                   <r.icon className="w-4 h-4" />
                 </div>
@@ -223,16 +228,6 @@ export default function RoleLoginPage() {
                   }`}>
                     Sign in as <br /> {r.name}
                   </p>
-                  <Link
-                    href={`/${r.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                      role === r.id ? 'text-[#00FFCC] hover:text-white' : 'text-gray-500 hover:text-white'
-                    }`}
-                  >
-                    <Eye className="h-3 w-3" />
-                    <span>Preview Portal</span>
-                  </Link>
                 </div>
               </div>
             </button>
@@ -251,7 +246,7 @@ export default function RoleLoginPage() {
           <div className="space-y-3">
             {/* Passkey Login - Primary Method */}
             <Button 
-              className="w-full bg-[#00FFCC] text-black hover:bg-[#00FFCC]/90 h-12 rounded-xl flex gap-3 font-bold text-base shadow-[0_0_20px_rgba(0,255,204,0.3)] transition-all hover:scale-[1.02]"
+              className="w-full bg-royal text-black hover:bg-royal/90 h-12 rounded-xl flex gap-3 font-bold text-base shadow-[0_0_20px_rgba(0,255,204,0.3)] transition-all hover:scale-[1.02]"
               onClick={handlePasskeyLogin}
               disabled={isLoading}
             >
@@ -286,7 +281,7 @@ export default function RoleLoginPage() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="password" className="text-white text-xs font-medium">Password</Label>
-                  <Link href="#" className="text-[#00FFCC] text-[10px] hover:underline">Forgot password?</Link>
+                  <Link href="#" className="text-royal text-[10px] hover:underline">Forgot password?</Link>
                 </div>
                 <div className="relative">
                   <Input
@@ -356,3 +351,6 @@ export default function RoleLoginPage() {
     </main>
   );
 }
+
+
+

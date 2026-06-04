@@ -1,0 +1,82 @@
+'use client';
+
+import React, { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { LeftFilterSidebar } from '../../student/community/components/LeftFilterSidebar';
+import { ForumFeed } from '../../student/community/components/ForumFeed';
+import { RightSidebarWidgets } from '../../student/community/components/RightSidebarWidgets';
+import { CreateThreadModal } from '../../student/community/components/CreateThreadModal';
+import { useForumRealtime } from '../../../hooks/useForumRealtime';
+import { Post } from '../../student/community/types';
+
+export default function TutorForum() {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [savedPostIds, setSavedPostIds] = useState<string[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('student_forum_saved');
+      if (saved) {
+        setSavedPostIds(JSON.parse(saved));
+      }
+      setIsLoaded(true);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (isLoaded && typeof window !== 'undefined') {
+      localStorage.setItem('student_forum_saved', JSON.stringify(savedPostIds));
+    }
+  }, [savedPostIds, isLoaded]);
+
+  const { posts, broadcastNewPost, broadcastVoteUpdate, broadcastNewComment, broadcastDeletePost } = useForumRealtime([]);
+
+  const savedPosts = posts.filter(p => savedPostIds.includes(p.id));
+
+  const handleToggleSave = (postId: string) => {
+    setSavedPostIds(prev =>
+      prev.includes(postId) ? prev.filter(id => id !== postId) : [...prev, postId]
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-obsidian text-zinc-200 pb-12">
+      <div className="bg-zinc-900 border-b border-zinc-800 py-4 px-6 mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-zinc-100">Community Forums</h1>
+        <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border border-orange-500/30 bg-orange-500/10 text-orange-400">
+          Tutor — Can Moderate
+        </span>
+      </div>
+
+      <div className="container mx-auto max-w-7xl px-4 grid grid-cols-1 lg:grid-cols-[20%_55%_25%] gap-6">
+        <LeftFilterSidebar savedPosts={savedPosts} />
+
+        <ForumFeed
+          posts={posts}
+          savedPostIds={savedPostIds}
+          isAdmin={true}
+          onVote={broadcastVoteUpdate}
+          onComment={broadcastNewComment}
+          onOpenCreateModal={() => setIsCreateModalOpen(true)}
+          onToggleSave={handleToggleSave}
+          onDelete={broadcastDeletePost}
+        />
+
+        <RightSidebarWidgets
+          onOpenCreateModal={() => setIsCreateModalOpen(true)}
+        />
+      </div>
+
+      <AnimatePresence>
+        {isCreateModalOpen && (
+          <CreateThreadModal
+            onClose={() => setIsCreateModalOpen(false)}
+            onSubmit={broadcastNewPost}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+

@@ -54,18 +54,19 @@ export default async function CoursePage({ params }: { params: Promise<{ subject
 
   // Fetch Curriculum Modules and Items
   const { data: modulesData } = await supabase
-    .from('modules')
+    .from('curriculum_modules')
     .select('*')
     .eq('subject_id', subjectId)
+    .eq('approval_status', 'approved')
     .order('sequence_order', { ascending: true })
 
   let modules = []
   if (modulesData && modulesData.length > 0) {
     const { data: itemsData } = await supabase
-      .from('module_items')
-      .select('*')
+      .from('curriculum_items')
+      .select('*, assignments:curriculum_assignments(*)')
       .in('module_id', modulesData.map(m => m.id))
-      .order('sequence_order', { ascending: true })
+      .order('start_date', { ascending: true })
     
     modules = modulesData.map(m => ({
       ...m,

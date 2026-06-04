@@ -42,9 +42,9 @@ function StatCard({ title, value, icon: Icon, trend, description, href }: StatCa
                         {trend.positive ? (
                             <ArrowUpRight className="h-3 w-3 text-emerald-500 mr-1" />
                         ) : (
-                            <ArrowDownRight className="h-3 w-3 text-red-500 mr-1" />
+                            <ArrowDownRight className="h-3 w-3 text-burgundy mr-1" />
                         )}
-                        <span className={trend.positive ? "text-emerald-500" : "text-red-500"}>
+                        <span className={trend.positive ? "text-emerald-500" : "text-burgundy"}>
                             {trend.value}
                         </span>
                         <span className="text-muted-foreground ml-1">vs last month</span>
@@ -220,11 +220,7 @@ export default function AdminDashboardPage() {
         toast({ title: "Feature In Progress", description: "We need to add an 'is_approved' column to your courses table first!" });
     };
 
-    // Mock data for pending courses since `is_approved` doesn't exist on courses table yet
-    const pendingCourses = [
-        { id: '1', title: 'Advanced Calculus', tutor: 'Dr. Smith', date: 'Oct 29, 2026', type: 'Course' },
-        { id: '2', title: 'Intro to Quantum Physics', tutor: 'Prof. Johnson', date: 'Oct 31, 2026', type: 'Course' },
-    ];
+    const pendingCourses: any[] = [];
 
     return (
         <div className="p-4 sm:p-6 space-y-6">
@@ -386,7 +382,7 @@ export default function AdminDashboardPage() {
                                                 <TableCell className="text-right">
                                                     <div className="flex justify-end gap-2">
                                                         <Button size="sm" variant="outline" className="text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10" onClick={() => handleApproveUser(profile.id, true)}><CheckCircle className="mr-1 h-3 w-3"/> Approve</Button>
-                                                        <Button size="sm" variant="outline" className="text-red-500 border-red-500/20 hover:bg-red-500/10" onClick={() => handleApproveUser(profile.id, false)}><XCircle className="mr-1 h-3 w-3"/> Reject</Button>
+                                                        <Button size="sm" variant="outline" className="text-burgundy border-burgundy/20 hover:bg-burgundy/10" onClick={() => handleApproveUser(profile.id, false)}><XCircle className="mr-1 h-3 w-3"/> Reject</Button>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -422,8 +418,22 @@ export default function AdminDashboardPage() {
                                             </TableCell>
                                         </TableRow>
                                     ))}
+                                    {pendingCourses.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                                                No legacy courses pending. Go to the new <Link href="/admin/validation-panel" className="text-primary hover:underline">Validation Panel</Link> to review dynamic curriculum modules.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
                                 </TableBody>
                             </Table>
+                            <div className="mt-4 flex justify-end">
+                                <Link href="/admin/validation-panel">
+                                    <Button>
+                                        Go to Curriculum Validation Panel <ArrowUpRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            </div>
                         </TabsContent>
                     </Tabs>
                 </CardContent>
@@ -431,3 +441,4 @@ export default function AdminDashboardPage() {
         </div>
     );
 }
+

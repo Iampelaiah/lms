@@ -80,14 +80,14 @@ export default function StudentLiveClassesPage() {
     if (profile && !profile.is_approved) {
         return (
             <div className="h-[60vh] flex flex-col items-center justify-center text-center max-w-md mx-auto px-4">
-                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
-                    <Video className="w-8 h-8 text-red-500" />
+                <div className="w-16 h-16 bg-burgundy/10 rounded-full flex items-center justify-center mb-6">
+                    <Video className="w-8 h-8 text-burgundy" />
                 </div>
                 <h1 className="text-2xl font-bold mb-2">Access Restricted</h1>
                 <p className="text-muted-foreground mb-6">
                     Your account is currently pending administrator approval. Once approved, you will be able to view and join live classes.
                 </p>
-                <Button className="bg-[#A7C957] hover:bg-[#6A994E] text-[#0A1A12] font-bold rounded-xl" asChild>
+                <Button className="bg-[#D4AF37] hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl" asChild>
                     <Link href="/student">Back to Dashboard</Link>
                 </Button>
             </div>
@@ -148,7 +148,7 @@ export default function StudentLiveClassesPage() {
                             </CardContent>
                             <CardFooter className="p-6 pt-0">
                                 {liveClass.status === 'ongoing' ? (
-                                    <Button className="w-full bg-[#A7C957] hover:bg-[#6A994E] text-[#0A1A12] font-bold rounded-xl py-6" asChild>
+                                    <Button className="w-full bg-[#D4AF37] hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl py-6" asChild>
                                         <Link href={`/classroom/${liveClass.agora_channel_name || liveClass.id}?role=participant&name=${profile?.full_name || 'Guest'}`}>
                                             <Video className="mr-2 h-5 w-5" />
                                             Join Now
@@ -169,3 +169,5 @@ export default function StudentLiveClassesPage() {
         </div>
     );
 }
+
+

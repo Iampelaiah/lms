@@ -61,8 +61,8 @@ export function RoleSelection() {
         >
           <Link href={role.loginHref} className="block flex-grow p-6">
             <div className="flex items-center gap-4 mb-4">
-              <div className="bg-white/5 p-3 rounded-2xl group-hover:bg-[#00FFCC]/10 transition-colors">
-                <role.icon className="w-6 h-6 text-white group-hover:text-[#00FFCC] transition-colors" />
+              <div className="bg-white/5 p-3 rounded-2xl group-hover:bg-royal/10 transition-colors">
+                <role.icon className="w-6 h-6 text-white group-hover:text-royal transition-colors" />
               </div>
               <h3 className="text-xl font-bold text-white">{role.name}</h3>
             </div>
@@ -84,3 +84,4 @@ export function RoleSelection() {
     </div>
   );
 }
+

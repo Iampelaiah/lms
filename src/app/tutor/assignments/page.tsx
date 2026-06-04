@@ -11,8 +11,14 @@ import { SchoolHeader } from "@/components/app/school-header";
 import { useUser } from "@/components/providers/user-context";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { getTutorUnmarkedAssignments, gradeAssignment } from "@/app/actions/student-assignments";
+import { createClient } from "@/utils/supabase/client";
+import GradingHeader from "@/components/TutorGrading/GradingHeader";
+import LeftPanel from "@/components/TutorGrading/LeftPanel";
+import RightPanel from "@/components/TutorGrading/RightPanel";
+import GradingEditor from "@/components/TutorGrading/GradingEditor";
 
 export default function TutorAssignmentsPage() {
   const { profile } = useUser();
@@ -27,15 +33,22 @@ export default function TutorAssignmentsPage() {
   const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
   const [feedback, setFeedback] = useState('');
   const [gradingLoading, setGradingLoading] = useState(false);
+  const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null);
 
   const loadSubmissions = async () => {
     setLoading(true);
     let dbSubmissions: any[] = [];
 
     if (tutorId) {
-      const res = await getTutorUnmarkedAssignments(tutorId);
-      if (res.data) {
-        dbSubmissions = res.data;
+      const supabase = createClient();
+      const { data: dbData } = await supabase
+        .from('student_assignments')
+        .select('*, profiles(full_name, email, avatar_url), subjects(name, level), module_items(title)')
+        .eq('tutor_id', tutorId)
+        .order('submitted_at', { ascending: false });
+        
+      if (dbData) {
+        dbSubmissions = dbData;
       }
     }
 
@@ -50,7 +63,7 @@ export default function TutorAssignmentsPage() {
             const parsedList = JSON.parse(stored);
             if (Array.isArray(parsedList)) {
               parsedList.forEach((sub: any) => {
-                if (sub.status === 'unmarked') {
+                if (sub.status === 'unmarked' || sub.status === 'completed' || sub.status === 'graded') {
                   localSubmissions.push({
                     id: sub.id || `${sub.student_id}_${sub.module_item_id}_${sub.assignment_number}`,
                     student_id: sub.student_id,
@@ -86,33 +99,7 @@ export default function TutorAssignmentsPage() {
 
     const merged = [...dbSubmissions, ...localSubmissions];
     
-    // Seed default mock submission if absolutely none exist
-    if (merged.length === 0) {
-      merged.push({
-        id: 'mock-assignment-id-1',
-        student_id: 'mock-student-id',
-        subject_id: 'mock-subject-id',
-        module_item_id: 'fallback-topic-1',
-        assignment_number: 1,
-        status: 'unmarked',
-        student_submission: `France was on the brink of bankruptcy in 1789 due to its involvement in the American Revolutionary War and the extravagant spending of the royal court at Versailles. The tax system was regressive, exempting the nobility and clergy while placing the burden entirely on the Third Estate (peasants and bourgeoisie). This, coupled with poor harvests leading to high bread prices, triggered widespread famine and discontent, forcing King Louis XVI to summon the Estates-General.`,
-        submitted_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-        profiles: {
-          full_name: 'Pelaiah Tadiwanashe Tapera Ngarande',
-          email: 'student@pelaiah.com',
-          avatar_url: ''
-        },
-        subjects: {
-          name: 'History',
-          level: 'A-Level'
-        },
-        module_items: {
-          title: 'France, 1774–1814'
-        },
-        isLocal: true,
-        isMock: true
-      });
-    }
+
 
     const seen = new Set();
     const uniqueSubmissions = merged.filter((sub: any) => {
@@ -199,6 +186,7 @@ export default function TutorAssignmentsPage() {
       setIsMarkingDialogOpen(false);
       setFeedback('');
       setSelectedSubmission(null);
+      setActiveAnnotationId(null);
       loadSubmissions();
     } catch (err) {
       console.error(err);
@@ -212,10 +200,11 @@ export default function TutorAssignmentsPage() {
     }
   };
 
-  const openMarkingDialog = (submission: any) => {
-    setSelectedSubmission(submission);
-    setFeedback(submission.tutor_feedback || '');
-    setIsMarkingDialogOpen(true);
+  const openMarkingDialog = async (submission: any) => {
+    // Navigate to the new grading page. We pass the assignment ID.
+    // In a real flow, you'd check if a submission exists in the `submissions` table first,
+    // but for now we route to the new page.
+    window.location.href = `/tutor/grading/${submission.id}`;
   };
 
   return (
@@ -225,7 +214,7 @@ export default function TutorAssignmentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Assignments Hub
+            Grading
           </h1>
           <p className="text-muted-foreground">Review, grade, and provide detailed feedback on student submissions.</p>
         </div>
@@ -237,163 +226,158 @@ export default function TutorAssignmentsPage() {
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
           </CardContent>
         </Card>
-      ) : submissions.length === 0 ? (
-        <Card className="border-dashed border-white/10 bg-card/25 py-16 text-center">
-          <CardContent className="flex flex-col items-center gap-4">
-            <div className="bg-[#00FFCC]/10 p-4 rounded-full text-[#00FFCC] animate-pulse">
-              <CheckCircle className="h-12 w-12" />
-            </div>
-            <h3 className="text-xl font-semibold text-white/95">Inbox Clear!</h3>
-            <p className="text-slate-400 max-w-sm">No student assignments are currently waiting to be marked.</p>
-          </CardContent>
-        </Card>
       ) : (
-        <Card className="border-white/5 bg-card/30">
-          <CardHeader>
-            <CardTitle className="text-white text-lg">Inbox: Received Submissions</CardTitle>
-            <CardDescription className="text-slate-400">
-              You have {submissions.length} unmarked assignment{submissions.length === 1 ? '' : 's'} waiting for grading.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="!pt-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="border-white/10">
-                  <TableRow className="hover:bg-transparent border-white/10">
-                    <TableHead className="text-slate-400">Student</TableHead>
-                    <TableHead className="text-slate-400">Subject</TableHead>
-                    <TableHead className="text-slate-400">Topic</TableHead>
-                    <TableHead className="text-slate-400">Task</TableHead>
-                    <TableHead className="text-slate-400">Submitted</TableHead>
-                    <TableHead className="text-slate-400 text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {submissions.map((sub) => {
-                    const initials = sub.profiles?.full_name
-                      ?.split(' ')
-                      .map((n: string) => n[0])
-                      .join('')
-                      .toUpperCase()
-                      .substring(0, 2) || 'ST';
-                    
-                    return (
-                      <TableRow key={sub.id} className="hover:bg-white/5 border-white/5">
-                        <TableCell className="font-medium text-white/90">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9 border border-white/10">
-                              <AvatarImage src={sub.profiles?.avatar_url} />
-                              <AvatarFallback className="bg-primary/20 text-primary font-bold text-xs">{initials}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-sm">{sub.profiles?.full_name}</span>
-                              <span className="text-[10px] text-slate-500">{sub.profiles?.email}</span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-white/80 font-medium text-sm">
-                          {sub.subjects?.name} 
-                          <span className="text-[10px] text-slate-500 ml-1.5">({sub.subjects?.level})</span>
-                        </TableCell>
-                        <TableCell className="text-slate-300 text-sm max-w-[200px] truncate">
-                          {sub.module_items?.title}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className="bg-[#00FFCC]/10 text-[#00FFCC] border-[#00FFCC]/20 hover:bg-[#00FFCC]/20">
-                            Assignment {sub.assignment_number}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-slate-400 text-xs">
-                          {new Date(sub.submitted_at).toLocaleDateString()} at{' '}
-                          {new Date(sub.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            onClick={() => openMarkingDialog(sub)}
-                            className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black font-bold size-sm text-xs gap-1.5 h-8"
-                          >
-                            <Award className="w-3.5 h-3.5" />
-                            Mark Assignment
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="unmarked" className="w-full">
+          <TabsList className="bg-white/5 border border-white/10 p-1 rounded-lg">
+            <TabsTrigger value="unmarked" className="rounded-md data-[state=active]:bg-royal data-[state=active]:text-black">Inbox ({submissions.filter((s:any) => s.status === 'unmarked').length})</TabsTrigger>
+            <TabsTrigger value="marked" className="rounded-md data-[state=active]:bg-royal data-[state=active]:text-black">Marked ({submissions.filter((s:any) => s.status === 'completed' || s.status === 'graded').length})</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="unmarked" className="mt-6">
+            {submissions.filter((s:any) => s.status === 'unmarked').length === 0 ? (
+              <Card className="border-dashed border-white/10 bg-card/25 py-16 text-center">
+                <CardContent className="flex flex-col items-center gap-4">
+                  <div className="bg-royal/10 p-4 rounded-full text-royal animate-pulse">
+                    <CheckCircle className="h-12 w-12" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white/95">Inbox Clear!</h3>
+                  <p className="text-slate-400 max-w-sm">No student assignments are currently waiting to be marked.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-white/5 bg-card/30">
+                <CardHeader>
+                  <CardTitle className="text-white text-lg">Inbox: Received Submissions</CardTitle>
+                </CardHeader>
+                <CardContent className="!pt-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="border-white/10">
+                        <TableRow className="hover:bg-transparent border-white/10">
+                          <TableHead className="text-slate-400">Student</TableHead>
+                          <TableHead className="text-slate-400">Subject</TableHead>
+                          <TableHead className="text-slate-400">Topic</TableHead>
+                          <TableHead className="text-slate-400">Task</TableHead>
+                          <TableHead className="text-slate-400">Submitted</TableHead>
+                          <TableHead className="text-slate-400 text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {submissions.filter((s:any) => s.status === 'unmarked').map((sub) => {
+                          const initials = sub.profiles?.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) || 'ST';
+                          return (
+                            <TableRow key={sub.id} className="hover:bg-white/5 border-white/5">
+                              <TableCell className="font-medium text-white/90">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-9 w-9 border border-white/10">
+                                    <AvatarImage src={sub.profiles?.avatar_url} />
+                                    <AvatarFallback className="bg-primary/20 text-primary font-bold text-xs">{initials}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex flex-col">
+                                    <span className="font-semibold text-sm">{sub.profiles?.full_name}</span>
+                                    <span className="text-[10px] text-slate-500">{sub.profiles?.email}</span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-white/80 font-medium text-sm">
+                                {sub.subjects?.name} <span className="text-[10px] text-slate-500 ml-1.5">({sub.subjects?.level})</span>
+                              </TableCell>
+                              <TableCell className="text-slate-300 text-sm max-w-[200px] truncate">{sub.module_items?.title}</TableCell>
+                              <TableCell>
+                                <Badge className="bg-royal/10 text-royal border-royal/20 hover:bg-royal/20">Assignment {sub.assignment_number}</Badge>
+                              </TableCell>
+                              <TableCell className="text-slate-400 text-xs">
+                                {new Date(sub.submitted_at).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button onClick={() => openMarkingDialog(sub)} className="bg-royal hover:bg-royal/80 text-black font-bold size-sm text-xs gap-1.5 h-8">
+                                  <Award className="w-3.5 h-3.5" />
+                                  Mark Assignment
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="marked" className="mt-6">
+            {submissions.filter((s:any) => s.status === 'completed' || s.status === 'graded').length === 0 ? (
+              <Card className="border-dashed border-white/10 bg-card/25 py-16 text-center">
+                <CardContent className="flex flex-col items-center gap-4">
+                  <p className="text-slate-400 max-w-sm">No marked assignments yet.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-white/5 bg-card/30">
+                <CardHeader>
+                  <CardTitle className="text-white text-lg">Marked / Graded</CardTitle>
+                </CardHeader>
+                <CardContent className="!pt-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="border-white/10">
+                        <TableRow className="hover:bg-transparent border-white/10">
+                          <TableHead className="text-slate-400">Student</TableHead>
+                          <TableHead className="text-slate-400">Subject</TableHead>
+                          <TableHead className="text-slate-400">Topic</TableHead>
+                          <TableHead className="text-slate-400">Task</TableHead>
+                          <TableHead className="text-slate-400">Marked Date</TableHead>
+                          <TableHead className="text-slate-400 text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {submissions.filter((s:any) => s.status === 'completed' || s.status === 'graded').map((sub) => {
+                          const initials = sub.profiles?.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) || 'ST';
+                          return (
+                            <TableRow key={sub.id} className="hover:bg-white/5 border-white/5">
+                              <TableCell className="font-medium text-white/90">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-9 w-9 border border-white/10">
+                                    <AvatarImage src={sub.profiles?.avatar_url} />
+                                    <AvatarFallback className="bg-primary/20 text-primary font-bold text-xs">{initials}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex flex-col">
+                                    <span className="font-semibold text-sm">{sub.profiles?.full_name}</span>
+                                    <span className="text-[10px] text-slate-500">{sub.profiles?.email}</span>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-white/80 font-medium text-sm">
+                                {sub.subjects?.name} <span className="text-[10px] text-slate-500 ml-1.5">({sub.subjects?.level})</span>
+                              </TableCell>
+                              <TableCell className="text-slate-300 text-sm max-w-[200px] truncate">{sub.module_items?.title}</TableCell>
+                              <TableCell>
+                                <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20">Assignment {sub.assignment_number}</Badge>
+                              </TableCell>
+                              <TableCell className="text-slate-400 text-xs">
+                                {sub.marked_at ? new Date(sub.marked_at).toLocaleDateString() : 'N/A'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="outline" onClick={() => openMarkingDialog(sub)} className="border-white/10 hover:bg-white/5 text-white/90 text-xs h-8">
+                                  View Grade
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       )}
 
-      {/* Grade Dialog */}
-      <Dialog open={isMarkingDialogOpen} onOpenChange={setIsMarkingDialogOpen}>
-        <DialogContent className="sm:max-w-[650px] max-h-[85vh] flex flex-col border-white/10 bg-slate-900/95 backdrop-blur-md">
-          <DialogHeader>
-            <DialogTitle className="text-white text-xl flex items-center gap-2">
-              <Award className="w-5 h-5 text-[#00FFCC]" />
-              <span>Mark Student Submission</span>
-            </DialogTitle>
-            <DialogDescription className="text-slate-400">
-              Review submission from {selectedSubmission?.profiles?.full_name} and add your evaluation feedback.
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedSubmission && (
-            <form onSubmit={handleGradeSubmit} className="flex-grow flex flex-col min-h-0 space-y-4 py-2">
-              <div className="flex flex-wrap gap-2 text-xs text-slate-300 bg-white/5 p-3 rounded-lg border border-white/5">
-                <div>
-                  <span className="font-semibold text-[#00FFCC]">Subject:</span> {selectedSubmission.subjects?.name} ({selectedSubmission.subjects?.level})
-                </div>
-                <div className="border-l border-white/10 pl-2">
-                  <span className="font-semibold text-[#00FFCC]">Topic:</span> {selectedSubmission.module_items?.title}
-                </div>
-                <div className="border-l border-white/10 pl-2">
-                  <span className="font-semibold text-[#00FFCC]">Task:</span> Assignment {selectedSubmission.assignment_number}
-                </div>
-              </div>
-
-              <div className="flex-1 flex flex-col min-h-0 space-y-1.5">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Student's Submitted Work:</label>
-                <div 
-                  className="flex-1 bg-black/60 border border-white/10 rounded-lg p-4 text-sm text-slate-200 overflow-y-auto leading-relaxed max-h-[220px] prose prose-invert prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: selectedSubmission.student_submission || '' }}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Tutor Feedback & Evaluation *</label>
-                <Textarea
-                  placeholder="Provide constructive feedback, corrections, and grading comments..."
-                  value={feedback}
-                  onChange={e => setFeedback(e.target.value)}
-                  className="bg-background/60 border-white/10 text-white/90 text-sm h-32 focus:border-primary/50"
-                  required
-                />
-              </div>
-
-              <DialogFooter className="pt-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsMarkingDialogOpen(false)}
-                  className="border-white/10 text-white hover:bg-white/10"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={gradingLoading}
-                  className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black font-bold"
-                >
-                  {gradingLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Submit Grade & Feedback
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Grade Dialog has been moved to its own page route */}
     </div>
   );
 }
+

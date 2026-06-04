@@ -110,7 +110,7 @@ function FinalizeClassDialog({
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-[#0A1A12] border-white/10 text-white rounded-3xl">
+      <DialogContent className="sm:max-w-[425px] bg-[#0B0C10] border-white/10 text-white rounded-3xl">
         <form onSubmit={handleSave}>
           <DialogHeader>
             <DialogTitle>Finalize Class</DialogTitle>
@@ -155,7 +155,7 @@ function FinalizeClassDialog({
             <Button
               type="submit"
               disabled={saving}
-              className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black font-bold rounded-xl"
+              className="bg-royal hover:bg-royal/80 text-black font-bold rounded-xl"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Finalize & Send Resources'}
             </Button>
@@ -208,7 +208,7 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                                  {liveClass.recording_url && (
                                      <Button className="flex-1 rounded-xl py-6 bg-white/5 hover:bg-white/10 text-white border-white/10" variant="outline" asChild>
                                          <a href={liveClass.recording_url} target="_blank" rel="noreferrer">
-                                             <Video className="mr-2 h-4 w-4 text-[#00FFCC]" />
+                                             <Video className="mr-2 h-4 w-4 text-royal" />
                                              Video
                                          </a>
                                      </Button>
@@ -216,7 +216,7 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                                  {liveClass.presentation_url && (
                                      <Button className="flex-1 rounded-xl py-6 bg-white/5 hover:bg-white/10 text-white border-white/10" variant="outline" asChild>
                                          <a href={liveClass.presentation_url} target="_blank" rel="noreferrer">
-                                             <FileText className="mr-2 h-4 w-4 text-[#00FFCC]" />
+                                             <FileText className="mr-2 h-4 w-4 text-royal" />
                                              Slides
                                          </a>
                                      </Button>
@@ -299,7 +299,7 @@ export default function TutorLiveClassesPage() {
                     tutorId={profile?.id || ''} 
                     onClassScheduled={fetchClasses}
                     trigger={
-                        <Button className="bg-[#00FFCC] hover:bg-[#00DDAA] text-black font-bold h-12 px-6">
+                        <Button className="bg-royal hover:bg-royal/80 text-black font-bold h-12 px-6">
                             <CalendarPlus className="mr-2 h-5 w-5" />
                             Schedule New Class
                         </Button>
@@ -332,3 +332,5 @@ export default function TutorLiveClassesPage() {
         </div>
     );
 }
+
+

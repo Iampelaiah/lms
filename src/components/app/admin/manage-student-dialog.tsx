@@ -366,7 +366,7 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                                                 variant={isEnrolled || isPending ? 'destructive' : 'outline'}
                                                 className={`flex-shrink-0 h-8 px-3 text-xs ${
                                                     isEnrolled || isPending
-                                                        ? 'bg-red-500/10 text-red-600 border-red-200 hover:bg-red-500/20 hover:text-red-700'
+                                                        ? 'bg-burgundy/10 text-red-600 border-red-200 hover:bg-burgundy/20 hover:text-red-700'
                                                         : 'text-emerald-600 border-emerald-200 hover:bg-emerald-500/10'
                                                 }`}
                                                 onClick={() => toggleEnrollment(course.id, enrollment)}
@@ -519,3 +519,4 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
         </Dialog>
     );
 }
+

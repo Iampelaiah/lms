@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { BookOpenCheck, PlusCircle, Users, Eye, Settings, Loader2, Image as ImageIcon } from "lucide-react";
+import { BookOpenCheck, PlusCircle, Users, Eye, Settings, Loader2, Image as ImageIcon, BookOpen, Clock, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { SchoolHeader } from "@/components/app/school-header";
@@ -11,30 +11,59 @@ import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { useUser } from "@/components/providers/user-context";
 import { CreateCourseDialog } from "@/components/app/tutor/create-course-dialog";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const statusColorMap: Record<string, string> = {
-    "Published": "bg-blue-500 hover:bg-blue-600",
-    "Pending Review": "bg-yellow-500 text-yellow-900 hover:bg-yellow-600",
+    "approved": "bg-emerald-500 hover:bg-emerald-600 text-white",
+    "pending_admin_review": "bg-yellow-500 text-yellow-950 hover:bg-yellow-600",
+    "draft": "bg-muted text-muted-foreground",
+    "rejected": "bg-burgundy text-white hover:bg-red-600",
+};
+
+const statusLabelMap: Record<string, string> = {
+    "approved": "Approved",
+    "pending_admin_review": "Pending Review",
+    "draft": "Draft",
+    "rejected": "Rejected",
 };
 
 function CourseList({ tutorId }: { tutorId: string }) {
-    const [courses, setCourses] = useState<any[]>([]);
+    const [subjects, setSubjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const supabase = createClient();
 
     const fetchCourses = async () => {
         if (!tutorId) return;
-        const { data } = await supabase
-            .from('courses')
-            .select(`
-                *,
-                lessons (id),
-                enrollments (id)
-            `)
-            .eq('tutor_id', tutorId)
-            .order('created_at', { ascending: false });
         
-        if (data) setCourses(data);
+        // 1. Fetch subjects assigned to tutor
+        const { data: assignments } = await supabase
+            .from('tutor_subjects')
+            .select('subjects(*)')
+            .eq('tutor_id', tutorId);
+
+        // 2. Fetch curriculum modules created by tutor
+        const { data: modulesData } = await supabase
+            .from('curriculum_modules')
+            .select('id, subject_id, title, sequence_order, course_level, approval_status, admin_feedback')
+            .eq('tutor_id', tutorId)
+            .order('sequence_order', { ascending: true });
+
+        // Group modules by subject
+        const subjectsWithModules = (assignments || []).map((assignment: any) => {
+            const subject = assignment.subjects;
+            const subjectModules = (modulesData || []).filter((m: any) => m.subject_id === subject.id);
+            return {
+                ...subject,
+                modules: subjectModules
+            };
+        });
+
+        setSubjects(subjectsWithModules);
         setLoading(false);
     };
 
@@ -42,13 +71,13 @@ function CourseList({ tutorId }: { tutorId: string }) {
         if (tutorId) {
             fetchCourses();
 
-            // Real-time subscription
+            // Real-time subscription to curriculum_modules
             const channel = supabase
-                .channel(`tutor-courses-${tutorId}`)
+                .channel(`tutor-modules-${tutorId}`)
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
-                    table: 'courses',
+                    table: 'curriculum_modules',
                     filter: `tutor_id=eq.${tutorId}`
                 }, () => {
                     fetchCourses();
@@ -72,7 +101,7 @@ function CourseList({ tutorId }: { tutorId: string }) {
                             <div className="bg-primary/5 p-4 rounded-full group-hover:scale-110 transition-transform">
                                 <PlusCircle className="h-10 w-10 text-primary" />
                             </div>
-                            <h3 className="mt-4 font-bold text-lg">Create New Course</h3>
+                            <h3 className="mt-4 font-bold text-lg">Create Curriculum Module</h3>
                         </Card>
                     }
                 />
@@ -89,7 +118,7 @@ function CourseList({ tutorId }: { tutorId: string }) {
         );
     }
 
-    if (courses.length === 0) {
+    if (subjects.length === 0) {
         return (
             <Card className="p-16 text-center border-dashed">
                 <div className="flex flex-col items-center gap-4">
@@ -97,82 +126,114 @@ function CourseList({ tutorId }: { tutorId: string }) {
                         <PlusCircle className="h-12 w-12 text-primary/20" />
                     </div>
                     <div className="space-y-2">
-                        <h3 className="text-xl font-bold">No courses created yet</h3>
+                        <h3 className="text-xl font-bold">No subjects assigned yet</h3>
                         <p className="text-muted-foreground max-w-sm mx-auto">
-                            You haven't added any learning materials. Start by creating your first course and adding lessons.
+                            You have not been assigned to teach any subjects yet. Contact the admin to get assigned.
                         </p>
                     </div>
-                    <CreateCourseDialog tutorId={tutorId} onCourseCreated={fetchCourses} />
                 </div>
             </Card>
         );
     }
 
     return (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <CreateCourseDialog 
-                tutorId={tutorId} 
-                onCourseCreated={fetchCourses} 
-                trigger={
-                    <Card className="border-dashed flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-muted/50 transition-colors group h-full min-h-[300px]">
-                        <div className="bg-primary/5 p-4 rounded-full group-hover:scale-110 transition-transform">
-                            <PlusCircle className="h-10 w-10 text-primary" />
-                        </div>
-                        <h3 className="mt-4 font-bold text-lg">Create New Course</h3>
-                        <p className="text-sm text-muted-foreground text-center mt-2 px-4">
-                            Start building your curriculum and adding lessons.
-                        </p>
-                    </Card>
-                }
-            />
-            {courses.map(course => (
-                <Card key={course.id} className="overflow-hidden flex flex-col">
-                    <CardHeader className="p-0 relative">
-                        <Badge className={`absolute top-4 right-4 z-10 ${statusColorMap[course.status] || 'bg-blue-500'}`}>
-                            {course.status}
-                        </Badge>
-                        <div className="relative aspect-[3/2] w-full bg-muted">
-                            {course.image_url ? (
-                                <Image src={course.image_url} alt={course.title} fill className="object-cover" />
-                            ) : (
-                                <div className="flex items-center justify-center h-full">
-                                    <ImageIcon className="w-12 h-12 text-muted-foreground/20" />
+        <div className="space-y-6">
+            <div className="flex justify-end">
+                <CreateCourseDialog 
+                    tutorId={tutorId} 
+                    onCourseCreated={fetchCourses} 
+                    trigger={
+                        <Button>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Module
+                        </Button>
+                    }
+                />
+            </div>
+
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {subjects.map(subject => (
+                    <Card key={subject.id} className="overflow-hidden flex flex-col h-full border-border/60 shadow-sm transition-all hover:border-primary/50">
+                        <CardHeader className="p-0 relative">
+                            <div className="relative aspect-[3/2] w-full bg-gradient-to-br from-primary/10 to-primary/5">
+                                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                                    <BookOpen className="w-12 h-12 text-primary/40 mb-3" />
+                                    <h3 className="text-2xl font-bold text-primary/80 line-clamp-2">{subject.name}</h3>
+                                    <Badge variant="outline" className="mt-2 bg-background/50 backdrop-blur-sm border-primary/20 text-primary">
+                                        {subject.level}
+                                    </Badge>
                                 </div>
-                            )}
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-4 flex-grow">
-                        <h3 className="text-lg font-bold line-clamp-1">{course.title}</h3>
-                        <div className="pt-2 text-sm text-muted-foreground flex items-center gap-4">
-                            <div className="flex items-center gap-1.5">
-                                <Users className="w-4 h-4" />
-                                <span>{course.enrollments?.length || 0} Students</span>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <BookOpenCheck className="w-4 h-4" />
-                                <span>{course.lessons?.length || 0} Lessons</span>
+                        </CardHeader>
+                        <CardContent className="p-0 flex-grow flex flex-col">
+                            <div className="p-4 border-b bg-muted/10">
+                                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-1.5">
+                                        <BookOpenCheck className="w-4 h-4" />
+                                        <span>{subject.modules.length} Modules</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Clock className="w-4 h-4" />
+                                        <span>{subject.category}</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        {course.status !== "Published" && (
-                            <p className="text-yellow-600 text-xs mt-2 italic">Pending admin approval</p>
-                        )}
-                    </CardContent>
-                    <CardFooter className="p-4 pt-0">
-                        <div className="flex w-full gap-2">
-                            <Button variant="outline" size="sm" className="flex-1" asChild>
-                                <Link href={`/student/courses/${course.id}`}>
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    View
-                                </Link>
-                            </Button>
-                            <Button variant="secondary" size="sm" className="flex-1">
-                                <Settings className="mr-2 h-4 w-4" />
-                                Manage
-                            </Button>
-                        </div>
-                    </CardFooter>
-                </Card>
-            ))}
+
+                            <div className="p-4 flex-grow">
+                                {subject.modules.length === 0 ? (
+                                    <div className="text-center py-6">
+                                        <p className="text-sm text-muted-foreground mb-3">No curriculum modules created yet.</p>
+                                        <CreateCourseDialog 
+                                            tutorId={tutorId} 
+                                            onCourseCreated={fetchCourses} 
+                                            trigger={
+                                                <Button variant="outline" size="sm" className="w-full">
+                                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                                    Create First Module
+                                                </Button>
+                                            }
+                                        />
+                                    </div>
+                                ) : (
+                                    <Accordion type="single" collapsible className="w-full">
+                                        <AccordionItem value="modules" className="border-none">
+                                            <AccordionTrigger className="hover:no-underline py-2 px-1 rounded-md hover:bg-muted/30 transition-colors">
+                                                <div className="flex items-center justify-between w-full pr-2">
+                                                    <span className="text-sm font-semibold">View Curriculum Modules</span>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="pt-2 pb-0">
+                                                <div className="space-y-3 mt-1">
+                                                    {subject.modules.map((mod: any) => (
+                                                        <div key={mod.id} className="p-3 bg-muted/20 border rounded-md space-y-2">
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div>
+                                                                    <span className="text-xs font-bold text-primary uppercase mr-2">Mod {mod.sequence_order}</span>
+                                                                    <span className="text-sm font-medium">{mod.title}</span>
+                                                                </div>
+                                                                <Badge className={`text-[10px] whitespace-nowrap ${statusColorMap[mod.approval_status]}`}>
+                                                                    {statusLabelMap[mod.approval_status]}
+                                                                </Badge>
+                                                            </div>
+                                                            
+                                                            {mod.approval_status === 'rejected' && mod.admin_feedback && (
+                                                                <div className="bg-burgundy/10 border border-burgundy/20 p-2 rounded text-xs text-red-700 flex items-start gap-1.5">
+                                                                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                                                    <p>{mod.admin_feedback}</p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    </Accordion>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </div>
     );
 }
@@ -184,8 +245,8 @@ export default function TutorCoursesPage() {
             <SchoolHeader />
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                  <div>
-                    <h1 className="text-3xl font-bold tracking-tight">My Courses</h1>
-                    <p className="text-muted-foreground">Manage your courses and learning materials.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">My Assigned Subjects</h1>
+                    <p className="text-muted-foreground">Manage your curriculum modules and learning materials.</p>
                 </div>
             </div>
             {profileLoading ? (
@@ -208,3 +269,4 @@ export default function TutorCoursesPage() {
         </div>
     );
 }
+

@@ -6,8 +6,11 @@ import {
     FlaskConical, Building2, Network, Dumbbell, TrendingUp,
     BookOpenText, Store, Cpu, Theater, ScrollText, Users, Tractor,
     DraftingCompass, Palette, MessageCircle, Scale, Lightbulb,
-    BookCopy, Book, GraduationCap, Loader2
+    BookCopy, Book, GraduationCap, Loader2,
+    Search, BrainCircuit, Code, Database, Layout, ChevronRight
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Link from 'next/link';
 import { SchoolHeader } from "@/components/app/school-header";
 import { createClient } from '@/utils/supabase/client';
@@ -134,23 +137,64 @@ export default function StudyPanelPage() {
                 <p className="text-muted-foreground">Select a subject to start your learning journey.</p>
             </div>
 
-            {loading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {Array.from({ length: 8 }).map((_, i) => <SubjectSkeleton key={i} />)}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-4">
+                    {loading ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            {Array.from({ length: 6 }).map((_, i) => <SubjectSkeleton key={i} />)}
+                        </div>
+                    ) : subjects.length === 0 ? (
+                        <Card className="p-16 text-center border-dashed">
+                            <GraduationCap className="h-12 w-12 mx-auto text-muted-foreground/20 mb-4" />
+                            <h3 className="text-lg font-medium">No subjects available yet</h3>
+                            <p className="text-muted-foreground text-sm mt-1">Check back later or contact your school administrator.</p>
+                        </Card>
+                    ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            {subjects.map((subject) => (
+                                <SubjectCard key={subject.id} subject={subject} />
+                            ))}
+                        </div>
+                    )}
                 </div>
-            ) : subjects.length === 0 ? (
-                <Card className="p-16 text-center border-dashed">
-                    <GraduationCap className="h-12 w-12 mx-auto text-muted-foreground/20 mb-4" />
-                    <h3 className="text-lg font-medium">No subjects available yet</h3>
-                    <p className="text-muted-foreground text-sm mt-1">Check back later or contact your school administrator.</p>
-                </Card>
-            ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {subjects.map((subject) => (
-                        <SubjectCard key={subject.id} subject={subject} />
-                    ))}
+
+                <div className="lg:col-span-1">
+                    <Card className="rounded-[1.5rem] border-neutral-200/60 shadow-sm bg-neutral-50/50 dark:bg-neutral-900/30">
+                        <CardContent className="p-6">
+                            <h3 className="font-bold text-lg mb-1">Quick Review</h3>
+                            <p className="text-sm text-muted-foreground mb-6">Sharpen your knowledge in 2 minutes!</p>
+                            
+                            <div className="relative mb-4">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input 
+                                placeholder="Choose a topic to review..." 
+                                className="pl-9 h-11 bg-white dark:bg-neutral-900 border-none rounded-xl shadow-sm text-sm"
+                            />
+                            </div>
+                            
+                            <p className="text-[10px] text-muted-foreground mb-6 font-medium">Recent: Data Visualization in Python</p>
+                            
+                            <div className="flex items-center justify-between mb-8 px-2">
+                            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center border border-white shadow-sm"><BrainCircuit className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Database className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Layout className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center ml-auto text-muted-foreground hover:bg-neutral-200 transition-colors cursor-pointer"><ChevronRight className="w-4 h-4" /></div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                            <Button variant="outline" className="flex-1 rounded-xl h-11 font-semibold border-neutral-200 shadow-sm">
+                                Practice
+                            </Button>
+                            <Button className="flex-1 rounded-xl h-11 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
+                                Start Quiz →
+                            </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
-            )}
+            </div>
         </div>
     );
 }

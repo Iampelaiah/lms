@@ -76,16 +76,16 @@ export function StudentSidebar() {
   return (
     <Sidebar variant="floating" collapsible="icon" className="bg-white/60 dark:bg-neutral-900/40 backdrop-blur-xl border-white/20 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
       <SidebarHeader>
-        <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
+        <div className="flex items-center gap-3 w-full overflow-hidden">
+            <Avatar className="h-9 w-9 shrink-0">
                 <AvatarImage src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || 'Student'}`} alt={userName} data-ai-hint="student portrait" />
                 <AvatarFallback>{userInitials}</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-                <span className="text-xs text-muted-foreground">Welcome back,</span>
-                <span className="text-base font-semibold">{userName}</span>
+            <div className="flex flex-col group-data-[collapsible=icon]:hidden min-w-0">
+                <span className="text-[10px] text-muted-foreground leading-tight">Welcome back,</span>
+                <span className="text-sm font-semibold truncate" title={userName}>{userName}</span>
             </div>
-            <SidebarTrigger className="ml-auto -translate-x-[5px]" />
+            <SidebarTrigger className="ml-auto shrink-0 -translate-x-[5px]" />
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -147,10 +147,10 @@ export function StudentSidebar() {
                     </div>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <Button className="w-full h-12 mt-2 group relative flex items-center justify-center gap-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-neutral-900/20 dark:hover:shadow-white/20 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0" asChild>
+                    <Button className="w-full h-10 mt-1 group relative flex items-center justify-center gap-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-4 rounded-xl font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-neutral-900/10 dark:hover:shadow-white/10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0" asChild>
                         <Link href="#">
-                            <Plus className="transition-transform group-hover:rotate-90 group-data-[collapsible=icon]:w-6 group-data-[collapsible=icon]:h-6" />
-                            <span className="group-data-[collapsible=icon]:hidden">Create New Task</span>
+                            <Plus className="w-4 h-4 transition-transform group-hover:rotate-90 group-data-[collapsible=icon]:w-5 group-data-[collapsible=icon]:h-5" />
+                            <span className="text-sm group-data-[collapsible=icon]:hidden">Create New Task</span>
                         </Link>
                     </Button>
                 </SidebarMenuItem>

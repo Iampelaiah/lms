@@ -46,6 +46,7 @@
     "@tiptap/extension-bubble-menu": "^3.24.0",
     "@tiptap/extension-collaboration": "^3.24.0",
     "@tiptap/extension-collaboration-cursor": "^2.26.2",
+    "@tiptap/extension-highlight": "^3.25.0",
     "@tiptap/extension-placeholder": "^3.24.0",
     "@tiptap/extension-underline": "^3.24.0",
     "@tiptap/pm": "^3.24.0",

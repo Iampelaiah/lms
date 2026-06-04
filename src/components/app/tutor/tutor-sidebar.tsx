@@ -26,6 +26,7 @@ import {
   Puzzle,
   Palette,
   Lock,
+  MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -53,8 +54,9 @@ export function TutorSidebar() {
     { href: '/tutor', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/tutor/courses', icon: BookOpenCheck, label: 'My Courses' },
     { href: '/tutor/students', icon: Users, label: 'My Students' },
-    { href: '/tutor/assignments', icon: FileText, label: 'Assignments' },
+    { href: '/tutor/assignments', icon: FileText, label: 'Grade' },
     { href: '/tutor/live-classes', icon: Video, label: 'Live Classes' },
+    { href: '/tutor/community', icon: MessageSquare, label: 'Forums' },
   ];
 
   const userName = profile?.full_name || 'Tutor';

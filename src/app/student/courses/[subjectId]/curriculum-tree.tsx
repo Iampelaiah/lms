@@ -465,12 +465,12 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
 
       {/* Student Submission Dialog */}
       <Dialog open={isSubmitOpen} onOpenChange={(open) => { setIsSubmitOpen(open); if (!open) setIsEditorExpanded(false); }}>
-        <DialogContent className={`transition-all duration-300 border-white/10 bg-slate-900/95 backdrop-blur-md ${
-          isEditorExpanded ? 'sm:max-w-[92vw] h-[90vh] flex flex-col' : 'sm:max-w-[550px]'
+        <DialogContent className={`transition-all duration-300 bg-white border-slate-200 shadow-2xl rounded-2xl ${
+          isEditorExpanded ? 'sm:max-w-[92vw] h-[90vh] flex flex-col' : 'sm:max-w-5xl'
         }`}>
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-white text-lg flex items-center gap-2">
+              <DialogTitle className="text-slate-900 text-lg flex items-center gap-2 font-bold">
                 <FileText className="w-5 h-5 text-primary" />
                 <span>Submit Assignment {selectedAssignment?.assignmentNum}</span>
               </DialogTitle>
@@ -478,20 +478,40 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                 type="button"
                 onClick={() => setIsEditorExpanded(prev => !prev)}
                 title={isEditorExpanded ? 'Collapse editor' : 'Expand editor'}
-                className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+                className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex-shrink-0"
               >
                 {isEditorExpanded
                   ? <Minimize2 className="w-4 h-4" />
                   : <Maximize2 className="w-4 h-4" />}
               </button>
             </div>
-            <DialogDescription className="text-slate-400">
-              Submit your work for topic: "{selectedAssignment?.topicTitle}". Your tutor will review and provide feedback.
-            </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmission} className={`space-y-4 py-2 ${
-            isEditorExpanded ? 'flex-1 flex flex-col min-h-0' : ''
+          <form onSubmit={handleSubmission} className={`grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-8 py-2 ${
+            isEditorExpanded ? 'flex-1 min-h-0' : ''
           }`}>
+            {/* Left Column: Form Info / Actions */}
+            <div className="flex flex-col space-y-6">
+              <div className="bg-slate-50 border border-slate-100 rounded-lg p-4 text-slate-600 text-sm">
+                <p>Submit your work for topic:</p>
+                <p className="font-semibold text-slate-900 mt-1">"{selectedAssignment?.topicTitle}"</p>
+                <p className="mt-3 text-slate-500 text-xs">Your tutor will review this document and provide evaluation feedback.</p>
+              </div>
+
+              <div className="flex-1" />
+
+              <DialogFooter className="flex-col sm:flex-row gap-2 mt-auto">
+                <Button type="button" variant="outline" onClick={() => setIsSubmitOpen(false)} className="border-slate-200 text-slate-600 hover:bg-slate-50 w-full sm:w-auto">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={submitting} className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-5 py-2.5 rounded-lg w-full sm:w-auto">
+                  {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Submit Assignment
+                </Button>
+              </DialogFooter>
+            </div>
+
+            {/* Right Column: Editor */}
+            <div className={`flex flex-col min-h-[400px] ${isEditorExpanded ? 'h-full' : ''}`}>
               <CollaborativeEditor 
                 roomId={`student-assignment-${profile?.id || 'guest'}-${selectedAssignment?.topicId || 'default'}-${selectedAssignment?.assignmentNum || 1}`}
                 onChange={(html) => setSubmissionText(html)}
@@ -499,15 +519,7 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                 placeholder="Type or paste your homework, essay, or exercises here..."
                 expanded={isEditorExpanded}
               />
-            <DialogFooter className={isEditorExpanded ? 'mt-auto' : ''}>
-              <Button type="button" variant="outline" onClick={() => setIsSubmitOpen(false)} className="border-white/10 text-white hover:bg-white/10">
-                Cancel
-              </Button>
-              <Button type="submit" disabled={submitting} className="bg-primary text-primary-foreground font-semibold">
-                {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Submit Assignment
-              </Button>
-            </DialogFooter>
+            </div>
           </form>
         </DialogContent>
       </Dialog>

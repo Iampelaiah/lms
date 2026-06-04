@@ -57,13 +57,13 @@ function ClassroomContent() {
   if (error) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-[#051C1C] text-white p-6">
-        <div className="bg-red-500/10 border border-red-500/20 p-8 rounded-3xl max-w-md text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <div className="bg-burgundy/10 border border-burgundy/20 p-8 rounded-3xl max-w-md text-center">
+          <AlertCircle className="w-12 h-12 text-burgundy mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Connection Failed</h2>
-          <p className="text-gray-400 mb-6">{error}</p>
+          <p className="text-white/60 mb-6">{error}</p>
           <button 
             onClick={() => router.push('/')}
-            className="px-6 py-2 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-colors"
+            className="px-6 py-2 bg-white text-black rounded-full font-bold hover:bg-white/90 transition-colors"
           >
             Go Back
           </button>
@@ -75,7 +75,7 @@ function ClassroomContent() {
   if (!agoraData) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-[#051C1C] text-white">
-        <Loader2 className="w-10 h-10 animate-spin text-[#00FFCC]" />
+        <Loader2 className="w-10 h-10 animate-spin text-royal" />
         <p className="mt-4 text-white/50 animate-pulse">Securing connection...</p>
       </div>
     );
@@ -90,7 +90,13 @@ function ClassroomContent() {
       uid={agoraData.uid}
       userName={userName}
       role={role}
-      onLeave={() => router.push('/')}
+      onLeave={() => {
+        if (role === 'tutor') {
+          router.push('/tutor');
+        } else {
+          router.push('/student');
+        }
+      }}
     />
   );
 }
@@ -99,10 +105,13 @@ export default function ClassroomPage() {
   return (
     <Suspense fallback={
       <div className="h-screen w-full flex flex-col items-center justify-center bg-[#051C1C] text-white">
-        <Loader2 className="w-10 h-10 animate-spin text-[#00FFCC]" />
+        <Loader2 className="w-10 h-10 animate-spin text-royal" />
       </div>
     }>
       <ClassroomContent />
     </Suspense>
   );
 }
+
+
+

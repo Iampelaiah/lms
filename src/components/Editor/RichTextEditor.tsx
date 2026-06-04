@@ -5,9 +5,11 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Placeholder from '@tiptap/extension-placeholder';
+import Highlight from '@tiptap/extension-highlight';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, Code,
-  Heading1, Heading2, Heading3, List, ListOrdered, Code2, RefreshCw
+  Heading1, Heading2, Heading3, List, ListOrdered, Code2, RefreshCw,
+  Highlighter
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -16,6 +18,7 @@ interface RichTextEditorProps {
   readOnly?: boolean;
   placeholder?: string;
   expanded?: boolean;
+  isTutorMode?: boolean;
 }
 
 export default function RichTextEditor({
@@ -24,12 +27,14 @@ export default function RichTextEditor({
   readOnly = false,
   placeholder = 'Write your submission here...',
   expanded = false,
+  isTutorMode = false,
 }: RichTextEditorProps) {
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({} as any),
       Underline,
+      Highlight.configure({ HTMLAttributes: { class: 'tutor-highlight' } }),
       Placeholder.configure({
         placeholder,
         emptyEditorClass: 'is-editor-empty',
@@ -62,42 +67,43 @@ export default function RichTextEditor({
   }
 
   return (
-    <div className="w-full rounded-xl border border-white/10 bg-slate-950/60 overflow-hidden flex flex-col">
+    <div className="w-full rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-sm">
       {/* Inline styles for ProseMirror */}
       <style>{`
         .tiptap-editor .ProseMirror {
           min-height: 150px;
           outline: none;
           padding: 1rem;
-          color: rgba(255,255,255,0.9);
+          color: rgba(15, 23, 42, 0.9);
           font-size: 0.875rem;
           line-height: 1.6;
         }
         .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           float: left;
-          color: rgba(255, 255, 255, 0.3);
+          color: rgba(148, 163, 184, 0.8);
           pointer-events: none;
           height: 0;
         }
-        .tiptap-editor .ProseMirror h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: white; }
-        .tiptap-editor .ProseMirror h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: white; }
-        .tiptap-editor .ProseMirror h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; color: white; }
-        .tiptap-editor .ProseMirror ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
-        .tiptap-editor .ProseMirror ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
-        .tiptap-editor .ProseMirror code { background: rgba(255,255,255,0.1); padding: 0.1em 0.3em; border-radius: 3px; font-family: monospace; font-size: 0.85em; }
-        .tiptap-editor .ProseMirror pre { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; margin: 0.5rem 0; }
-        .tiptap-editor .ProseMirror pre code { background: none; padding: 0; font-family: monospace; }
-        .tiptap-editor .ProseMirror strong { font-weight: 700; }
-        .tiptap-editor .ProseMirror em { font-style: italic; }
-        .tiptap-editor .ProseMirror s { text-decoration: line-through; }
-        .tiptap-editor .ProseMirror u { text-decoration: underline; }
-        .tiptap-editor .ProseMirror blockquote { border-left: 3px solid rgba(255,255,255,0.2); padding-left: 1rem; color: rgba(255,255,255,0.6); margin: 0.5rem 0; }
+        .tiptap-editor .ProseMirror h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f172a; }
+        .tiptap-editor .ProseMirror h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #0f172a; }
+        .tiptap-editor .ProseMirror h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; color: #0f172a; }
+        .tiptap-editor .ProseMirror ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; color: #0f172a; }
+        .tiptap-editor .ProseMirror ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; color: #0f172a; }
+        .tiptap-editor .ProseMirror code { background: rgba(0,0,0,0.05); padding: 0.1em 0.3em; border-radius: 3px; font-family: monospace; font-size: 0.85em; color: #0f172a; }
+        .tiptap-editor .ProseMirror pre { background: rgba(248,250,252,1); border: 1px solid rgba(226,232,240,1); border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; margin: 0.5rem 0; }
+        .tiptap-editor .ProseMirror pre code { background: none; padding: 0; font-family: monospace; color: #0f172a; }
+        .tiptap-editor .ProseMirror strong { font-weight: 700; color: #0f172a; }
+        .tiptap-editor .ProseMirror em { font-style: italic; color: #0f172a; }
+        .tiptap-editor .ProseMirror s { text-decoration: line-through; color: #64748b; }
+        .tiptap-editor .ProseMirror u { text-decoration: underline; color: #0f172a; }
+        .tiptap-editor .ProseMirror blockquote { border-left: 3px solid rgba(203,213,225,1); padding-left: 1rem; color: rgba(100,116,139,1); margin: 0.5rem 0; }
+        .tiptap-editor .ProseMirror mark.tutor-highlight { background-color: #fef08a; border-radius: 2px; padding: 0.1em 0.2em; color: #1a202c; font-weight: 500; }
       `}</style>
 
       {/* Toolbar — only in edit mode */}
       {!readOnly && (
-        <div className="flex flex-wrap items-center gap-0.5 p-2 bg-slate-900/80 border-b border-white/10">
+        <div className="flex flex-wrap items-center gap-0.5 p-2 bg-slate-50 border-b border-slate-200">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             active={editor.isActive('bold')}
@@ -191,11 +197,24 @@ export default function RichTextEditor({
           >
             <Code2 className="w-4 h-4" />
           </ToolbarButton>
+
+          {isTutorMode && (
+            <>
+              <Divider />
+              <ToolbarButton
+                onClick={() => editor.chain().focus().toggleHighlight().run()}
+                active={editor.isActive('highlight')}
+                title="Highlight Selection"
+              >
+                <Highlighter className="w-4 h-4 text-amber-500" />
+              </ToolbarButton>
+            </>
+          )}
         </div>
       )}
 
       {/* Editor content */}
-      <div className={`tiptap-editor overflow-y-auto bg-slate-900/20 ${
+      <div className={`tiptap-editor overflow-y-auto bg-slate-50/50 ${
         expanded ? 'flex-1 min-h-0' : 'max-h-[300px] min-h-[160px]'
       }`}>
         <EditorContent editor={editor} />
@@ -217,8 +236,10 @@ function ToolbarButton({
       type="button"
       onClick={onClick}
       title={title}
-      className={`p-1.5 rounded-md hover:bg-white/5 transition-colors ${
-        active ? 'bg-white/10 text-[#00FFCC]' : 'text-slate-300'
+      className={`p-1.5 rounded-md transition-colors ${
+        active 
+          ? 'bg-slate-200 text-slate-900' 
+          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
       }`}
     >
       {children}
@@ -227,5 +248,5 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <div className="w-[1px] h-6 bg-white/10 mx-1" />;
+  return <div className="w-[1px] h-6 bg-slate-200 mx-1" />;
 }

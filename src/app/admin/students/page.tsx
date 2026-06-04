@@ -210,7 +210,7 @@ function StudentList() {
                                                     <Button 
                                                         size="sm" 
                                                         variant="outline"
-                                                        className={student.is_approved ? "text-red-500 border-red-500/20 hover:bg-red-500/10" : "text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10"}
+                                                        className={student.is_approved ? "text-burgundy border-burgundy/20 hover:bg-burgundy/10" : "text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10"}
                                                         onClick={() => toggleApproveStudent(student.id, student.is_approved)}
                                                     >
                                                         {student.is_approved ? "Suspend" : "Approve"}
@@ -274,3 +274,4 @@ export default function StudentsPage() {
         </div>
     );
 }
+

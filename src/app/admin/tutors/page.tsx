@@ -369,7 +369,7 @@ export default function TutorsPage() {
                                                     <Button 
                                                         size="sm" 
                                                         variant="outline" 
-                                                        className={tutor.is_approved ? "text-red-500 border-red-500/20 hover:bg-red-500/10" : "text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10"}
+                                                        className={tutor.is_approved ? "text-burgundy border-burgundy/20 hover:bg-burgundy/10" : "text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10"}
                                                         onClick={() => toggleApproveTutor(tutor.id, tutor.is_approved)}
                                                     >
                                                         {tutor.is_approved ? "Suspend" : "Approve"}
@@ -489,3 +489,4 @@ export default function TutorsPage() {
         </div>
     );
 }
+

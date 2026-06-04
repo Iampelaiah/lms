@@ -33,7 +33,7 @@ export default function AgoraWhiteboard({
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tool, setTool] = useState<'pencil' | 'eraser'>('pencil');
-  const [color, setColor] = useState('#0A1A12'); // Sleek branding color
+  const [color, setColor] = useState('#0B0C10'); // Sleek branding color
   const [brushSize, setBrushSize] = useState(4);
 
   // Try initializing the actual Agora Whiteboard SDK
@@ -242,15 +242,15 @@ export default function AgoraWhiteboard({
     <div className="relative w-full h-full bg-white rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl flex flex-col">
       {isLoading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#07120C]/90 backdrop-blur-md z-30">
-          <Loader2 className="w-10 h-10 animate-spin text-[#A7C957] mb-4" />
+          <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37] mb-4" />
           <p className="text-white/60 text-sm font-medium tracking-wide animate-pulse">Initializing Board...</p>
         </div>
       )}
 
       {/* Info indicator overlay */}
-      <div className="absolute top-4 left-6 z-20 flex items-center gap-2 bg-[#0A1A12]/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white">
-        <Sparkles className="w-3.5 h-3.5 text-[#A7C957]" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[#A7C957]">
+      <div className="absolute top-4 left-6 z-20 flex items-center gap-2 bg-[#0B0C10]/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white">
+        <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">
           {useLocalFallback ? 'Interactive Canvas' : 'Agora Whiteboard'}
         </span>
         <span className="text-[10px] text-white/40">|</span>
@@ -284,14 +284,14 @@ export default function AgoraWhiteboard({
 
       {/* PREMIUM LOCAL WHITEBOARD TOOLBAR (Tutor only) */}
       {isTutor && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-3.5 bg-[#0A1A12]/95 border border-white/10 rounded-full shadow-2xl z-20 text-white backdrop-blur-md transition-transform hover:scale-105 duration-300">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-3.5 bg-[#0B0C10]/95 border border-white/10 rounded-full shadow-2xl z-20 text-white backdrop-blur-md transition-transform hover:scale-105 duration-300">
           {/* Tool select */}
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setTool('pencil')}
               className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center transition-all hover:bg-white/5 active:scale-95",
-                tool === 'pencil' ? "bg-[#A7C957] text-[#0A1A12] hover:bg-[#A7C957]" : "text-white/60"
+                tool === 'pencil' ? "bg-[#D4AF37] text-[#0B0C10] hover:bg-[#D4AF37]" : "text-white/60"
               )}
               title="Draw Pencil"
             >
@@ -301,7 +301,7 @@ export default function AgoraWhiteboard({
               onClick={() => setTool('eraser')}
               className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center transition-all hover:bg-white/5 active:scale-95",
-                tool === 'eraser' ? "bg-[#A7C957] text-[#0A1A12] hover:bg-[#A7C957]" : "text-white/60"
+                tool === 'eraser' ? "bg-[#D4AF37] text-[#0B0C10] hover:bg-[#D4AF37]" : "text-white/60"
               )}
               title="Eraser"
             >
@@ -315,8 +315,8 @@ export default function AgoraWhiteboard({
           {tool === 'pencil' && (
             <div className="flex items-center gap-2">
               {[
-                { hex: '#0A1A12', name: 'Primary' },
-                { hex: '#A7C957', name: 'Brand Green' },
+                { hex: '#0B0C10', name: 'Primary' },
+                { hex: '#D4AF37', name: 'Brand Green' },
                 { hex: '#F59E0B', name: 'Amber' },
                 { hex: '#EF4444', name: 'Red' },
               ].map((c) => (
@@ -325,7 +325,7 @@ export default function AgoraWhiteboard({
                   onClick={() => setColor(c.hex)}
                   className={cn(
                     "w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 active:scale-90",
-                    color === c.hex ? "border-[#A7C957] scale-105" : "border-white/10"
+                    color === c.hex ? "border-[#D4AF37] scale-105" : "border-white/10"
                   )}
                   style={{ backgroundColor: c.hex }}
                   title={c.name}
@@ -345,7 +345,7 @@ export default function AgoraWhiteboard({
                   onClick={() => setBrushSize(size)}
                   className={cn(
                     "rounded-full flex items-center justify-center hover:bg-white/5 text-xs transition-all",
-                    brushSize === size ? "bg-white/10 font-bold text-[#A7C957]" : "text-white/40"
+                    brushSize === size ? "bg-white/10 font-bold text-[#D4AF37]" : "text-white/40"
                   )}
                   style={{ width: 28, height: 28 }}
                 >
@@ -360,7 +360,7 @@ export default function AgoraWhiteboard({
           {/* Clear board */}
           <button
             onClick={useLocalFallback ? clearCanvas : () => room?.cleanCurrentScene()}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all active:scale-95"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-burgundy/80 hover:bg-burgundy/10 hover:text-burgundy/80 transition-all active:scale-95"
             title="Clear Board"
           >
             <Trash2 className="w-4 h-4" />
@@ -370,3 +370,6 @@ export default function AgoraWhiteboard({
     </div>
   );
 }
+
+
+
