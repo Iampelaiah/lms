@@ -26,24 +26,24 @@ export function RightSidebarWidgets({ onOpenCreateModal }: RightSidebarWidgetsPr
       {/* Create Post Button */}
       <button 
         onClick={onOpenCreateModal}
-        className="w-full flex items-center justify-center gap-2 bg-royal hover:bg-royal text-white font-bold py-3 px-4 rounded-full transition-colors shadow-[0_0_15px_rgba(249,115,22,0.3)]"
+        className="w-full flex items-center justify-center gap-2 bg-gold hover:bg-gold text-foreground font-bold py-3 px-4 rounded-full transition-colors shadow-[0_0_15px_rgba(249,115,22,0.3)]"
       >
         <Plus className="w-5 h-5" />
         Create Thread
       </button>
 
       {/* Trending Communities Widget */}
-      <div className="bg-obsidian border border-white/10 rounded-lg overflow-hidden">
-        <div className="bg-obsidian/50 px-4 py-3 border-b border-white/10">
-          <h3 className="font-bold text-white/90">Trending Subjects</h3>
+      <div className="bg-background border border-border rounded-lg overflow-hidden">
+        <div className="bg-background/50 px-4 py-3 border-b border-border">
+          <h3 className="font-bold text-foreground/">Trending Subjects</h3>
         </div>
         <ul className="divide-y divide-zinc-800">
           {mockCommunities.slice(0, 3).map((comm, idx) => (
-            <li key={comm.id} className="p-4 hover:bg-obsidian/30 transition-colors cursor-pointer flex items-center gap-3">
-              <span className="text-xl font-bold text-white/60">{idx + 1}</span>
+            <li key={comm.id} className="p-4 hover:bg-background/30 transition-colors cursor-pointer flex items-center gap-3">
+              <span className="text-xl font-bold text-foreground/">{idx + 1}</span>
               <div>
-                <h4 className="text-sm font-semibold text-white/90">{comm.name}</h4>
-                <p className="text-xs text-white/60">{comm.members_count?.toLocaleString()} members</p>
+                <h4 className="text-sm font-semibold text-foreground/">{comm.name}</h4>
+                <p className="text-xs text-foreground/">{comm.members_count?.toLocaleString()} members</p>
               </div>
             </li>
           ))}
@@ -52,7 +52,7 @@ export function RightSidebarWidgets({ onOpenCreateModal }: RightSidebarWidgetsPr
           <button 
             onClick={handleViewAllTrending}
             disabled={isFetchingTrending}
-            className="w-full flex items-center justify-center py-1.5 rounded-full bg-obsidian text-xs font-bold text-white/90 hover:bg-white/5 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center py-1.5 rounded-full bg-background text-xs font-bold text-foreground/ hover:bg-muted transition-colors disabled:opacity-50"
           >
             {isFetchingTrending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'View All'}
           </button>
@@ -60,9 +60,9 @@ export function RightSidebarWidgets({ onOpenCreateModal }: RightSidebarWidgetsPr
       </div>
 
       {/* Rules Widget */}
-      <div className="bg-obsidian border border-white/10 rounded-lg p-4 space-y-3">
-        <h3 className="font-bold text-white/90 border-b border-white/10 pb-2">Forum Rules</h3>
-        <ol className="list-decimal list-inside text-sm text-white/60 space-y-2">
+      <div className="bg-background border border-border rounded-lg p-4 space-y-3">
+        <h3 className="font-bold text-foreground/ border-b border-border pb-2">Forum Rules</h3>
+        <ol className="list-decimal list-inside text-sm text-foreground/ space-y-2">
           <li>Be respectful to fellow students.</li>
           <li>No sharing exact exam answers.</li>
           <li>Keep posts relevant to the community.</li>

@@ -118,28 +118,28 @@ export default function QuizPage() {
 
     if (isFinished) {
         return (
-            <div className="min-h-screen bg-neutral-50 dark:bg-obsidian p-6 flex flex-col items-center justify-center">
+            <div className="min-h-screen bg-neutral-50 dark:bg-background p-6 flex flex-col items-center justify-center">
                 <motion.div 
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     className="w-full max-w-md"
                 >
-                    <Card className="rounded-[2rem] border-white/10 shadow-2xl overflow-hidden bg-white dark:bg-obsidian relative">
-                        <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-royal/20 to-transparent" />
+                    <Card className="rounded-[2rem] border-border shadow-2xl overflow-hidden bg-white dark:bg-background relative">
+                        <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-gold/20 to-transparent" />
                         <CardContent className="p-10 text-center relative z-10 flex flex-col items-center">
-                            <div className="w-20 h-20 rounded-full bg-royal text-obsidian flex items-center justify-center shadow-lg mb-6">
+                            <div className="w-20 h-20 rounded-full bg-gold text-obsidian flex items-center justify-center shadow-lg mb-6">
                                 <Award className="w-10 h-10" />
                             </div>
                             <h2 className="text-3xl font-black mb-2 tracking-tight">Quiz Complete!</h2>
                             <p className="text-muted-foreground font-medium mb-8">You scored {score} out of {MOCK_QUESTIONS.length}</p>
 
-                            <div className="bg-obsidian/5 dark:bg-white/5 rounded-2xl p-6 w-full mb-8 relative overflow-hidden">
-                                <Sparkles className="absolute top-2 right-2 w-4 h-4 text-royal opacity-50" />
+                            <div className="bg-background/5 dark:bg-muted rounded-2xl p-6 w-full mb-8 relative overflow-hidden">
+                                <Sparkles className="absolute top-2 right-2 w-4 h-4 text-gold opacity-50" />
                                 <p className="text-sm uppercase tracking-widest font-bold text-muted-foreground mb-1">Points Earned</p>
-                                <p className="text-4xl font-black text-royal">+{score * 50}</p>
+                                <p className="text-4xl font-black text-gold">+{score * 50}</p>
                             </div>
 
-                            <Button asChild className="w-full h-14 rounded-xl text-lg font-bold bg-obsidian text-white hover:bg-obsidian/90 dark:bg-white dark:text-obsidian dark:hover:bg-white/90">
+                            <Button asChild className="w-full h-14 rounded-xl text-lg font-bold bg-background text-foreground hover:bg-background/90 dark:bg-white dark:text-obsidian dark:hover:bg-muted">
                                 <Link href="/student/study-panel">Return to Study Panel</Link>
                             </Button>
                         </CardContent>
@@ -152,7 +152,7 @@ export default function QuizPage() {
     const question = MOCK_QUESTIONS[currentQuestionIndex];
 
     return (
-        <div className="min-h-screen bg-neutral-50 dark:bg-obsidian p-6 flex flex-col">
+        <div className="min-h-screen bg-neutral-50 dark:bg-background p-6 flex flex-col">
             <header className="flex items-center justify-between mb-12 max-w-4xl mx-auto w-full">
                 <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-full">
                     <ArrowLeft className="w-5 h-5" />
@@ -169,7 +169,7 @@ export default function QuizPage() {
                     {MOCK_QUESTIONS.map((_, idx) => (
                         <div 
                             key={idx} 
-                            className={`h-2 flex-1 rounded-full transition-colors ${idx <= currentQuestionIndex ? 'bg-royal' : 'bg-royal/20'}`}
+                            className={`h-2 flex-1 rounded-full transition-colors ${idx <= currentQuestionIndex ? 'bg-gold' : 'bg-gold/20'}`}
                         />
                     ))}
                 </div>
@@ -195,12 +195,12 @@ export default function QuizPage() {
                                         onClick={() => setSelectedAnswer(idx)}
                                         className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-200 flex items-center justify-between ${
                                             isSelected 
-                                                ? 'border-royal bg-royal/10 shadow-md scale-[1.01]' 
-                                                : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
+                                                ? 'border-gold bg-gold/10 shadow-md scale-[1.01]' 
+                                                : 'border-border bg-muted hover:border-border hover:bg-muted'
                                         }`}
                                     >
                                         <span className="font-medium">{opt}</span>
-                                        {isSelected && <CheckCircle2 className="w-5 h-5 text-royal" />}
+                                        {isSelected && <CheckCircle2 className="w-5 h-5 text-gold" />}
                                     </button>
                                 );
                             })}
@@ -213,7 +213,7 @@ export default function QuizPage() {
                         size="lg"
                         disabled={selectedAnswer === null} 
                         onClick={handleNext}
-                        className="rounded-xl px-10 h-14 font-bold text-lg bg-obsidian text-white hover:bg-obsidian/90 dark:bg-white dark:text-obsidian dark:hover:bg-white/90 shadow-xl"
+                        className="rounded-xl px-10 h-14 font-bold text-lg bg-background text-foreground hover:bg-background/90 dark:bg-white dark:text-obsidian dark:hover:bg-muted shadow-xl"
                     >
                         {currentQuestionIndex === MOCK_QUESTIONS.length - 1 ? 'Finish' : 'Next Question'}
                     </Button>

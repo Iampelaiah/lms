@@ -11,11 +11,11 @@ export default function ProgressPage() {
   const userName = profile?.full_name ? profile.full_name.split(' ')[0] : 'Student';
 
   return (
-    <div className="space-y-8 bg-neutral-50/50 dark:bg-obsidian/10 min-h-screen p-2 sm:p-6 rounded-[2rem]">
+    <div className="space-y-8 bg-neutral-50/50 dark:bg-background/10 min-h-screen p-2 sm:p-6 rounded-[2rem]">
       {/* Top Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white dark:text-white/90">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground dark:text-foreground/">
             Welcome Back {userName}!
           </h1>
           <p className="text-sm text-muted-foreground mt-1 font-medium">

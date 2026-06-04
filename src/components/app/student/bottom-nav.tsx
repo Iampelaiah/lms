@@ -17,7 +17,7 @@ export function BottomNav() {
 
   return (
     <div className="fixed bottom-6 left-4 right-4 z-50 sm:hidden">
-      <nav className="flex items-center justify-between bg-obsidian dark:bg-[#1C1C1C] px-6 py-4 rounded-[2rem] shadow-2xl border border-white/10 dark:border-white/5">
+      <nav className="flex items-center justify-between bg-background dark:bg-[#1C1C1C] px-6 py-4 rounded-[2rem] shadow-2xl border border-border dark:border-border">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -29,13 +29,13 @@ export function BottomNav() {
               <div
                 className={cn(
                   "absolute inset-0 rounded-full transition-all duration-300",
-                  isActive ? "bg-fin-lime scale-100" : "bg-transparent scale-0"
+                  isActive ? "bg-gold scale-100" : "bg-transparent scale-0"
                 )}
               />
               <item.icon 
                 className={cn(
                   "w-6 h-6 transition-colors duration-300 relative z-10",
-                  isActive ? "text-fin-green" : "text-white/60 dark:text-muted-foreground"
+                  isActive ? "text-background" : "text-foreground/ dark:text-muted-foreground"
                 )} 
               />
             </Link>

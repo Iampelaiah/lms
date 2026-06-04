@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 
 const calendarLegend = [
-    { subject: "Mathematics", color: "bg-royal" },
-    { subject: "Physics", color: "bg-royal" },
-    { subject: "History", color: "bg-royal" },
-    { subject: "Chemistry", color: "bg-royal" },
-    { subject: "Biology", color: "bg-royal" },
-    { subject: "English Literature", color: "bg-royal" },
+    { subject: "Mathematics", color: "bg-gold" },
+    { subject: "Physics", color: "bg-gold" },
+    { subject: "History", color: "bg-gold" },
+    { subject: "Chemistry", color: "bg-gold" },
+    { subject: "Biology", color: "bg-gold" },
+    { subject: "English Literature", color: "bg-gold" },
     { subject: "Computer Science", color: "bg-burgundy" },
 ]
 

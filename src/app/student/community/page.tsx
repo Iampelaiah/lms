@@ -44,10 +44,10 @@ export default function StudentForum() {
   };
 
   return (
-    <div className="min-h-screen bg-obsidian text-white/90 pb-12">
+    <div className="min-h-screen bg-background text-foreground/ pb-12">
       {/* Top Banner Area */}
-      <div className="bg-obsidian border-b border-white/10 py-4 px-6 mb-6">
-        <h1 className="text-2xl font-bold text-white/90">Student Community</h1>
+      <div className="bg-background border-b border-border py-4 px-6 mb-6">
+        <h1 className="text-2xl font-bold text-foreground/">Student Community</h1>
       </div>
 
       <div className="container mx-auto max-w-7xl px-4 grid grid-cols-1 lg:grid-cols-[20%_55%_25%] gap-6">

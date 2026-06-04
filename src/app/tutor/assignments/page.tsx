@@ -221,76 +221,76 @@ export default function TutorAssignmentsPage() {
       </div>
 
       {loading ? (
-        <Card className="border-white/5 bg-card/30">
+        <Card className="border-border bg-card">
           <CardContent className="flex items-center justify-center py-20">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
           </CardContent>
         </Card>
       ) : (
         <Tabs defaultValue="unmarked" className="w-full">
-          <TabsList className="bg-white/5 border border-white/10 p-1 rounded-lg">
-            <TabsTrigger value="unmarked" className="rounded-md data-[state=active]:bg-royal data-[state=active]:text-obsidian">Inbox ({submissions.filter((s:any) => s.status === 'unmarked').length})</TabsTrigger>
-            <TabsTrigger value="marked" className="rounded-md data-[state=active]:bg-royal data-[state=active]:text-obsidian">Marked ({submissions.filter((s:any) => s.status === 'completed' || s.status === 'graded').length})</TabsTrigger>
+          <TabsList className="bg-muted/50 border border-border p-1 rounded-lg">
+            <TabsTrigger value="unmarked" className="rounded-md data-[state=active]:bg-gold data-[state=active]:text-obsidian">Inbox ({submissions.filter((s:any) => s.status === 'unmarked').length})</TabsTrigger>
+            <TabsTrigger value="marked" className="rounded-md data-[state=active]:bg-gold data-[state=active]:text-obsidian">Marked ({submissions.filter((s:any) => s.status === 'completed' || s.status === 'graded').length})</TabsTrigger>
           </TabsList>
           
           <TabsContent value="unmarked" className="mt-6">
             {submissions.filter((s:any) => s.status === 'unmarked').length === 0 ? (
-              <Card className="border-dashed border-white/10 bg-card/25 py-16 text-center">
+              <Card className="border-dashed border-border bg-card py-16 text-center">
                 <CardContent className="flex flex-col items-center gap-4">
-                  <div className="bg-royal/10 p-4 rounded-full text-royal animate-pulse">
+                  <div className="bg-gold/10 p-4 rounded-full text-gold animate-pulse">
                     <CheckCircle className="h-12 w-12" />
                   </div>
-                  <h3 className="text-xl font-semibold text-white/95">Inbox Clear!</h3>
-                  <p className="text-white/60 max-w-sm">No student assignments are currently waiting to be marked.</p>
+                  <h3 className="text-xl font-semibold text-foreground">Inbox Clear!</h3>
+                  <p className="text-muted-foreground max-w-sm">No student assignments are currently waiting to be marked.</p>
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-white/5 bg-card/30">
+              <Card className="border-border bg-card">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Inbox: Received Submissions</CardTitle>
+                  <CardTitle className="text-foreground text-lg">Inbox: Received Submissions</CardTitle>
                 </CardHeader>
                 <CardContent className="!pt-0">
                   <div className="overflow-x-auto">
                     <Table>
-                      <TableHeader className="border-white/10">
-                        <TableRow className="hover:bg-transparent border-white/10">
-                          <TableHead className="text-white/60">Student</TableHead>
-                          <TableHead className="text-white/60">Subject</TableHead>
-                          <TableHead className="text-white/60">Topic</TableHead>
-                          <TableHead className="text-white/60">Task</TableHead>
-                          <TableHead className="text-white/60">Submitted</TableHead>
-                          <TableHead className="text-white/60 text-right">Actions</TableHead>
+                      <TableHeader className="border-border">
+                        <TableRow className="hover:bg-transparent border-border">
+                          <TableHead className="text-muted-foreground">Student</TableHead>
+                          <TableHead className="text-muted-foreground">Subject</TableHead>
+                          <TableHead className="text-muted-foreground">Topic</TableHead>
+                          <TableHead className="text-muted-foreground">Task</TableHead>
+                          <TableHead className="text-muted-foreground">Submitted</TableHead>
+                          <TableHead className="text-muted-foreground text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {submissions.filter((s:any) => s.status === 'unmarked').map((sub) => {
                           const initials = sub.profiles?.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) || 'ST';
                           return (
-                            <TableRow key={sub.id} className="hover:bg-white/5 border-white/5">
-                              <TableCell className="font-medium text-white/90">
+                            <TableRow key={sub.id} className="hover:bg-muted/50 border-border">
+                              <TableCell className="font-medium text-foreground">
                                 <div className="flex items-center gap-3">
-                                  <Avatar className="h-9 w-9 border border-white/10">
+                                  <Avatar className="h-9 w-9 border border-border">
                                     <AvatarImage src={sub.profiles?.avatar_url} />
                                     <AvatarFallback className="bg-primary/20 text-primary font-bold text-xs">{initials}</AvatarFallback>
                                   </Avatar>
                                   <div className="flex flex-col">
                                     <span className="font-semibold text-sm">{sub.profiles?.full_name}</span>
-                                    <span className="text-[10px] text-white/60">{sub.profiles?.email}</span>
+                                    <span className="text-[10px] text-muted-foreground">{sub.profiles?.email}</span>
                                   </div>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-white/80 font-medium text-sm">
-                                {sub.subjects?.name} <span className="text-[10px] text-white/60 ml-1.5">({sub.subjects?.level})</span>
+                              <TableCell className="text-muted-foreground font-medium text-sm">
+                                {sub.subjects?.name} <span className="text-[10px] text-muted-foreground ml-1.5">({sub.subjects?.level})</span>
                               </TableCell>
-                              <TableCell className="text-white/90 text-sm max-w-[200px] truncate">{sub.module_items?.title}</TableCell>
+                              <TableCell className="text-foreground text-sm max-w-[200px] truncate">{sub.module_items?.title}</TableCell>
                               <TableCell>
-                                <Badge className="bg-royal/10 text-royal border-royal/20 hover:bg-royal/20">Assignment {sub.assignment_number}</Badge>
+                                <Badge className="bg-gold/10 text-gold border-gold/20 hover:bg-gold/20">Assignment {sub.assignment_number}</Badge>
                               </TableCell>
-                              <TableCell className="text-white/60 text-xs">
+                              <TableCell className="text-muted-foreground text-xs">
                                 {new Date(sub.submitted_at).toLocaleDateString()}
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button onClick={() => openMarkingDialog(sub)} className="bg-royal hover:bg-royal/80 text-obsidian font-bold size-sm text-xs gap-1.5 h-8">
+                                <Button onClick={() => openMarkingDialog(sub)} className="bg-gold hover:bg-gold/80 text-obsidian font-bold size-sm text-xs gap-1.5 h-8">
                                   <Award className="w-3.5 h-3.5" />
                                   Mark Assignment
                                 </Button>
@@ -308,58 +308,58 @@ export default function TutorAssignmentsPage() {
 
           <TabsContent value="marked" className="mt-6">
             {submissions.filter((s:any) => s.status === 'completed' || s.status === 'graded').length === 0 ? (
-              <Card className="border-dashed border-white/10 bg-card/25 py-16 text-center">
+              <Card className="border-dashed border-border bg-card py-16 text-center">
                 <CardContent className="flex flex-col items-center gap-4">
-                  <p className="text-white/60 max-w-sm">No marked assignments yet.</p>
+                  <p className="text-muted-foreground max-w-sm">No marked assignments yet.</p>
                 </CardContent>
               </Card>
             ) : (
-              <Card className="border-white/5 bg-card/30">
+              <Card className="border-border bg-card">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Marked / Graded</CardTitle>
+                  <CardTitle className="text-foreground text-lg">Marked / Graded</CardTitle>
                 </CardHeader>
                 <CardContent className="!pt-0">
                   <div className="overflow-x-auto">
                     <Table>
-                      <TableHeader className="border-white/10">
-                        <TableRow className="hover:bg-transparent border-white/10">
-                          <TableHead className="text-white/60">Student</TableHead>
-                          <TableHead className="text-white/60">Subject</TableHead>
-                          <TableHead className="text-white/60">Topic</TableHead>
-                          <TableHead className="text-white/60">Task</TableHead>
-                          <TableHead className="text-white/60">Marked Date</TableHead>
-                          <TableHead className="text-white/60 text-right">Actions</TableHead>
+                      <TableHeader className="border-border">
+                        <TableRow className="hover:bg-transparent border-border">
+                          <TableHead className="text-muted-foreground">Student</TableHead>
+                          <TableHead className="text-muted-foreground">Subject</TableHead>
+                          <TableHead className="text-muted-foreground">Topic</TableHead>
+                          <TableHead className="text-muted-foreground">Task</TableHead>
+                          <TableHead className="text-muted-foreground">Marked Date</TableHead>
+                          <TableHead className="text-muted-foreground text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {submissions.filter((s:any) => s.status === 'completed' || s.status === 'graded').map((sub) => {
                           const initials = sub.profiles?.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) || 'ST';
                           return (
-                            <TableRow key={sub.id} className="hover:bg-white/5 border-white/5">
-                              <TableCell className="font-medium text-white/90">
+                            <TableRow key={sub.id} className="hover:bg-muted/50 border-border">
+                              <TableCell className="font-medium text-foreground">
                                 <div className="flex items-center gap-3">
-                                  <Avatar className="h-9 w-9 border border-white/10">
+                                  <Avatar className="h-9 w-9 border border-border">
                                     <AvatarImage src={sub.profiles?.avatar_url} />
                                     <AvatarFallback className="bg-primary/20 text-primary font-bold text-xs">{initials}</AvatarFallback>
                                   </Avatar>
                                   <div className="flex flex-col">
                                     <span className="font-semibold text-sm">{sub.profiles?.full_name}</span>
-                                    <span className="text-[10px] text-white/60">{sub.profiles?.email}</span>
+                                    <span className="text-[10px] text-muted-foreground">{sub.profiles?.email}</span>
                                   </div>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-white/80 font-medium text-sm">
-                                {sub.subjects?.name} <span className="text-[10px] text-white/60 ml-1.5">({sub.subjects?.level})</span>
+                              <TableCell className="text-muted-foreground font-medium text-sm">
+                                {sub.subjects?.name} <span className="text-[10px] text-muted-foreground ml-1.5">({sub.subjects?.level})</span>
                               </TableCell>
-                              <TableCell className="text-white/90 text-sm max-w-[200px] truncate">{sub.module_items?.title}</TableCell>
+                              <TableCell className="text-foreground text-sm max-w-[200px] truncate">{sub.module_items?.title}</TableCell>
                               <TableCell>
-                                <Badge className="bg-royal/10 text-royal border-royal/20">Assignment {sub.assignment_number}</Badge>
+                                <Badge className="bg-gold/10 text-gold border-gold/20">Assignment {sub.assignment_number}</Badge>
                               </TableCell>
-                              <TableCell className="text-white/60 text-xs">
+                              <TableCell className="text-muted-foreground text-xs">
                                 {sub.marked_at ? new Date(sub.marked_at).toLocaleDateString() : 'N/A'}
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button variant="outline" onClick={() => openMarkingDialog(sub)} className="border-white/10 hover:bg-white/5 text-white/90 text-xs h-8">
+                                <Button variant="outline" onClick={() => openMarkingDialog(sub)} className="border-border hover:bg-muted/50 text-foreground text-xs h-8">
                                   View Grade
                                 </Button>
                               </TableCell>

@@ -10,7 +10,7 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: '2rem',
+      padding: '1rem',
       screens: {
         '2xl': '1400px',
       },
@@ -23,7 +23,7 @@ export default {
       },
       colors: {
         obsidian: '#0B0C10',
-        royal: '#D4AF37',
+        gold: '#D4AF37',
         burgundy: '#800000',
         'fin-green': '#1A1A1A',
         'fin-lime': '#D4AF37',

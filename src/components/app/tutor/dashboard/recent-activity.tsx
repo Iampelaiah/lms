@@ -7,11 +7,10 @@ import { createClient } from "@/utils/supabase/client";
 export function RecentActivity({ tutorId }: { tutorId?: string }) {
     const [activities, setActivities] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const supabase = createClient();
+    const supabase = React.useMemo(() => createClient(), []);
 
-    useEffect(() => {
-        const fetchActivity = async () => {
-            try {
+    const fetchActivity = React.useCallback(async () => {
+        try {
                 // Run queries in parallel to eliminate sequential database roundtrip waterfalls
                 const [studentsRes, enrollmentsRes, coursesRes] = await Promise.all([
                     supabase
@@ -53,8 +52,8 @@ export function RecentActivity({ tutorId }: { tutorId?: string }) {
                         target: '',
                         time: new Date(s.created_at),
                         icon: UserPlus,
-                        iconColor: 'text-royal',
-                        iconBg: 'bg-royal/10'
+                        iconColor: 'text-gold',
+                        iconBg: 'bg-gold/10'
                     }));
                 }
 
@@ -66,8 +65,8 @@ export function RecentActivity({ tutorId }: { tutorId?: string }) {
                         target: e.course?.title || 'your course',
                         time: new Date(e.created_at),
                         icon: CheckCircle2,
-                        iconColor: 'text-royal',
-                        iconBg: 'bg-royal/10'
+                        iconColor: 'text-gold',
+                        iconBg: 'bg-gold/10'
                     }));
                 }
 
@@ -79,8 +78,8 @@ export function RecentActivity({ tutorId }: { tutorId?: string }) {
                         target: c.title,
                         time: new Date(c.created_at),
                         icon: FileText,
-                        iconColor: 'text-royal',
-                        iconBg: 'bg-royal/10'
+                        iconColor: 'text-gold',
+                        iconBg: 'bg-gold/10'
                     }));
                 }
 
@@ -91,10 +90,24 @@ export function RecentActivity({ tutorId }: { tutorId?: string }) {
             } finally {
                 setLoading(false);
             }
-        };
+    }, [tutorId, supabase]);
 
+    useEffect(() => {
         fetchActivity();
-    }, [tutorId]);
+
+        if (!tutorId) return;
+
+        const channel = supabase
+            .channel(`recent-activity-${tutorId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: 'role=eq.student' }, () => fetchActivity())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'enrollments' }, () => fetchActivity())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'courses', filter: `tutor_id=eq.${tutorId}` }, () => fetchActivity())
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [fetchActivity, tutorId, supabase]);
 
     const formatTime = (date: Date) => {
         const now = new Date();

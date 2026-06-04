@@ -20,7 +20,7 @@ export function EnrollButton({ subjectId }: { subjectId: string }) {
     <button
       onClick={handleEnroll}
       disabled={isPending}
-      className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl font-medium text-white bg-royal hover:bg-royal transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+      className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl font-medium text-foreground bg-gold hover:bg-gold transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
     >
       {isPending ? (
         <>

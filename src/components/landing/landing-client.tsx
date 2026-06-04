@@ -57,10 +57,10 @@ const Navbar = () => {
     >
       {/* Left: Nav Links in Pill */}
       <div className="flex-1 hidden lg:flex items-center">
-        <div className="bg-obsidian/20 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 flex gap-8 text-[10px] font-semibold text-white/90">
-            <a href="#methodology" className="hover:text-white transition-colors">Methodology</a>
-            <a href="#curriculum" className="hover:text-white transition-colors">Curriculum</a>
-            <a href="#resources" className="hover:text-white transition-colors">Resources</a>
+        <div className="bg-background/20 backdrop-blur-md border border-border rounded-full px-4 py-1.5 flex gap-8 text-[10px] font-semibold text-foreground/">
+            <a href="#methodology" className="hover:text-foreground transition-colors">Methodology</a>
+            <a href="#curriculum" className="hover:text-foreground transition-colors">Curriculum</a>
+            <a href="#resources" className="hover:text-foreground transition-colors">Resources</a>
         </div>
       </div>
       
@@ -78,12 +78,12 @@ const Navbar = () => {
 
       {/* Right: Auth & Menu */}
       <div className="flex-1 flex items-center justify-end gap-6">
-        <Link href="/login" className="text-white text-xs font-bold hover:opacity-80 transition-opacity">Login</Link>
-        <Button className="bg-white text-fin-green hover:bg-white/90 font-bold px-5 h-8 rounded-full text-xs" asChild>
+        <Link href="/login" className="text-foreground text-xs font-bold hover:opacity-80 transition-opacity">Login</Link>
+        <Button className="bg-white text-background hover:bg-muted font-bold px-5 h-8 rounded-full text-xs" asChild>
             <Link href="/login?mode=signup">Enroll now</Link>
         </Button>
         {/* aria-label required: icon-only button must have an accessible name */}
-        <Button variant="ghost" size="icon" className="text-white" aria-label="Toggle navigation menu">
+        <Button variant="ghost" size="icon" className="text-foreground" aria-label="Toggle navigation menu">
             <Menu className="w-6 h-6" />
         </Button>
       </div>
@@ -93,7 +93,7 @@ const Navbar = () => {
 
 const Hero = () => {
   return (
-    <section className="relative h-screen flex items-end overflow-hidden bg-fin-green">
+    <section className="relative h-screen flex items-end overflow-hidden bg-background">
       {/* Background Image Container */}
       <div className="absolute inset-0 z-0">
         <Image 
@@ -106,8 +106,8 @@ const Hero = () => {
           data-ai-hint="student learning"
         />
         {/* Cinematic Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-fin-green via-fin-green/20 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-fin-green/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-transparent" />
       </div>
 
       <div className="container mx-auto px-6 md:px-12 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
@@ -117,7 +117,7 @@ const Hero = () => {
             initial={{ y: 60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            className="text-4xl md:text-[74px] font-headline font-bold text-white leading-[0.85] tracking-tight"
+            className="text-4xl md:text-[74px] font-headline font-bold text-foreground leading-[0.85] tracking-tight"
           >
             The future of <br /> learning together
           </motion.h1>
@@ -125,7 +125,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="mt-8 text-base md:text-lg text-white/80 max-w-xl leading-relaxed"
+            className="mt-8 text-base md:text-lg text-foreground/ max-w-xl leading-relaxed"
           >
             Empowering students with AI-driven paths, expert tutors, and a world-class curriculum designed for digital excellence.
           </motion.p>
@@ -135,12 +135,12 @@ const Hero = () => {
             transition={{ delay: 0.8, duration: 0.5 }}
             className="mt-10 flex items-center gap-4"
           >
-            <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-7 h-11 rounded-full text-base group shadow-xl shadow-black/20" asChild>
+            <Button size="lg" className="bg-gold text-background hover:bg-gold/90 font-bold px-7 h-11 rounded-full text-base group shadow-xl shadow-black/20" asChild>
               <Link href="/login?mode=signup">
                 Start learning <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-white/20 bg-white/5 backdrop-blur-md text-white hover:bg-white/10 font-bold px-7 h-11 rounded-full text-base shadow-xl shadow-black/20" asChild>
+            <Button size="lg" variant="outline" className="border-border bg-muted backdrop-blur-md text-foreground hover:bg-muted font-bold px-7 h-11 rounded-full text-base shadow-xl shadow-black/20" asChild>
                 <Link href="/login">Role Preview</Link>
             </Button>
           </motion.div>
@@ -154,17 +154,17 @@ const Hero = () => {
             transition={{ delay: 0.4, duration: 1, ease: "easeOut" }}
             className="relative z-10 origin-bottom-right"
           >
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl shadow-black/20 min-w-[380px]">
+            <div className="bg-muted backdrop-blur-xl border border-border rounded-3xl p-8 shadow-2xl shadow-black/20 min-w-[380px]">
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h3 className="text-white font-headline font-bold text-3xl">Academic Growth</h3>
+                  <h3 className="text-foreground font-headline font-bold text-3xl">Academic Growth</h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="w-2 h-2 rounded-full bg-fin-lime" />
-                    <p className="text-white/40 text-xs font-bold uppercase tracking-widest">Average student mastery levels</p>
+                    <span className="w-2 h-2 rounded-full bg-gold" />
+                    <p className="text-foreground/ text-xs font-bold uppercase tracking-widest">Average student mastery levels</p>
                   </div>
                 </div>
-                <div className="w-14 h-14 bg-fin-lime rounded-2xl flex items-center justify-center">
-                  <BarChart3 className="text-fin-green w-8 h-8" />
+                <div className="w-14 h-14 bg-gold rounded-2xl flex items-center justify-center">
+                  <BarChart3 className="text-background w-8 h-8" />
                 </div>
               </div>
               
@@ -175,31 +175,31 @@ const Hero = () => {
                     initial={{ height: 0 }}
                     animate={{ height: `${h}%` }}
                     transition={{ delay: 1.2 + i * 0.1, duration: 0.8 }}
-                    className={`flex-1 ${i === 3 ? 'bg-white' : 'bg-white/10'} rounded-2xl relative group overflow-hidden`}
+                    className={`flex-1 ${i === 3 ? 'bg-white' : 'bg-muted'} rounded-2xl relative group overflow-hidden`}
                   >
-                    <div className="absolute inset-0 bg-fin-lime translate-y-full group-hover:translate-y-0 transition-transform" />
+                    <div className="absolute inset-0 bg-gold translate-y-full group-hover:translate-y-0 transition-transform" />
                   </motion.div>
                 ))}
               </div>
               
-              <div className="mt-8 pt-8 border-t border-white/5 grid grid-cols-2 gap-4">
+              <div className="mt-8 pt-8 border-t border-border grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-white/30 text-[10px] uppercase tracking-widest font-bold">Retention Rate</p>
-                  <p className="text-2xl text-white font-bold mt-1">98.4%</p>
+                  <p className="text-foreground/ text-[10px] uppercase tracking-widest font-bold">Retention Rate</p>
+                  <p className="text-2xl text-foreground font-bold mt-1">98.4%</p>
                 </div>
                 <div>
-                  <p className="text-white/30 text-[10px] uppercase tracking-widest font-bold">Pass Velocity</p>
-                  <p className="text-2xl text-white font-bold mt-1">+24.5%</p>
+                  <p className="text-foreground/ text-[10px] uppercase tracking-widest font-bold">Pass Velocity</p>
+                  <p className="text-2xl text-foreground font-bold mt-1">+24.5%</p>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center gap-3 text-white/40 text-[10px] font-bold italic">
+              <div className="mt-6 flex items-center gap-3 text-foreground/ text-[10px] font-bold italic">
                 <Plus className="w-3 h-3" />
                 <span>Updated every semester</span>
               </div>
             </div>
             {/* Shadow for separation */}
-            <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-obsidian/40 blur-[120px] rounded-full -z-10 pointer-events-none" />
+            <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-background/40 blur-[120px] rounded-full -z-10 pointer-events-none" />
           </motion.div>
         </div>
       </div>
@@ -214,7 +214,7 @@ const Marquee = () => {
     <div className="bg-white pt-24 pb-12 overflow-hidden">
       <div className="container mx-auto px-6 mb-16 flex flex-col items-center">
          {/* Contrast bumped from /30 to /70 to meet WCAG AA minimum contrast ratio */}
-         <div className="inline-flex items-center gap-2 px-6 py-2 bg-fin-beige rounded-full border border-fin-green/10 text-[13px] font-semibold text-fin-green/70">
+         <div className="inline-flex items-center gap-2 px-6 py-2 bg-muted rounded-full border border-background/10 text-[13px] font-semibold text-background/70">
             <span>Join over 10,000 students already learning with Dr Max.</span>
          </div>
       </div>
@@ -226,7 +226,7 @@ const Marquee = () => {
             className="flex gap-20 items-center px-10"
         >
             {[...brands, ...brands].map((item, i) => (
-            <span key={i} className="text-2xl font-headline font-bold text-fin-green/30 uppercase tracking-tighter italic">
+            <span key={i} className="text-2xl font-headline font-bold text-background/30 uppercase tracking-tighter italic">
                 {item}
             </span>
             ))}
@@ -247,23 +247,23 @@ const Features = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-6xl md:text-7xl font-headline font-bold text-fin-green leading-[1] tracking-tight">
+            <h2 className="text-6xl md:text-7xl font-headline font-bold text-background leading-[1] tracking-tight">
               Build for your <br /> next gen of <br /> learning
             </h2>
             <div className="mt-10 flex flex-wrap gap-4">
-               <Button size="lg" className="bg-fin-green text-white hover:bg-fin-green/90 font-bold px-8 h-14 rounded-full text-md group">
+               <Button size="lg" className="bg-background text-foreground hover:bg-background/90 font-bold px-8 h-14 rounded-full text-md group">
                   Start learning <ArrowRight className="ml-2 w-4 h-4" />
                </Button>
-               <Button size="lg" variant="outline" className="border-fin-green/10 text-fin-green hover:bg-fin-beige font-bold px-8 h-14 rounded-full text-md">
+               <Button size="lg" variant="outline" className="border-background/10 text-background hover:bg-muted font-bold px-8 h-14 rounded-full text-md">
                   Learn more
                </Button>
             </div>
             
             <div className="mt-16 space-y-6 max-w-md">
-              <p className="text-fin-green/60 text-lg leading-relaxed">
+              <p className="text-background/60 text-lg leading-relaxed">
                 Experience seamless integration of technology and education, built for your success and convenience.
               </p>
-              <p className="text-fin-green/60 text-lg leading-relaxed font-bold">
+              <p className="text-background/60 text-lg leading-relaxed font-bold">
                 The power of an AI-driven school, with none of the legacy baggage. Dr Max gives modern learners and tutors an intuitive platform for exam-readiness and mastery.
               </p>
             </div>
@@ -281,10 +281,10 @@ const Features = () => {
                 className="bg-[#E4F0F2] rounded-[2.5rem] p-7 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[224px] absolute bottom-[10px] left-0 w-[57%]"
             >
                 <div className="space-y-6">
-                    <h3 className="text-2xl font-headline font-bold text-fin-green tracking-tight leading-tight">
+                    <h3 className="text-2xl font-headline font-bold text-background tracking-tight leading-tight">
                         Control study <br /> effortlessly at any pace
                     </h3>
-                    <ul className="space-y-4 text-fin-green/60 font-medium">
+                    <ul className="space-y-4 text-background/60 font-medium">
                         <li className="flex items-center gap-3">
                             <ArrowRight className="w-4 h-4" /> 
                             <span>Adaptive learning paths</span>
@@ -295,7 +295,7 @@ const Features = () => {
                         </li>
                     </ul>
                 </div>
-                <Button variant="ghost" className="mt-7 w-fit bg-fin-green text-white hover:bg-fin-green/90 rounded-full px-5 h-9 font-bold flex gap-2 text-sm">
+                <Button variant="ghost" className="mt-7 w-fit bg-background text-foreground hover:bg-background/90 rounded-full px-5 h-9 font-bold flex gap-2 text-sm">
                     Manage studies <ArrowRight className="w-4 h-4" />
                 </Button>
             </motion.div>
@@ -306,30 +306,30 @@ const Features = () => {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-                className="bg-fin-green rounded-[2.5rem] p-10 flex flex-col justify-between overflow-hidden absolute bottom-[10px] right-0 w-[40%] min-h-[380px]"
+                className="bg-background rounded-[2.5rem] p-10 flex flex-col justify-between overflow-hidden absolute bottom-[10px] right-0 w-[40%] min-h-[380px]"
             >
                 <div className="space-y-8 relative z-10">
                     {/* UI Mockup Snippets */}
                     <div className="space-y-4">
-                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/5 w-full flex items-center justify-between">
+                        <div className="bg-muted backdrop-blur-md rounded-2xl p-4 border border-border w-full flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-fin-lime/20 flex items-center justify-center">
-                                    <Brain className="w-6 h-6 text-fin-lime" />
+                                <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
+                                    <Brain className="w-6 h-6 text-gold" />
                                 </div>
-                                <span className="text-white text-sm font-bold">Ask AI Buddy</span>
+                                <span className="text-foreground text-sm font-bold">Ask AI Buddy</span>
                             </div>
-                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                                <Plus className="w-4 h-4 text-white" />
+                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                                <Plus className="w-4 h-4 text-foreground" />
                             </div>
                         </div>
 
-                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/5 w-fit ml-auto flex items-center gap-4">
-                             <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Ongoing session</span>
+                        <div className="bg-muted backdrop-blur-md rounded-2xl p-4 border border-border w-fit ml-auto flex items-center gap-4">
+                             <span className="text-foreground/ text-xs font-bold uppercase tracking-widest">Ongoing session</span>
                              <div className="flex -space-x-2">
-                                <div className="w-6 h-6 rounded-full border-2 border-fin-green bg-royal overflow-hidden">
+                                <div className="w-6 h-6 rounded-full border-2 border-background bg-gold overflow-hidden">
                                     <Image src="https://picsum.photos/seed/face1/40/40" alt="user" width={40} height={40} />
                                 </div>
-                                <div className="w-6 h-6 rounded-full border-2 border-fin-green bg-royal overflow-hidden">
+                                <div className="w-6 h-6 rounded-full border-2 border-background bg-gold overflow-hidden">
                                     <Image src="https://picsum.photos/seed/face2/40/40" alt="user" width={40} height={40} />
                                 </div>
                              </div>
@@ -338,7 +338,7 @@ const Features = () => {
                 </div>
 
                 <div className="mt-20 relative z-10">
-                    <h3 className="text-3xl font-headline font-bold text-fin-lime tracking-tight leading-tight">
+                    <h3 className="text-3xl font-headline font-bold text-gold tracking-tight leading-tight">
                         Fuel your future with <br /> world-class certified <br /> expert tutors
                     </h3>
                 </div>
@@ -366,15 +366,15 @@ const StudySimulator = () => {
     <section className="py-32 px-6 md:px-12 bg-white">
       <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
         <div>
-          <h2 className="text-5xl md:text-7xl font-headline font-bold text-fin-green leading-[0.9] tracking-tight">Visualize your <br /> success.</h2>
-          <p className="mt-8 text-2xl text-fin-green/60 max-w-md leading-relaxed">Our algorithm projects your performance based on commitment and resource engagement.</p>
+          <h2 className="text-5xl md:text-7xl font-headline font-bold text-background leading-[0.9] tracking-tight">Visualize your <br /> success.</h2>
+          <p className="mt-8 text-2xl text-background/60 max-w-md leading-relaxed">Our algorithm projects your performance based on commitment and resource engagement.</p>
         </div>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="bg-fin-lime p-12 rounded-[3rem] text-fin-green shadow-2xl shadow-fin-lime/20"
+          className="bg-gold p-12 rounded-[3rem] text-background shadow-2xl shadow-gold/20"
         >
           <div className="space-y-12">
             <div>
@@ -391,26 +391,26 @@ const StudySimulator = () => {
                 value={hours}
                 aria-label="Select weekly study hours"
                 onChange={(e) => setHours(Number(e.target.value))}
-                className="w-full h-2.5 bg-fin-green/10 rounded-full appearance-none cursor-pointer accent-fin-green"
+                className="w-full h-2.5 bg-background/10 rounded-full appearance-none cursor-pointer accent-background"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-8 border-t border-fin-green/10 pt-12">
+            <div className="grid grid-cols-2 gap-8 border-t border-background/10 pt-12">
               <div>
-                <p className="text-fin-green/40 text-xs uppercase font-bold tracking-widest">Projected Grade</p>
+                <p className="text-background/40 text-xs uppercase font-bold tracking-widest">Projected Grade</p>
                 <div className="text-4xl font-headline font-bold mt-4 tracking-tighter">
                   <AnimatedNumber value={projectedGrade} suffix="%" />
                 </div>
               </div>
               <div>
-                <p className="text-fin-green/40 text-xs uppercase font-bold tracking-widest">Mastery Velocity</p>
-                <div className="text-4xl font-headline font-bold mt-4 text-fin-green tracking-tighter">
+                <p className="text-background/40 text-xs uppercase font-bold tracking-widest">Mastery Velocity</p>
+                <div className="text-4xl font-headline font-bold mt-4 text-background tracking-tighter">
                   <AnimatedNumber value={masteryBoost} suffix="x" />
                 </div>
               </div>
             </div>
 
-            <Button className="w-full bg-fin-green text-white hover:bg-fin-green/90 h-[60px] rounded-2xl font-bold text-base transition-all active:scale-95" asChild>
+            <Button className="w-full bg-background text-foreground hover:bg-background/90 h-[60px] rounded-2xl font-bold text-base transition-all active:scale-95" asChild>
               <Link href="/login?mode=signup">Unlock Full Potential</Link>
             </Button>
           </div>
@@ -454,12 +454,12 @@ const FAQ = () => {
             <AccordionItem key={i} value={`item-${i}`} className="border-b-0">
               <motion.div 
                 style={{ backgroundColor: i % 2 === 0 ? 'rgba(128, 0, 0, 0.15)' : 'transparent' }}
-                className="rounded-3xl border border-white/10 overflow-hidden"
+                className="rounded-3xl border border-border overflow-hidden"
               >
-                <AccordionTrigger className="px-10 py-8 text-white hover:no-underline group">
+                <AccordionTrigger className="px-10 py-8 text-foreground hover:no-underline group">
                   <span className="text-left font-headline font-bold text-2xl tracking-tight">{item.q}</span>
                 </AccordionTrigger>
-                <AccordionContent className="px-10 pb-10 text-white/60 text-xl leading-relaxed">
+                <AccordionContent className="px-10 pb-10 text-foreground/ text-xl leading-relaxed">
                   {item.a}
                 </AccordionContent>
               </motion.div>
@@ -492,23 +492,23 @@ const ParallaxTestimonial = () => {
         />
       </motion.div>
       
-      <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-32 bg-gradient-to-t from-fin-green to-transparent">
+      <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-32 bg-gradient-to-t from-background to-transparent">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="bg-fin-lime p-10 rounded-[2.5rem] max-w-2xl shadow-2xl shadow-black/40"
+          className="bg-gold p-10 rounded-[2.5rem] max-w-2xl shadow-2xl shadow-black/40"
         >
-          <p className="text-2xl md:text-4xl font-headline font-bold text-fin-green leading-[1] tracking-tight">
+          <p className="text-2xl md:text-4xl font-headline font-bold text-background leading-[1] tracking-tight">
             "Since joining Dr Max, my grade in Mathematics jumped from a C to an A+. The AI tutor changed how I study forever."
           </p>
           <div className="mt-8 flex items-center gap-4">
-            <div className="w-12 h-12 bg-fin-green rounded-full flex items-center justify-center">
-                <Trophy className="text-fin-lime w-6 h-6" />
+            <div className="w-12 h-12 bg-background rounded-full flex items-center justify-center">
+                <Trophy className="text-gold w-6 h-6" />
             </div>
             <div>
-              <p className="font-bold text-fin-green text-lg">Sarah Jenkins</p>
-              <p className="text-fin-green/60 text-xs font-bold uppercase tracking-widest">Grade 11 Student</p>
+              <p className="font-bold text-background text-lg">Sarah Jenkins</p>
+              <p className="text-background/60 text-xs font-bold uppercase tracking-widest">Grade 11 Student</p>
             </div>
           </div>
         </motion.div>
@@ -519,7 +519,7 @@ const ParallaxTestimonial = () => {
 
 const Footer = () => {
   return (
-    <footer className="bg-fin-green text-white py-32 px-6 md:px-12 border-t border-white/5">
+    <footer className="bg-background text-foreground py-32 px-6 md:px-12 border-t border-border">
       <div className="container mx-auto">
         <div className="flex flex-col items-center text-center mb-32">
           <motion.h2 
@@ -530,14 +530,14 @@ const Footer = () => {
           >
             Start your digital <br /> learning journey
           </motion.h2>
-          <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-16 h-24 rounded-full text-3xl group transition-all duration-500 shadow-2xl shadow-fin-lime/20" asChild>
+          <Button size="lg" className="bg-gold text-background hover:bg-gold/90 font-bold px-16 h-24 rounded-full text-3xl group transition-all duration-500 shadow-2xl shadow-gold/20" asChild>
             <Link href="/login?mode=signup">
                 Enroll Today <ArrowRight className="ml-6 w-10 h-10 group-hover:translate-x-3 transition-transform" />
             </Link>
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-16 pt-32 border-t border-white/5">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-16 pt-32 border-t border-border">
           <div className="col-span-2">
             <div className="flex items-center gap-3 mb-10">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center p-2">
@@ -545,10 +545,10 @@ const Footer = () => {
               </div>
               <div className="flex flex-col leading-tight">
                 <span className="font-headline font-bold text-3xl">Dr Max</span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-fin-lime/80">Online School</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gold/80">Online School</span>
               </div>
             </div>
-            <p className="text-white/30 max-w-xs text-lg leading-relaxed font-medium">
+            <p className="text-foreground/ max-w-xs text-lg leading-relaxed font-medium">
               Pioneering the future of digital education with AI-powered personalized learning systems.
             </p>
           </div>
@@ -560,11 +560,11 @@ const Footer = () => {
             { title: "Institution", links: [{label: "About", href: "#"}, {label: "Faculty", href: "#"}, {label: "Contact", href: "#"}, {label: "Privacy", href: "#"}] }
           ].map((section, i) => (
             <div key={i}>
-              <h4 className="font-bold mb-8 text-xs uppercase tracking-[0.2em] text-fin-lime">{section.title}</h4>
-              <ul className="space-y-5 text-white/50 font-medium">
+              <h4 className="font-bold mb-8 text-xs uppercase tracking-[0.2em] text-gold">{section.title}</h4>
+              <ul className="space-y-5 text-foreground/ font-medium">
                 {section.links.map((link, j) => (
                   <li key={j}>
-                    <Link href={link.href} className="hover:text-white transition-colors">{link.label}</Link>
+                    <Link href={link.href} className="hover:text-foreground transition-colors">{link.label}</Link>
                   </li>
                 ))}
               </ul>
@@ -572,12 +572,12 @@ const Footer = () => {
           ))}
         </div>
 
-        <div className="mt-32 pt-10 border-t border-white/5 flex flex-col md:row justify-between items-center gap-10 text-white/20 text-sm font-bold uppercase tracking-widest">
+        <div className="mt-32 pt-10 border-t border-border flex flex-col md:row justify-between items-center gap-10 text-foreground/ text-sm font-bold uppercase tracking-widest">
           <p>© 2024 Dr Max Online School. All rights reserved.</p>
           <div className="flex gap-12">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors">Cookies</a>
+            <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-foreground transition-colors">Cookies</a>
           </div>
         </div>
       </div>
@@ -587,7 +587,7 @@ const Footer = () => {
 
 export const LandingClient = () => {
   return (
-    <div className="min-h-screen bg-fin-beige selection:bg-fin-lime selection:text-fin-green">
+    <div className="min-h-screen bg-muted selection:bg-gold selection:text-background">
       <Navbar />
       <Hero />
       <Marquee />

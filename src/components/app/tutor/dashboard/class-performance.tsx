@@ -32,10 +32,9 @@ const chartConfig = {
 export function ClassPerformance({ tutorId }: { tutorId?: string }) {
   const [performanceData, setPerformanceData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = React.useMemo(() => createClient(), []);
 
-  useEffect(() => {
-    const fetchPerformance = async () => {
+  const fetchPerformance = React.useCallback(async () => {
       if (!tutorId) {
         setLoading(false);
         return;
@@ -64,10 +63,23 @@ export function ClassPerformance({ tutorId }: { tutorId?: string }) {
       } finally {
         setLoading(false);
       }
-    };
+  }, [tutorId, supabase]);
 
+  useEffect(() => {
     fetchPerformance();
-  }, [tutorId]);
+
+    if (!tutorId) return;
+
+    const channel = supabase
+      .channel(`class-performance-${tutorId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses', filter: `tutor_id=eq.${tutorId}` }, () => fetchPerformance())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'enrollments' }, () => fetchPerformance())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchPerformance, tutorId, supabase]);
 
   if (loading) return (
     <Card className="h-full">

@@ -40,11 +40,11 @@ function StatCard({ title, value, icon: Icon, trend, description, href }: StatCa
                 {trend && (
                     <div className="flex items-center text-xs mt-1">
                         {trend.positive ? (
-                            <ArrowUpRight className="h-3 w-3 text-royal mr-1" />
+                            <ArrowUpRight className="h-3 w-3 text-gold mr-1" />
                         ) : (
                             <ArrowDownRight className="h-3 w-3 text-burgundy mr-1" />
                         )}
-                        <span className={trend.positive ? "text-royal" : "text-burgundy"}>
+                        <span className={trend.positive ? "text-gold" : "text-burgundy"}>
                             {trend.value}
                         </span>
                         <span className="text-muted-foreground ml-1">vs last month</span>
@@ -375,13 +375,13 @@ export default function AdminDashboardPage() {
                                     ) : (
                                         pendingProfiles.map((profile) => (
                                             <TableRow key={profile.id}>
-                                                <TableCell><Badge variant="outline" className="text-royal border-royal/20 bg-royal/10">Pending</Badge></TableCell>
+                                                <TableCell><Badge variant="outline" className="text-gold border-gold/20 bg-gold/10">Pending</Badge></TableCell>
                                                 <TableCell className="font-medium">{profile.full_name || 'Unnamed User'}</TableCell>
                                                 <TableCell className="capitalize">{profile.role}</TableCell>
                                                 <TableCell>{new Date(profile.updated_at).toLocaleDateString()}</TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex justify-end gap-2">
-                                                        <Button size="sm" variant="outline" className="text-royal border-royal/20 hover:bg-royal/10" onClick={() => handleApproveUser(profile.id, true)}><CheckCircle className="mr-1 h-3 w-3"/> Approve</Button>
+                                                        <Button size="sm" variant="outline" className="text-gold border-gold/20 hover:bg-gold/10" onClick={() => handleApproveUser(profile.id, true)}><CheckCircle className="mr-1 h-3 w-3"/> Approve</Button>
                                                         <Button size="sm" variant="outline" className="text-burgundy border-burgundy/20 hover:bg-burgundy/10" onClick={() => handleApproveUser(profile.id, false)}><XCircle className="mr-1 h-3 w-3"/> Reject</Button>
                                                     </div>
                                                 </TableCell>
@@ -406,14 +406,14 @@ export default function AdminDashboardPage() {
                                 <TableBody>
                                     {pendingCourses.map((course) => (
                                         <TableRow key={course.id}>
-                                            <TableCell><Badge variant="outline" className="text-royal border-royal/20 bg-royal/10">Review</Badge></TableCell>
+                                            <TableCell><Badge variant="outline" className="text-gold border-gold/20 bg-gold/10">Review</Badge></TableCell>
                                             <TableCell className="font-medium">{course.title}</TableCell>
                                             <TableCell>{course.tutor}</TableCell>
                                             <TableCell>{course.date}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <Button size="sm" variant="outline" onClick={handleApproveCourse}><FileText className="mr-1 h-3 w-3"/> View Course</Button>
-                                                    <Button size="sm" variant="outline" className="text-royal border-royal/20 hover:bg-royal/10" onClick={handleApproveCourse}><CheckCircle className="mr-1 h-3 w-3"/> Approve</Button>
+                                                    <Button size="sm" variant="outline" className="text-gold border-gold/20 hover:bg-gold/10" onClick={handleApproveCourse}><CheckCircle className="mr-1 h-3 w-3"/> Approve</Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>

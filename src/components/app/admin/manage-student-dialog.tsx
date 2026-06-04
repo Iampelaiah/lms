@@ -280,8 +280,8 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                     </div>
                     <Badge
                         className={student.is_approved
-                            ? 'bg-royal text-royal hover:bg-royal'
-                            : 'bg-royal text-royal hover:bg-royal'}
+                            ? 'bg-gold/10 text-gold hover:bg-gold/20'
+                            : 'bg-gold/10 text-gold hover:bg-gold/20'}
                     >
                         {student.is_approved ? 'Active' : 'Pending'}
                     </Badge>
@@ -296,7 +296,7 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             {enrollmentsList.filter(e => e.status === 'pending').length > 0 && (
-                                <Badge variant="outline" className="bg-royal/10 text-royal border-royal">
+                                <Badge variant="outline" className="bg-gold/10 text-gold border-gold">
                                     {enrollmentsList.filter(e => e.status === 'pending').length} pending
                                 </Badge>
                             )}
@@ -335,14 +335,14 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                                     <div
                                         key={course.id}
                                         className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${
-                                            isEnrolled ? 'bg-primary/5 border-primary/20' : isPending ? 'bg-royal/5 border-royal/20' : 'bg-background'
+                                            isEnrolled ? 'bg-primary/5 border-primary/20' : isPending ? 'bg-gold/5 border-gold/20' : 'bg-background'
                                         }`}
                                     >
                                         <div className="flex items-center gap-2 min-w-0">
                                             {isEnrolled
                                                 ? <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
                                                 : isPending
-                                                ? <Loader2 className="h-4 w-4 text-royal flex-shrink-0 animate-pulse" />
+                                                ? <Loader2 className="h-4 w-4 text-gold flex-shrink-0 animate-pulse" />
                                                 : <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                             }
                                             <div className="flex flex-col min-w-0">
@@ -354,7 +354,7 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                                             {isPending && (
                                                 <Button
                                                     size="sm"
-                                                    className="flex-shrink-0 h-8 px-3 text-xs bg-royal hover:bg-royal text-white"
+                                                    className="flex-shrink-0 h-8 px-3 text-xs bg-gold hover:bg-gold text-foreground"
                                                     onClick={() => approveEnrollment(enrollment.id, course.id)}
                                                     disabled={isToggling}
                                                 >
@@ -367,7 +367,7 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                                                 className={`flex-shrink-0 h-8 px-3 text-xs ${
                                                     isEnrolled || isPending
                                                         ? 'bg-burgundy/10 text-burgundy border-burgundy hover:bg-burgundy/20 hover:text-burgundy'
-                                                        : 'text-royal border-royal hover:bg-royal/10'
+                                                        : 'text-gold border-gold hover:bg-gold/10'
                                                 }`}
                                                 onClick={() => toggleEnrollment(course.id, enrollment)}
                                                 disabled={isToggling}
@@ -499,7 +499,7 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                                 </Button>
                                 <Button
                                     size="sm"
-                                    className="flex-1 bg-burgundy hover:bg-burgundy text-white"
+                                    className="flex-1 bg-burgundy hover:bg-burgundy text-foreground"
                                     onClick={handleTransferOut}
                                     disabled={
                                         isTransferring ||

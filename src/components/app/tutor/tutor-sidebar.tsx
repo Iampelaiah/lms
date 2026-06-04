@@ -36,11 +36,12 @@ import React from 'react';
 import { useTheme } from "next-themes";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/components/providers/user-context';
+import { TutorNotifications } from '@/components/app/tutor/tutor-notifications';
 
 export function TutorSidebar() {
   const pathname = usePathname();
   const { profile, loading } = useUser();
-  const { setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const router = useRouter();
 
   const handleLogout = async (e: React.MouseEvent) => {
@@ -125,20 +126,11 @@ export function TutorSidebar() {
              <SidebarMenu>
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
-                        <Link href="#"><Button variant="ghost" size="icon"><HelpCircle /></Button></Link>
                         <Link href="#"><Button variant="ghost" size="icon"><Puzzle /></Button></Link>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                <Palette />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="mb-2">
-                                <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                            <Palette />
+                        </Button>
+                        <TutorNotifications />
                         <Link href="/tutor/settings"><Button variant="ghost" size="icon"><Settings /></Button></Link>
                         <Button variant="ghost" size="icon" onClick={handleLogout}><LogOut /></Button>
                     </div>

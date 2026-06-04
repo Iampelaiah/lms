@@ -57,23 +57,23 @@ export function RoleSelection() {
       {roles.map((role) => (
         <Card
           key={role.name}
-          className="bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col rounded-3xl overflow-hidden group"
+          className="bg-muted border-border hover:border-border transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col rounded-3xl overflow-hidden group"
         >
           <Link href={role.loginHref} className="block flex-grow p-6">
             <div className="flex items-center gap-4 mb-4">
-              <div className="bg-white/5 p-3 rounded-2xl group-hover:bg-royal/10 transition-colors">
-                <role.icon className="w-6 h-6 text-white group-hover:text-royal transition-colors" />
+              <div className="bg-muted p-3 rounded-2xl group-hover:bg-gold/10 transition-colors">
+                <role.icon className="w-6 h-6 text-foreground group-hover:text-gold transition-colors" />
               </div>
-              <h3 className="text-xl font-bold text-white">{role.name}</h3>
+              <h3 className="text-xl font-bold text-foreground">{role.name}</h3>
             </div>
-            <p className="text-white/60 text-sm leading-relaxed">
+            <p className="text-foreground/ text-sm leading-relaxed">
               {role.description}
             </p>
           </Link>
           <div className="px-6 pb-4 mt-auto flex justify-end">
             <Link 
               href={role.previewHref} 
-              className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-foreground/ hover:text-foreground transition-colors"
             >
               <Eye className="h-3 w-3" />
               <span>Preview Portal</span>

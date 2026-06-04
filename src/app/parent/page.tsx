@@ -163,8 +163,8 @@ async function StudentDashboard({ student }: { student: any }) {
                                 const Icon = achievement.icon;
                                 return (
                                 <li key={index} className="flex items-center gap-4">
-                                     <div className="bg-royal p-2 rounded-full">
-                                        <Icon className="h-5 w-5 text-royal" />
+                                     <div className="bg-gold p-2 rounded-full">
+                                        <Icon className="h-5 w-5 text-gold" />
                                     </div>
                                     <div>
                                         <p className="font-medium">{achievement.title}</p>

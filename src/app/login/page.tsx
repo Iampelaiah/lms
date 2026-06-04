@@ -149,27 +149,27 @@ function LoginForm() {
   const displayRole = roleDisplayNames[role] || capitalizeFirstLetter(role);
 
   return (
-    <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-obsidian overflow-hidden">
+    <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-background overflow-hidden">
       {/* Left Column */}
-      <div className="hidden lg:flex relative bg-obsidian p-10 flex-col justify-between overflow-hidden">
+      <div className="hidden lg:flex relative bg-background p-10 flex-col justify-between overflow-hidden">
         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-20 mix-blend-screen pointer-events-none">
           <source src="/make_it_a_male_voice___the_ui.mp4" type="video/mp4" />
         </video>
-        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-royal/10 rounded-full blur-[80px] z-0 pointer-events-none" />
-        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-royal/5 rounded-full blur-[80px] z-0 pointer-events-none" />
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-gold/10 rounded-full blur-[80px] z-0 pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-gold/5 rounded-full blur-[80px] z-0 pointer-events-none" />
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1">
               <Image src="/logo.png" alt="Dr Max Logo" width={32} height={32} className="object-contain" />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">Dr Max</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Dr Max</h2>
           </div>
           <div className="space-y-4 max-w-md mt-6">
-            <h1 className="text-4xl font-bold text-white leading-tight tracking-tight">
+            <h1 className="text-4xl font-bold text-foreground leading-tight tracking-tight">
               Welcome <br /> Back
             </h1>
-            <p className="text-white/60 text-sm">
+            <p className="text-foreground/ text-sm">
               The future of personalized learning, powered by AI. Select your role to access your workspace.
             </p>
           </div>
@@ -183,21 +183,21 @@ function LoginForm() {
               onClick={() => setRole(r.id)}
               className={`relative rounded-[1.5rem] p-3 flex flex-col justify-between h-28 transition-all duration-200 text-left overflow-hidden ${
                 role === r.id
-                  ? 'bg-royal/10 border border-royal shadow-[0_0_15px_rgba(0,255,204,0.2)] ring-1 ring-royal scale-105 z-20'
-                  : 'bg-white/5 border border-white/10 hover:bg-white/10 opacity-60 hover:opacity-100'
+                  ? 'bg-gold/10 border border-gold shadow-[0_0_15px_rgba(0,255,204,0.2)] ring-1 ring-gold scale-105 z-20'
+                  : 'bg-muted border border-border hover:bg-muted opacity-60 hover:opacity-100'
               }`}
             >
               <div className="absolute inset-0 pointer-events-none">
                 <Image src={`/${r.id}.png`} alt={r.name} fill className="object-cover" priority />
-                <div className={`absolute inset-0 transition-opacity duration-200 ${role === r.id ? 'bg-royal/10' : 'bg-obsidian/40'}`} />
+                <div className={`absolute inset-0 transition-opacity duration-200 ${role === r.id ? 'bg-gold/10' : 'bg-background/40'}`} />
               </div>
 
               <div className="relative z-10 flex flex-col h-full justify-between">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-lg ${role === r.id ? 'bg-royal text-obsidian' : 'bg-white/20 text-white'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-lg ${role === r.id ? 'bg-gold text-obsidian' : 'bg-muted text-foreground'}`}>
                   <r.icon className="w-4 h-4" />
                 </div>
                 <div className="space-y-2">
-                  <p className={`font-bold text-sm leading-snug drop-shadow-md ${role === r.id ? 'text-white' : 'text-white/60'}`}>
+                  <p className={`font-bold text-sm leading-snug drop-shadow-md ${role === r.id ? 'text-foreground' : 'text-foreground/'}`}>
                     {isLogin ? 'Sign in as' : 'Sign up as'} <br /> {r.name}
                   </p>
                 </div>
@@ -208,11 +208,11 @@ function LoginForm() {
       </div>
 
       {/* Right Column - Auth Form */}
-      <div className="flex items-center justify-center p-6 lg:p-10 bg-obsidian overflow-y-auto">
+      <div className="flex items-center justify-center p-6 lg:p-10 bg-background overflow-y-auto">
         <div className="w-full max-w-md space-y-4">
           <div className="text-center space-y-1">
-            <h2 className="text-2xl font-bold text-white">{isLogin ? 'Login as' : 'Sign Up as'} {displayRole}</h2>
-            <p className="text-white/60 text-xs">Enter your credentials to access your account.</p>
+            <h2 className="text-2xl font-bold text-foreground">{isLogin ? 'Login as' : 'Sign Up as'} {displayRole}</h2>
+            <p className="text-foreground/ text-xs">Enter your credentials to access your account.</p>
           </div>
 
           {errorMessage && (
@@ -227,11 +227,11 @@ function LoginForm() {
           <div className="space-y-3">
             {/* Social Buttons */}
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" type="button" className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium" onClick={handleGoogleAuth} disabled={!mounted || isLoading}>
+              <Button variant="outline" type="button" className="bg-transparent border-border hover:bg-muted text-foreground h-10 rounded-xl flex gap-3 font-medium" onClick={handleGoogleAuth} disabled={!mounted || isLoading}>
                 <GoogleIcon className="w-5 h-5" />
                 Google
               </Button>
-              <Button variant="outline" type="button" className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium" onClick={() => window.open('https://wa.me/yournumber', '_blank')}>
+              <Button variant="outline" type="button" className="bg-transparent border-border hover:bg-muted text-foreground h-10 rounded-xl flex gap-3 font-medium" onClick={() => window.open('https://wa.me/yournumber', '_blank')}>
                 <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
                 WhatsApp
               </Button>
@@ -239,10 +239,10 @@ function LoginForm() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10" />
+                <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-obsidian px-2 text-white/60">Or</span>
+                <span className="bg-background px-2 text-foreground/">Or</span>
               </div>
             </div>
 
@@ -251,52 +251,52 @@ function LoginForm() {
                 {!isLogin && (
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="grid grid-cols-2 gap-4 pb-2">
                     <div className="space-y-2">
-                      <Label htmlFor="first-name" className="text-white text-xs font-medium">First Name</Label>
-                      <Input id="first-name" name="first-name" placeholder="eg. John" className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20" required={!isLogin} />
+                      <Label htmlFor="first-name" className="text-foreground text-xs font-medium">First Name</Label>
+                      <Input id="first-name" name="first-name" placeholder="eg. John" className="bg-muted border-none text-foreground h-10 rounded-xl placeholder:text-foreground/ focus-visible:ring-1 focus-visible:ring-white/20" required={!isLogin} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="last-name" className="text-white text-xs font-medium">Last Name</Label>
-                      <Input id="last-name" name="last-name" placeholder="eg. Doe" className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20" required={!isLogin} />
+                      <Label htmlFor="last-name" className="text-foreground text-xs font-medium">Last Name</Label>
+                      <Input id="last-name" name="last-name" placeholder="eg. Doe" className="bg-muted border-none text-foreground h-10 rounded-xl placeholder:text-foreground/ focus-visible:ring-1 focus-visible:ring-white/20" required={!isLogin} />
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white text-xs font-medium">Email</Label>
-                <Input id="email" name="email" type="email" placeholder="eg. m@example.com" className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Label htmlFor="email" className="text-foreground text-xs font-medium">Email</Label>
+                <Input id="email" name="email" type="email" placeholder="eg. m@example.com" className="bg-muted border-none text-foreground h-10 rounded-xl placeholder:text-foreground/ focus-visible:ring-1 focus-visible:ring-white/20" required value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label htmlFor="password" className="text-white text-xs font-medium">Password</Label>
-                  {isLogin && <Link href="#" className="text-royal text-[10px] hover:underline">Forgot password?</Link>}
+                  <Label htmlFor="password" className="text-foreground text-xs font-medium">Password</Label>
+                  {isLogin && <Link href="#" className="text-gold text-[10px] hover:underline">Forgot password?</Link>}
                 </div>
                 <div className="relative">
-                  <Input id="password" name="password" type="password" placeholder="Enter your password" className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20 pr-10" required />
+                  <Input id="password" name="password" type="password" placeholder="Enter your password" className="bg-muted border-none text-foreground h-10 rounded-xl placeholder:text-foreground/ focus-visible:ring-1 focus-visible:ring-white/20 pr-10" required />
                 </div>
               </div>
 
-              <Button type="submit" className="w-full bg-white text-obsidian hover:bg-white/90 h-10 rounded-full font-bold text-sm mt-4" disabled={isLoading}>
+              <Button type="submit" className="w-full bg-white text-obsidian hover:bg-muted h-10 rounded-full font-bold text-sm mt-4" disabled={isLoading}>
                 {isLoading ? (isLogin ? 'Logging in...' : 'Signing up...') : (isLogin ? 'Login' : 'Sign Up')}
               </Button>
             </form>
 
             <div className="relative pt-2">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10" />
+                <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-obsidian px-2 text-white/60">Or</span>
+                <span className="bg-background px-2 text-foreground/">Or</span>
               </div>
             </div>
 
-            <Button variant="outline" onClick={() => setIsLogin(!isLogin)} type="button" className="w-full bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl font-medium">
+            <Button variant="outline" onClick={() => setIsLogin(!isLogin)} type="button" className="w-full bg-transparent border-border hover:bg-muted text-foreground h-10 rounded-xl font-medium">
               {isLogin ? 'Create New Account' : 'Log in to existing account'}
             </Button>
 
             <div className="text-center text-xs pt-4">
-              <Link href="/" className="text-white/60 hover:text-white flex items-center justify-center gap-2 transition-colors">
+              <Link href="/" className="text-foreground/ hover:text-foreground flex items-center justify-center gap-2 transition-colors">
                 <ArrowLeft className="w-3 h-3" />
                 Back to landing page
               </Link>
@@ -311,7 +311,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="h-screen bg-obsidian flex items-center justify-center text-white">Loading...</div>}>
+    <Suspense fallback={<div className="h-screen bg-background flex items-center justify-center text-foreground">Loading...</div>}>
       <LoginForm />
     </Suspense>
   );

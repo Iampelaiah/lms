@@ -19,10 +19,10 @@ import {
 } from "@/components/ui/accordion";
 
 const statusColorMap: Record<string, string> = {
-    "approved": "bg-royal hover:bg-royal text-white",
-    "pending_admin_review": "bg-royal text-royal hover:bg-royal",
+    "approved": "bg-gold hover:bg-gold text-foreground",
+    "pending_admin_review": "bg-gold/10 text-gold hover:bg-gold/20",
     "draft": "bg-muted text-muted-foreground",
-    "rejected": "bg-burgundy text-white hover:bg-burgundy",
+    "rejected": "bg-burgundy text-foreground hover:bg-burgundy",
 };
 
 const statusLabelMap: Record<string, string> = {

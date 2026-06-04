@@ -87,7 +87,7 @@ export default function StudentLiveClassesPage() {
                 <p className="text-muted-foreground mb-6">
                     Your account is currently pending administrator approval. Once approved, you will be able to view and join live classes.
                 </p>
-                <Button className="bg-royal hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl" asChild>
+                <Button className="bg-gold hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl" asChild>
                     <Link href="/student">Back to Dashboard</Link>
                 </Button>
             </div>
@@ -103,13 +103,13 @@ export default function StudentLiveClassesPage() {
                 </p>
             </div>
             {classes.length === 0 ? (
-                <div className="bg-white/5 border border-dashed rounded-3xl p-12 text-center">
+                <div className="bg-muted border border-dashed rounded-3xl p-12 text-center">
                     <p className="text-muted-foreground">No live classes scheduled at the moment.</p>
                 </div>
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {classes.map((liveClass) => (
-                        <Card key={liveClass.id} className="overflow-hidden flex flex-col bg-white/5 border-white/10 hover:border-white/20 transition-all">
+                        <Card key={liveClass.id} className="overflow-hidden flex flex-col bg-muted border-border hover:border-border transition-all">
                             <CardHeader className="p-0 relative">
                                 <Badge
                                     variant={statusVariantMap[liveClass.status]}
@@ -117,10 +117,10 @@ export default function StudentLiveClassesPage() {
                                 >
                                     {liveClass.status}
                                 </Badge>
-                                <div className="relative aspect-[3/2] w-full bg-obsidian/20">
-                                    {liveClass.imageUrl ? (
+                                <div className="relative aspect-[3/2] w-full bg-background/20">
+                                    {liveClass.image_url ? (
                                         <Image
-                                            src={liveClass.imageUrl}
+                                            src={liveClass.image_url}
                                             alt={liveClass.title}
                                             fill
                                             className="object-cover"
@@ -128,35 +128,35 @@ export default function StudentLiveClassesPage() {
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
-                                            <Video className="w-12 h-12 text-white/10" />
+                                            <Video className="w-12 h-12 text-foreground/" />
                                         </div>
                                     )}
                                 </div>
                             </CardHeader>
                             <CardContent className="p-6 flex-grow">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <Avatar className="w-6 h-6 border border-white/10">
+                                    <Avatar className="w-6 h-6 border border-border">
                                         <AvatarImage src={liveClass.tutor?.avatar_url} />
                                         <AvatarFallback>{liveClass.tutor?.full_name?.[0]}</AvatarFallback>
                                     </Avatar>
-                                    <span className="text-xs text-white/60">{liveClass.tutor?.full_name}</span>
+                                    <span className="text-xs text-foreground/">{liveClass.tutor?.full_name}</span>
                                 </div>
-                                <h3 className="text-lg font-bold text-white/90">{liveClass.title}</h3>
-                                <p className="text-sm text-white/40">
+                                <h3 className="text-lg font-bold text-foreground/">{liveClass.title}</h3>
+                                <p className="text-sm text-foreground/">
                                     {liveClass.schedule ? new Date(liveClass.schedule).toLocaleString() : 'TBD'}
                                 </p>
                             </CardContent>
                             <CardFooter className="p-6 pt-0">
                                 {liveClass.status === 'ongoing' ? (
-                                    <Button className="w-full bg-royal hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl py-6" asChild>
+                                    <Button className="w-full bg-gold hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl py-6" asChild>
                                         <Link href={`/classroom/${liveClass.agora_channel_name || liveClass.id}?role=participant&name=${profile?.full_name || 'Guest'}`}>
                                             <Video className="mr-2 h-5 w-5" />
                                             Join Now
                                         </Link>
                                     </Button>
                                 ) : (
-                                    <Button className="w-full bg-white/5 hover:bg-white/10 text-white/60 border-white/10 rounded-xl py-6" asChild>
-                                        <Link href={`/student/live-classes/${liveClass.id}`}>
+                                    <Button className="w-full bg-muted hover:bg-muted text-foreground/ border-border rounded-xl py-6" asChild>
+                                        <Link href={liveClass.status === 'upcoming' ? `/student/live-classes/${liveClass.id}` : `/student/resources?liveClassId=${liveClass.id}`}>
                                             {liveClass.status === 'upcoming' ? 'View Details' : 'View Recording'}
                                         </Link>
                                     </Button>

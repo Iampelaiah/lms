@@ -196,9 +196,9 @@ function StudentList() {
                                             <TableCell>{student.updated_at ? new Date(student.updated_at).toLocaleDateString() : 'N/A'}</TableCell>
                                             <TableCell>
                                                 {student.is_approved ? (
-                                                    <Badge className="bg-royal text-royal hover:bg-royal">Active</Badge>
+                                                    <Badge className="bg-gold/10 text-gold hover:bg-gold/20">Active</Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-royal border-royal/20 bg-royal/10">Pending</Badge>
+                                                    <Badge variant="outline" className="text-gold border-gold/20 bg-gold/10">Pending</Badge>
                                                 )}
                                             </TableCell>
                                             <TableCell>
@@ -210,7 +210,7 @@ function StudentList() {
                                                     <Button 
                                                         size="sm" 
                                                         variant="outline"
-                                                        className={student.is_approved ? "text-burgundy border-burgundy/20 hover:bg-burgundy/10" : "text-royal border-royal/20 hover:bg-royal/10"}
+                                                        className={student.is_approved ? "text-burgundy border-burgundy/20 hover:bg-burgundy/10" : "text-gold border-gold/20 hover:bg-gold/10"}
                                                         onClick={() => toggleApproveStudent(student.id, student.is_approved)}
                                                     >
                                                         {student.is_approved ? "Suspend" : "Approve"}

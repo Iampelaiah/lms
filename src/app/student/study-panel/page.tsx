@@ -178,7 +178,7 @@ export default function StudyPanelPage() {
                 </div>
 
                 <div className="lg:col-span-1">
-                    <Card className="rounded-[1.5rem] border-white/10/60 shadow-sm bg-neutral-50/50 dark:bg-obsidian/30">
+                    <Card className="rounded-[1.5rem] border-border/60 shadow-sm bg-neutral-50/50 dark:bg-background/30">
                         <CardContent className="p-6">
                             <h3 className="font-bold text-lg mb-1">Quick Review</h3>
                             <p className="text-sm text-muted-foreground mb-6">Sharpen your knowledge in 2 minutes!</p>
@@ -194,15 +194,15 @@ export default function StudyPanelPage() {
                                 }}
                                 onFocus={() => setIsSearchOpen(true)}
                                 onBlur={() => setTimeout(() => setIsSearchOpen(false), 200)}
-                                className="pl-9 h-11 bg-white dark:bg-obsidian border-none rounded-xl shadow-sm text-sm"
+                                className="pl-9 h-11 bg-white dark:bg-background border-none rounded-xl shadow-sm text-sm"
                             />
                             {isSearchOpen && searchQuery.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-obsidian border border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto no-scrollbar">
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-background border border-border rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto no-scrollbar">
                                     {topics.filter((t: any) => t.title.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
                                         topics.filter((t: any) => t.title.toLowerCase().includes(searchQuery.toLowerCase())).map((topic: any) => (
                                             <div 
                                                 key={topic.id}
-                                                className="px-4 py-2 hover:bg-royal/10 cursor-pointer text-sm font-medium"
+                                                className="px-4 py-2 hover:bg-gold/10 cursor-pointer text-sm font-medium"
                                                 onMouseDown={(e) => {
                                                     e.preventDefault();
                                                     setSelectedReviewTopic(topic);
@@ -221,7 +221,7 @@ export default function StudyPanelPage() {
                             </div>
                             
                             <p className="text-[10px] text-muted-foreground mb-6 font-medium">
-                                Selected: <span className="text-royal font-bold">{selectedReviewTopic ? selectedReviewTopic.title : 'None'}</span>
+                                Selected: <span className="text-gold font-bold">{selectedReviewTopic ? selectedReviewTopic.title : 'None'}</span>
                             </p>
                             
                             <div className="flex items-center justify-start gap-1.5 mb-8 px-2 overflow-x-auto no-scrollbar">
@@ -233,24 +233,24 @@ export default function StudyPanelPage() {
                                         key={subject.id} 
                                         title={subject.name}
                                         onClick={() => setSelectedReviewSubject(subject)}
-                                        className={`w-8 h-8 rounded-full flex shrink-0 items-center justify-center border border-white shadow-sm cursor-pointer transition-colors ${isSelected ? 'bg-royal text-royal' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                                        className={`w-8 h-8 rounded-full flex shrink-0 items-center justify-center border border-white shadow-sm cursor-pointer transition-colors ${isSelected ? 'bg-gold/10 text-gold' : 'bg-muted text-foreground/ hover:bg-muted'}`}
                                     >
                                         <Icon className="w-4 h-4" />
                                     </div>
                                 )
                             })}
                             {subjects.length > 5 && (
-                                <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center ml-auto text-muted-foreground hover:bg-white/5 transition-colors cursor-pointer">
+                                <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center ml-auto text-muted-foreground hover:bg-muted transition-colors cursor-pointer">
                                     <ChevronRight className="w-4 h-4" />
                                 </div>
                             )}
                             </div>
 
                             <div className="flex items-center gap-3">
-                            <Button variant="outline" className="flex-1 rounded-xl h-11 font-semibold border-white/10 shadow-sm" disabled={!selectedReviewSubject}>
+                            <Button variant="outline" className="flex-1 rounded-xl h-11 font-semibold border-border shadow-sm" disabled={!selectedReviewSubject}>
                                 Practice
                             </Button>
-                                                        <Button asChild={!!selectedReviewTopic} className="flex-1 rounded-xl h-11 font-semibold bg-obsidian text-white hover:bg-obsidian dark:bg-white dark:text-white dark:hover:bg-white/5" disabled={!selectedReviewTopic}>
+                                                        <Button asChild={!!selectedReviewTopic} className="flex-1 rounded-xl h-11 font-semibold bg-background text-foreground hover:bg-background dark:bg-white dark:text-foreground dark:hover:bg-muted" disabled={!selectedReviewTopic}>
                                 {selectedReviewTopic ? (
                                     <Link href={`/student/quiz?topicId=${selectedReviewTopic.id}`}>Start Quiz →</Link>
                                 ) : (

@@ -64,7 +64,7 @@ function ResourceCard({ resource, isOffline, onToggleOffline }: { resource: any,
                       title={isOffline ? "Remove from offline" : "Save for offline"}
                     >
                         {toggling ? <Loader2 className="h-4 w-4 animate-spin" /> : 
-                         isOffline ? <BookmarkCheck className="h-4 w-4 text-royal" /> : <Bookmark className="h-4 w-4" />}
+                         isOffline ? <BookmarkCheck className="h-4 w-4 text-gold" /> : <Bookmark className="h-4 w-4" />}
                     </Button>
                 </div>
             </CardHeader>
@@ -76,7 +76,7 @@ function ResourceCard({ resource, isOffline, onToggleOffline }: { resource: any,
                         <span>{resource.size_mb ? `${resource.size_mb} MB` : 'Unknown size'}</span>
                     </div>
                     {isOffline && (
-                        <div className="flex items-center text-xs text-royal bg-royal/10 px-2 py-0.5 rounded-full font-medium">
+                        <div className="flex items-center text-xs text-gold bg-gold/10 px-2 py-0.5 rounded-full font-medium">
                             <Cloud className="w-3 h-3 mr-1" />
                             Saved
                         </div>
@@ -143,7 +143,17 @@ export default function ResourcesPage() {
             .eq('student_id', user.id)
       ]);
       
-      if (resourcesData) setResources(resourcesData);
+      if (resourcesData) {
+          const urlParams = new URLSearchParams(window.location.search);
+          const liveClassId = urlParams.get('liveClassId');
+          if (liveClassId) {
+              setResources(resourcesData.filter(r => r.live_class_id === liveClassId));
+              // Also auto-select the video filter if we're jumping to a recording
+              setActiveFilter('video');
+          } else {
+              setResources(resourcesData);
+          }
+      }
       if (offlineData) setOfflineResourceIds(new Set(offlineData.map(o => o.resource_id)));
       
       setLoading(false);

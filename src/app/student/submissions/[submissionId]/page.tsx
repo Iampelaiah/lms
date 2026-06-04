@@ -126,8 +126,8 @@ export default function StudentSubmissionPreviewPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-obsidian">
-        <Loader2 className="w-10 h-10 animate-spin text-royal" />
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="w-10 h-10 animate-spin text-gold" />
       </div>
     );
   }
@@ -137,20 +137,20 @@ export default function StudentSubmissionPreviewPage() {
   const resources = annotations.filter(a => a.type === 'resource');
 
   return (
-    <div className="flex flex-col h-screen w-full bg-obsidian text-white overflow-hidden">
+    <div className="flex flex-col h-screen w-full bg-background text-foreground overflow-hidden">
       {/* Header */}
-      <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 shrink-0 bg-obsidian/50 backdrop-blur-md">
+      <div className="h-16 border-b border-border flex items-center justify-between px-6 shrink-0 bg-background/50 backdrop-blur-md">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-white/60 hover:text-white rounded-full">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-foreground/ hover:text-foreground rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex flex-col">
             <h1 className="font-bold text-sm tracking-wide">Assignment Feedback</h1>
-            <span className="text-[10px] text-white/60 uppercase tracking-wider">{submission?.profiles?.full_name}</span>
+            <span className="text-[10px] text-foreground/ uppercase tracking-wider">{submission?.profiles?.full_name}</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-royal/10 text-royal rounded-full border border-royal/20">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gold/10 text-gold rounded-full border border-gold/20">
             <CheckCircle2 className="w-4 h-4" />
             <span className="text-xs font-bold">Graded</span>
           </div>
@@ -163,7 +163,7 @@ export default function StudentSubmissionPreviewPage() {
         )}
 
         {/* Editor Center Panel */}
-        <div className="flex-1 flex flex-col bg-obsidian overflow-y-auto relative">
+        <div className="flex-1 flex flex-col bg-background overflow-y-auto relative">
           <style>{`
             .ProseMirror { outline: none; padding: 2rem 4rem; color: #f1f5f9; font-size: 1rem; line-height: 2; font-family: system-ui, -apple-system, sans-serif; min-height: 100%; }
             .ProseMirror p { margin-bottom: 1.5rem; }
@@ -179,59 +179,59 @@ export default function StudentSubmissionPreviewPage() {
         </div>
 
         {/* Right Panel Feedback */}
-        <div className="w-[380px] bg-obsidian border-l border-white/10 flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.5)] z-10 shrink-0">
-          <div className="p-5 border-b border-white/10 bg-white/5">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-1">Tutor Feedback</h2>
-            <p className="text-xs text-white/60">Click highlighted text in the document to see specific feedback.</p>
+        <div className="w-[380px] bg-background border-l border-border flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.5)] z-10 shrink-0">
+          <div className="p-5 border-b border-border bg-muted">
+            <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-1">Tutor Feedback</h2>
+            <p className="text-xs text-foreground/">Click highlighted text in the document to see specific feedback.</p>
           </div>
 
           <Tabs defaultValue="comments" className="flex flex-col flex-1 min-h-0">
-            <div className="px-5 pt-3 border-b border-white/10">
-              <TabsList className="w-full bg-white/5 p-1 h-9 rounded-lg">
-                <TabsTrigger value="comments" className="flex-1 text-[11px] font-bold tracking-wide rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-royal data-[state=active]:shadow-sm transition-all h-7">
+            <div className="px-5 pt-3 border-b border-border">
+              <TabsList className="w-full bg-muted p-1 h-9 rounded-lg">
+                <TabsTrigger value="comments" className="flex-1 text-[11px] font-bold tracking-wide rounded-md data-[state=active]:bg-muted data-[state=active]:text-gold data-[state=active]:shadow-sm transition-all h-7">
                   <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> Comments ({comments.length})
                 </TabsTrigger>
-                <TabsTrigger value="corrections" className="flex-1 text-[11px] font-bold tracking-wide rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-royal data-[state=active]:shadow-sm transition-all h-7">
+                <TabsTrigger value="corrections" className="flex-1 text-[11px] font-bold tracking-wide rounded-md data-[state=active]:bg-muted data-[state=active]:text-gold data-[state=active]:shadow-sm transition-all h-7">
                   <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Corrections ({corrections.length})
                 </TabsTrigger>
-                <TabsTrigger value="resources" className="flex-1 text-[11px] font-bold tracking-wide rounded-md data-[state=active]:bg-white/10 data-[state=active]:text-royal data-[state=active]:shadow-sm transition-all h-7">
+                <TabsTrigger value="resources" className="flex-1 text-[11px] font-bold tracking-wide rounded-md data-[state=active]:bg-muted data-[state=active]:text-gold data-[state=active]:shadow-sm transition-all h-7">
                   <BookOpen className="w-3.5 h-3.5 mr-1.5" /> Resources ({resources.length})
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <ScrollArea className="flex-1 bg-obsidian">
+            <ScrollArea className="flex-1 bg-background">
               <div className="p-5">
                 <TabsContent value="comments" className="m-0 space-y-3 outline-none">
-                  {comments.length === 0 && <p className="text-xs text-white/60 text-center py-4">No comments.</p>}
+                  {comments.length === 0 && <p className="text-xs text-foreground/ text-center py-4">No comments.</p>}
                   {comments.map((comment) => (
                     <div 
                       key={comment.id} 
                       onClick={() => setActiveAnnotationId(comment.id)}
-                      className={`flex gap-3 bg-white/5 p-3 rounded-lg shadow-sm transition-colors cursor-pointer border ${activeAnnotationId === comment.id ? 'border-royal ring-1 ring-royal ring-offset-1 ring-offset-obsidian' : 'border-white/10 hover:border-white/20'}`}
+                      className={`flex gap-3 bg-muted p-3 rounded-lg shadow-sm transition-colors cursor-pointer border ${activeAnnotationId === comment.id ? 'border-gold ring-1 ring-gold ring-offset-1 ring-offset-obsidian' : 'border-border hover:border-border'}`}
                     >
-                      <div className="flex items-center justify-center w-5 h-5 rounded bg-royal/20 text-royal font-bold text-[10px] flex-shrink-0 mt-0.5">{comment.marker_number || 1}</div>
+                      <div className="flex items-center justify-center w-5 h-5 rounded bg-gold/20 text-gold font-bold text-[10px] flex-shrink-0 mt-0.5">{comment.marker_number || 1}</div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] text-white/60 font-semibold bg-white/5 px-1.5 py-0.5 rounded truncate max-w-[200px]">"{comment.selected_text}"</span>
-                        <p className="text-sm text-white/90 leading-snug">{comment.content}</p>
+                        <span className="text-[10px] text-foreground/ font-semibold bg-muted px-1.5 py-0.5 rounded truncate max-w-[200px]">"{comment.selected_text}"</span>
+                        <p className="text-sm text-foreground/ leading-snug">{comment.content}</p>
                       </div>
                     </div>
                   ))}
                 </TabsContent>
                 
                 <TabsContent value="corrections" className="m-0 space-y-3 outline-none">
-                  {corrections.length === 0 && <p className="text-xs text-white/60 text-center py-4">No corrections.</p>}
+                  {corrections.length === 0 && <p className="text-xs text-foreground/ text-center py-4">No corrections.</p>}
                   {corrections.map((corr) => (
                     <div 
                       key={corr.id} 
                       onClick={() => setActiveAnnotationId(corr.id)}
-                      className={`flex gap-3 bg-white/5 p-3 rounded-lg shadow-sm transition-colors cursor-pointer border ${activeAnnotationId === corr.id ? 'border-royal ring-1 ring-royal ring-offset-1 ring-offset-obsidian' : 'border-white/10 hover:border-white/20'}`}
+                      className={`flex gap-3 bg-muted p-3 rounded-lg shadow-sm transition-colors cursor-pointer border ${activeAnnotationId === corr.id ? 'border-gold ring-1 ring-gold ring-offset-1 ring-offset-obsidian' : 'border-border hover:border-border'}`}
                     >
-                      <div className="flex items-center justify-center w-5 h-5 rounded bg-royal/20 text-royal font-bold text-[10px] flex-shrink-0 mt-0.5">{corr.marker_number || 1}</div>
+                      <div className="flex items-center justify-center w-5 h-5 rounded bg-gold/20 text-gold font-bold text-[10px] flex-shrink-0 mt-0.5">{corr.marker_number || 1}</div>
                       <div className="flex flex-col gap-1 w-full">
-                        <span className="text-[10px] text-white/60 font-semibold line-through bg-white/5 px-1.5 py-0.5 rounded truncate max-w-[200px]">"{corr.selected_text}"</span>
-                        <div className="flex items-start gap-1.5 text-sm text-white/90 font-medium">
-                          <span className="text-royal mt-0.5">↳</span> {corr.content}
+                        <span className="text-[10px] text-foreground/ font-semibold line-through bg-muted px-1.5 py-0.5 rounded truncate max-w-[200px]">"{corr.selected_text}"</span>
+                        <div className="flex items-start gap-1.5 text-sm text-foreground/ font-medium">
+                          <span className="text-gold mt-0.5">↳</span> {corr.content}
                         </div>
                       </div>
                     </div>
@@ -239,17 +239,17 @@ export default function StudentSubmissionPreviewPage() {
                 </TabsContent>
 
                 <TabsContent value="resources" className="m-0 space-y-3 outline-none">
-                  {resources.length === 0 && <p className="text-xs text-white/60 text-center py-4">No resources.</p>}
+                  {resources.length === 0 && <p className="text-xs text-foreground/ text-center py-4">No resources.</p>}
                   {resources.map((res) => (
                     <div 
                       key={res.id} 
                       onClick={() => setActiveAnnotationId(res.id)}
-                      className={`flex gap-3 bg-white/5 p-3 rounded-lg shadow-sm transition-colors cursor-pointer border ${activeAnnotationId === res.id ? 'border-royal ring-1 ring-royal ring-offset-1 ring-offset-obsidian' : 'border-white/10 hover:border-white/20'}`}
+                      className={`flex gap-3 bg-muted p-3 rounded-lg shadow-sm transition-colors cursor-pointer border ${activeAnnotationId === res.id ? 'border-gold ring-1 ring-gold ring-offset-1 ring-offset-obsidian' : 'border-border hover:border-border'}`}
                     >
-                      <div className="flex items-center justify-center w-5 h-5 rounded bg-royal/20 text-royal font-bold text-[10px] flex-shrink-0 mt-0.5">{res.marker_number || 1}</div>
+                      <div className="flex items-center justify-center w-5 h-5 rounded bg-gold/20 text-gold font-bold text-[10px] flex-shrink-0 mt-0.5">{res.marker_number || 1}</div>
                       <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] text-white/60 font-semibold bg-white/5 px-1.5 py-0.5 rounded truncate max-w-[200px]">"{res.selected_text}"</span>
-                        <a href={res.content} target="_blank" rel="noopener noreferrer" className="text-sm text-royal hover:text-white font-medium leading-snug flex items-center gap-1 hover:underline">
+                        <span className="text-[10px] text-foreground/ font-semibold bg-muted px-1.5 py-0.5 rounded truncate max-w-[200px]">"{res.selected_text}"</span>
+                        <a href={res.content} target="_blank" rel="noopener noreferrer" className="text-sm text-gold hover:text-foreground font-medium leading-snug flex items-center gap-1 hover:underline">
                           <BookOpen className="w-3.5 h-3.5" /> View Resource
                         </a>
                       </div>
@@ -261,12 +261,12 @@ export default function StudentSubmissionPreviewPage() {
           </Tabs>
 
           {submission?.overall_feedback && (
-            <div className="p-5 border-t border-white/10 bg-white/5">
-              <h3 className="text-[10px] font-bold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-royal" />
+            <div className="p-5 border-t border-border bg-muted">
+              <h3 className="text-[10px] font-bold text-foreground/ uppercase tracking-wider mb-3 flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-gold" />
                 Overall Feedback
               </h3>
-              <p className="text-sm text-white/90 leading-relaxed bg-white/5 p-3 rounded-md border border-white/10 shadow-sm">{submission.overall_feedback}</p>
+              <p className="text-sm text-foreground/ leading-relaxed bg-muted p-3 rounded-md border border-border shadow-sm">{submission.overall_feedback}</p>
             </div>
           )}
         </div>

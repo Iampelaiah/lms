@@ -356,9 +356,9 @@ export default function TutorsPage() {
                                             </TableCell>
                                             <TableCell>
                                                 {tutor.is_approved ? (
-                                                    <Badge className="bg-royal text-royal hover:bg-royal">Active</Badge>
+                                                    <Badge className="bg-gold/10 text-gold hover:bg-gold/20">Active</Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-royal border-royal/20 bg-royal/10">Pending</Badge>
+                                                    <Badge variant="outline" className="text-gold border-gold/20 bg-gold/10">Pending</Badge>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
@@ -369,7 +369,7 @@ export default function TutorsPage() {
                                                     <Button 
                                                         size="sm" 
                                                         variant="outline" 
-                                                        className={tutor.is_approved ? "text-burgundy border-burgundy/20 hover:bg-burgundy/10" : "text-royal border-royal/20 hover:bg-royal/10"}
+                                                        className={tutor.is_approved ? "text-burgundy border-burgundy/20 hover:bg-burgundy/10" : "text-gold border-gold/20 hover:bg-gold/10"}
                                                         onClick={() => toggleApproveTutor(tutor.id, tutor.is_approved)}
                                                     >
                                                         {tutor.is_approved ? "Suspend" : "Approve"}
@@ -463,7 +463,7 @@ export default function TutorsPage() {
                                                                     </Label>
                                                                 </div>
                                                                 {isAssignedToOther && !isChecked && (
-                                                                    <Badge variant="outline" className="text-[10px] text-royal border-royal/20 bg-royal/10 shrink-0">Assigned Elsewhere</Badge>
+                                                                    <Badge variant="outline" className="text-[10px] text-gold border-gold/20 bg-gold/10 shrink-0">Assigned Elsewhere</Badge>
                                                                 )}
                                                             </div>
                                                         );

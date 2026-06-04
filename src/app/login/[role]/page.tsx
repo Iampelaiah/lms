@@ -179,26 +179,26 @@ export default function RoleLoginPage() {
   const displayRole = roleDisplayNames[role] || capitalizeFirstLetter(role);
 
   return (
-    <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-obsidian overflow-hidden">
+    <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-background overflow-hidden">
       {/* Left Column */}
-      <div className="hidden lg:flex relative bg-obsidian p-10 flex-col justify-between overflow-hidden">
+      <div className="hidden lg:flex relative bg-background p-10 flex-col justify-between overflow-hidden">
         {/* Background Video Placeholder */}
         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-20 mix-blend-screen pointer-events-none">
           <source src="/make_it_a_male_voice___the_ui.mp4" type="video/mp4" />
         </video>
 
-        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-royal/10 rounded-full blur-[80px] z-0 pointer-events-none" />
-        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-royal/5 rounded-full blur-[80px] z-0 pointer-events-none" />
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-gold/10 rounded-full blur-[80px] z-0 pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-gold/5 rounded-full blur-[80px] z-0 pointer-events-none" />
 
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-8">
-            <h2 className="text-3xl font-bold tracking-tight text-white">Dr Max</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">Dr Max</h2>
           </div>
           <div className="space-y-6 max-w-md mt-10">
-            <h1 className="text-5xl font-bold text-white leading-tight tracking-tight">
+            <h1 className="text-5xl font-bold text-foreground leading-tight tracking-tight">
               Welcome <br /> Back
             </h1>
-            <p className="text-white/60 text-base">
+            <p className="text-foreground/ text-base">
               Access your personalized {displayRole.toLowerCase()} dashboard and tools.
             </p>
           </div>
@@ -212,19 +212,19 @@ export default function RoleLoginPage() {
               onClick={() => router.push(`/login/${r.id}`)}
               className={`relative rounded-[1.5rem] p-3 flex flex-col justify-between h-28 transition-all duration-200 text-left overflow-hidden ${
                 role === r.id
-                  ? 'bg-royal/10 border border-royal shadow-[0_0_15px_rgba(0,255,204,0.2)] ring-1 ring-royal scale-105'
-                  : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                  ? 'bg-gold/10 border border-gold shadow-[0_0_15px_rgba(0,255,204,0.2)] ring-1 ring-gold scale-105'
+                  : 'bg-muted border border-border hover:bg-muted'
               }`}
             >
               <div className="flex flex-col h-full justify-between">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                  role === r.id ? 'bg-royal text-obsidian' : 'bg-white/20 text-white'
+                  role === r.id ? 'bg-gold text-obsidian' : 'bg-muted text-foreground'
                 }`}>
                   <r.icon className="w-4 h-4" />
                 </div>
                 <div className="space-y-2">
                   <p className={`font-bold text-sm leading-snug ${
-                    role === r.id ? 'text-white' : 'text-white/40'
+                    role === r.id ? 'text-foreground' : 'text-foreground/'
                   }`}>
                     Sign in as <br /> {r.name}
                   </p>
@@ -236,17 +236,17 @@ export default function RoleLoginPage() {
       </div>
 
       {/* Right Column - Form */}
-      <div className="flex items-center justify-center p-6 lg:p-10 bg-obsidian overflow-y-auto">
+      <div className="flex items-center justify-center p-6 lg:p-10 bg-background overflow-y-auto">
         <div className="w-full max-w-md space-y-4">
           <div className="text-center space-y-1">
-            <h2 className="text-2xl font-bold text-white">Login as {displayRole}</h2>
-            <p className="text-white/60 text-xs">Enter your credentials to access your account.</p>
+            <h2 className="text-2xl font-bold text-foreground">Login as {displayRole}</h2>
+            <p className="text-foreground/ text-xs">Enter your credentials to access your account.</p>
           </div>
 
           <div className="space-y-3">
             {/* Passkey Login - Primary Method */}
             <Button 
-              className="w-full bg-royal text-obsidian hover:bg-royal/90 h-12 rounded-xl flex gap-3 font-bold text-base shadow-[0_0_20px_rgba(0,255,204,0.3)] transition-all hover:scale-[1.02]"
+              className="w-full bg-gold text-obsidian hover:bg-gold/90 h-12 rounded-xl flex gap-3 font-bold text-base shadow-[0_0_20px_rgba(0,255,204,0.3)] transition-all hover:scale-[1.02]"
               onClick={handlePasskeyLogin}
               disabled={isLoading}
             >
@@ -256,22 +256,22 @@ export default function RoleLoginPage() {
 
             <div className="relative pt-2">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10" />
+                <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-obsidian px-2 text-white/60">Or use email</span>
+                <span className="bg-background px-2 text-foreground/">Or use email</span>
               </div>
             </div>
 
             <form action={handleAction} className="space-y-2">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white text-xs font-medium">Email</Label>
+                <Label htmlFor="email" className="text-foreground text-xs font-medium">Email</Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
                   placeholder="eg. m@example.com"
-                  className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20"
+                  className="bg-muted border-none text-foreground h-10 rounded-xl placeholder:text-foreground/ focus-visible:ring-1 focus-visible:ring-white/20"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -280,8 +280,8 @@ export default function RoleLoginPage() {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label htmlFor="password" className="text-white text-xs font-medium">Password</Label>
-                  <Link href="#" className="text-royal text-[10px] hover:underline">Forgot password?</Link>
+                  <Label htmlFor="password" className="text-foreground text-xs font-medium">Password</Label>
+                  <Link href="#" className="text-gold text-[10px] hover:underline">Forgot password?</Link>
                 </div>
                 <div className="relative">
                   <Input
@@ -289,7 +289,7 @@ export default function RoleLoginPage() {
                     name="password"
                     type="password"
                     placeholder="Enter your password"
-                    className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20 pr-10"
+                    className="bg-muted border-none text-foreground h-10 rounded-xl placeholder:text-foreground/ focus-visible:ring-1 focus-visible:ring-white/20 pr-10"
                     required
                   />
                 </div>
@@ -297,7 +297,7 @@ export default function RoleLoginPage() {
 
               <Button 
                 type="submit" 
-                className="w-full bg-white text-obsidian hover:bg-white/90 h-10 rounded-full font-bold text-sm mt-4"
+                className="w-full bg-white text-obsidian hover:bg-muted h-10 rounded-full font-bold text-sm mt-4"
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Login'}
@@ -306,10 +306,10 @@ export default function RoleLoginPage() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/10" />
+                <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-obsidian px-2 text-white/60">Other methods</span>
+                <span className="bg-background px-2 text-foreground/">Other methods</span>
               </div>
             </div>
 
@@ -317,7 +317,7 @@ export default function RoleLoginPage() {
             <div className="grid grid-cols-2 gap-4">
               <Button 
                 variant="outline" 
-                className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
+                className="bg-transparent border-border hover:bg-muted text-foreground h-10 rounded-xl flex gap-3 font-medium"
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
               >
@@ -326,7 +326,7 @@ export default function RoleLoginPage() {
               </Button>
               <Button 
                 variant="outline" 
-                className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
+                className="bg-transparent border-border hover:bg-muted text-foreground h-10 rounded-xl flex gap-3 font-medium"
                 onClick={handleWhatsAppLogin}
                 disabled={isLoading}
               >
@@ -335,12 +335,12 @@ export default function RoleLoginPage() {
               </Button>
             </div>
 
-            <Button variant="outline" className="w-full bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl font-medium" asChild>
+            <Button variant="outline" className="w-full bg-transparent border-border hover:bg-muted text-foreground h-10 rounded-xl font-medium" asChild>
               <Link href="/signup">Create New Account</Link>
             </Button>
 
             <div className="text-center text-xs pt-4">
-              <Link href="/login" className="text-white/60 hover:text-white flex items-center justify-center gap-2 transition-colors">
+              <Link href="/login" className="text-foreground/ hover:text-foreground flex items-center justify-center gap-2 transition-colors">
                 <ArrowLeft className="w-3 h-3" />
                 Back to role selection
               </Link>

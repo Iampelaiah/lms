@@ -41,10 +41,10 @@ export default function TutorForum() {
   };
 
   return (
-    <div className="min-h-screen bg-obsidian text-white/90 pb-12">
-      <div className="bg-obsidian border-b border-white/10 py-4 px-6 mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white/90">Community Forums</h1>
-        <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border border-royal/30 bg-royal/10 text-royal">
+    <div className="min-h-screen bg-background text-foreground/ pb-12">
+      <div className="bg-background border-b border-border py-4 px-6 mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground/">Community Forums</h1>
+        <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border border-gold/30 bg-gold/10 text-gold">
           Tutor — Can Moderate
         </span>
       </div>

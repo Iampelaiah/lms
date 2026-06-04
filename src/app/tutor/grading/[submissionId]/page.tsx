@@ -178,14 +178,14 @@ export default function GradingPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-obsidian">
-        <Loader2 className="w-10 h-10 animate-spin text-royal" />
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="w-10 h-10 animate-spin text-gold" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen w-full overflow-hidden bg-obsidian">
+    <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
       <GradingHeader 
         studentName={submission?.profiles?.full_name || 'Student'}
         submissionTitle={`Assignment`}

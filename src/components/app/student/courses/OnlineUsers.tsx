@@ -27,7 +27,7 @@ export function OnlineUsers() {
                             </Avatar>
                             <p className="font-medium">{user.name}</p>
                         </div>
-                        <div className="w-2.5 h-2.5 rounded-full bg-royal" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-gold" />
                     </div>
                 ))}
             </CardContent>

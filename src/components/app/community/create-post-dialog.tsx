@@ -171,8 +171,8 @@ export function CreatePostDialog({
                                 <div className="relative aspect-video w-full rounded-lg overflow-hidden border bg-muted mt-2">
                                     <img src={imageUrl} alt="Post attachment preview" className="object-contain w-full h-full" />
                                     {uploading && (
-                                        <div className="absolute inset-0 bg-obsidian/40 flex items-center justify-center">
-                                            <Loader2 className="h-8 w-8 animate-spin text-white" />
+                                        <div className="absolute inset-0 bg-background/40 flex items-center justify-center">
+                                            <Loader2 className="h-8 w-8 animate-spin text-foreground" />
                                         </div>
                                     )}
                                     <Button 

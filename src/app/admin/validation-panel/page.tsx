@@ -158,7 +158,7 @@ export default function AdminValidationPanel() {
                     <TabsTrigger value="assignments" className="flex gap-2">
                         <FileText className="h-4 w-4" />
                         Assignments & Tests
-                        <Badge variant="secondary" className="ml-1 bg-royal/10 text-royal">{pendingAssignments.length}</Badge>
+                        <Badge variant="secondary" className="ml-1 bg-gold/10 text-gold">{pendingAssignments.length}</Badge>
                     </TabsTrigger>
                 </TabsList>
 
@@ -171,7 +171,7 @@ export default function AdminValidationPanel() {
                     ) : pendingModules.length === 0 ? (
                         <Card className="border-dashed">
                             <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-                                <CheckCircle className="h-12 w-12 text-royal/50 mb-4" />
+                                <CheckCircle className="h-12 w-12 text-gold/50 mb-4" />
                                 <p className="text-lg font-medium text-foreground">All caught up!</p>
                                 <p>There are no curriculum modules pending review.</p>
                             </CardContent>
@@ -183,7 +183,7 @@ export default function AdminValidationPanel() {
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <Badge variant="secondary" className="bg-royal/10 text-royal border-royal/20">Pending Review</Badge>
+                                                <Badge variant="secondary" className="bg-gold/10 text-gold border-gold/20">Pending Review</Badge>
                                                 <Badge variant="outline">{module.course_level}</Badge>
                                                 <span className="text-xs text-muted-foreground">Module {module.sequence_order}</span>
                                             </div>
@@ -203,7 +203,7 @@ export default function AdminValidationPanel() {
                                                 Reject
                                             </Button>
                                             <Button 
-                                                className="bg-royal hover:bg-royal text-white"
+                                                className="bg-gold hover:bg-gold text-foreground"
                                                 onClick={() => handleApproveModule(module.id)}
                                             >
                                                 <CheckCircle className="h-4 w-4 mr-2" />
@@ -250,11 +250,11 @@ export default function AdminValidationPanel() {
                                                         <div>
                                                             <div className="flex items-center gap-2 mb-1">
                                                                 {item.item_type === 'topic' ? (
-                                                                    <Badge variant="outline" className="text-royal border-royal/20 bg-royal/5">Topic</Badge>
+                                                                    <Badge variant="outline" className="text-gold border-gold/20 bg-gold/5">Topic</Badge>
                                                                 ) : item.item_type === 'test' ? (
-                                                                    <Badge variant="outline" className="text-royal border-royal/20 bg-royal/5">Test</Badge>
+                                                                    <Badge variant="outline" className="text-gold border-gold/20 bg-gold/5">Test</Badge>
                                                                 ) : (
-                                                                    <Badge variant="outline" className="text-royal border-royal/20 bg-royal/5">Live Class</Badge>
+                                                                    <Badge variant="outline" className="text-gold border-gold/20 bg-gold/5">Live Class</Badge>
                                                                 )}
                                                                 {item.metadata?.exam_allocation_2026 && (
                                                                     <span className="text-xs font-medium text-muted-foreground border px-2 py-0.5 rounded-full">
@@ -317,7 +317,7 @@ export default function AdminValidationPanel() {
                     ) : pendingAssignments.length === 0 ? (
                         <Card className="border-dashed">
                             <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-                                <CheckCircle className="h-12 w-12 text-royal/50 mb-4" />
+                                <CheckCircle className="h-12 w-12 text-gold/50 mb-4" />
                                 <p className="text-lg font-medium text-foreground">No Pending Assignments</p>
                                 <p>Assignments from pending modules will appear here for review.</p>
                             </CardContent>
@@ -328,7 +328,7 @@ export default function AdminValidationPanel() {
                                 <Card key={assignment.id} className="flex flex-col hover:border-primary/50 transition-colors">
                                     <CardHeader className="pb-3 border-b bg-muted/10">
                                         <div className="flex justify-between items-start mb-2">
-                                            <Badge variant="outline" className="bg-royal/5 text-royal border-royal/20">
+                                            <Badge variant="outline" className="bg-gold/5 text-gold border-gold/20">
                                                 Assignment {assignment.assignment_number}
                                             </Badge>
                                         </div>

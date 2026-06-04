@@ -11,7 +11,9 @@ import {
   getStudentDeadlines, 
   createStudentDeadline, 
   toggleDeadlineStatus, 
-  deleteDeadline 
+  deleteDeadline,
+  getStudentProgress,
+  getAllStudentsProgress
 } from '@/app/actions/student-tutor';
 import { getSubjectAssignments, getSubjectTopics } from '@/app/actions/student-assignments';
 
@@ -27,7 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Search, MessageSquare, Calendar, Trash2, Send, Check, 
   User, Plus, Loader2, CalendarClock, AlertCircle, FileText, CheckCircle2, Users
-} from 'lucide-react';
+, ChevronDown, BookOpen, Clock, BarChart2, Paperclip, Smile, ClipboardList } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
@@ -98,6 +100,13 @@ export default function TutorStudentsPage() {
   const [deadlinesLoading, setDeadlinesLoading] = useState(false);
   const [useDeadlineFallback, setUseDeadlineFallback] = useState(false);
   
+  // Progress state
+  const [progressData, setProgressData] = useState<{total: number, completed: number, percent: number, trendPath: string, subjectProgress?: {name: string, percent: number}[]}>({ total: 0, completed: 0, percent: 0, trendPath: "M0,28 L100,28" });
+  const [studentsProgressMap, setStudentsProgressMap] = useState<Record<string, {percent: number, trendPath: string}>>({});
+  
+  // Filter state
+  const [subjectFilter, setSubjectFilter] = useState('All Subjects');
+  
   // New deadline form state
   const [isDeadlineDialogOpen, setIsDeadlineDialogOpen] = useState(false);
   const [newDeadlineTitle, setNewDeadlineTitle] = useState('');
@@ -162,6 +171,16 @@ export default function TutorStudentsPage() {
     loadStudents();
   }, [tutorId, toast]);
 
+  // Fetch all students' progress for the sidebar list
+  useEffect(() => {
+    if (!tutorId) return;
+    async function loadAllProgress() {
+      const res = await getAllStudentsProgress(tutorId);
+      if (res.data) setStudentsProgressMap(res.data);
+    }
+    loadAllProgress();
+  }, [tutorId, deadlines]);
+
   const selectedGroup = useMemo(() => {
     return students.find(s => s.student.id === selectedStudentId) || null;
   }, [students, selectedStudentId]);
@@ -198,14 +217,24 @@ export default function TutorStudentsPage() {
     loadChat();
   }, [selectedStudentId, tutorId, activeTab]);
 
+  // Fetch progress whenever a student is selected or deadlines change
+  useEffect(() => {
+    if (!selectedStudentId || !tutorId) return;
+    async function loadProgress() {
+      const res = await getStudentProgress(tutorId, selectedStudentId!);
+      if (res.data) setProgressData(res.data);
+    }
+    loadProgress();
+  }, [selectedStudentId, tutorId, deadlines]);
+
   // Scroll chat to bottom
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 3. Fetch Deadlines when student changes or Deadlines tab opens
+  // 3. Fetch Deadlines when student changes
   useEffect(() => {
-    if (!selectedStudentId || !tutorId || activeTab !== 'deadlines') return;
+    if (!selectedStudentId || !tutorId) return;
 
     async function loadDeadlines() {
       setDeadlinesLoading(true);
@@ -232,7 +261,31 @@ export default function TutorStudentsPage() {
     }
 
     loadDeadlines();
-  }, [selectedStudentId, tutorId, activeTab]);
+  }, [selectedStudentId, tutorId]);
+
+  // Compute recent activity based on deadlines
+  const recentActivities = useMemo(() => {
+    if (!deadlines || deadlines.length === 0) return [];
+    const activities: { title: string, timestamp: number, type: 'assigned' | 'completed' }[] = [];
+    
+    deadlines.forEach(d => {
+      if ((d as any).created_at) {
+        activities.push({
+          title: d.title,
+          timestamp: new Date((d as any).created_at).getTime(),
+          type: 'assigned'
+        });
+      }
+      if (d.status === 'completed' && (d as any).updated_at) {
+        activities.push({
+          title: d.title,
+          timestamp: new Date((d as any).updated_at).getTime(),
+          type: 'completed'
+        });
+      }
+    });
+    return activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 4);
+  }, [deadlines]);
 
   // 4. Send Message
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -466,490 +519,523 @@ export default function TutorStudentsPage() {
     setIsDeadlineDialogOpen(true);
   };
 
-  // Filter students based on search
+  // Extract unique subjects for the filter dropdown
+  const uniqueSubjects = useMemo(() => {
+    const subjects = new Set<string>();
+    students.forEach(s => {
+      s.subjects.forEach(sub => subjects.add(sub.name));
+    });
+    return Array.from(subjects).sort();
+  }, [students]);
+
+  // Filter students based on search and subject filter
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
       const q = searchQuery.toLowerCase();
-      return s.student.full_name.toLowerCase().includes(q) ||
+      const matchesSearch = s.student.full_name.toLowerCase().includes(q) ||
              s.student.email.toLowerCase().includes(q) ||
              s.subjects.some(sub => sub.name.toLowerCase().includes(q));
+             
+      const matchesSubject = subjectFilter === 'All Subjects' || s.subjects.some(sub => sub.name === subjectFilter);
+      
+      return matchesSearch && matchesSubject;
     });
-  }, [students, searchQuery]);
+  }, [students, searchQuery, subjectFilter]);
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto h-[calc(100vh-2rem)] flex flex-col">
-      <SchoolHeader />
+    <div className="flex flex-col h-full bg-background text-foreground font-sans overflow-hidden min-h-[calc(100vh-3.5rem)]">
       
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            My Students
-          </h1>
-          <p className="text-muted-foreground">Manage tasks, set deadlines, and track communications with your students.</p>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </div>
-      ) : students.length === 0 ? (
-        <Card className="flex-1 flex flex-col items-center justify-center p-12 text-center border-dashed">
-          <User className="h-16 w-16 text-muted-foreground/30 mb-4" />
-          <h3 className="text-xl font-semibold">No Students Assigned</h3>
-          <p className="text-muted-foreground max-w-md mt-2">
-            You do not have any students assigned to your subjects yet. When an administrator maps students to your roster, they will appear here.
-          </p>
-        </Card>
-      ) : (
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden min-h-0">
-          
-          {/* 1. Left Student List Panel */}
-          <div className="md:col-span-1 flex flex-col gap-4 border rounded-xl bg-card/50 p-4 min-h-0 overflow-hidden">
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search students or subjects..."
+      {/* 2. Middle Column ("My Students" List) and 3. Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* Left List Panel */}
+        <section className="w-64 flex-shrink-0 flex flex-col border-r border-border bg-background">
+          <div className="p-4 pb-3">
+            <h2 className="text-[#D4AF37] text-xl font-semibold mb-0.5">My Students</h2>
+            <p className="text-xs text-muted-foreground mb-4">Manage tasks, track progress, and support your students.</p>
+            
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+              <Input 
+                type="text" 
+                placeholder="Search students..." 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 bg-background/50 border-white/10"
+                className="w-full bg-card border border-border rounded-xl py-2.5 pl-10 pr-4 text-sm text-foreground focus:outline-none focus:border-[#D4AF37] transition-colors"
               />
             </div>
-            
-            <div className="flex-1 overflow-y-auto pr-1 space-y-2">
-              <AnimatePresence initial={false}>
-                {filteredStudents.map(({ student, subjects }) => {
-                  const selected = student.id === selectedStudentId;
-                  const initials = student.full_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-                  return (
-                    <motion.div
-                      key={student.id}
-                      onClick={() => {
-                        setSelectedStudentId(student.id);
-                        setActiveTab('overview');
-                      }}
-                      className={`p-3 rounded-lg flex items-center gap-3 cursor-pointer border transition-all duration-300 ${
-                        selected 
-                          ? 'bg-primary/10 border-primary shadow-sm shadow-primary/10' 
-                          : 'bg-background/20 border-white/5 hover:bg-background/40 hover:border-white/10'
-                      }`}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Avatar className="h-10 w-10 border border-white/10">
-                        <AvatarImage src={student.avatar_url} alt={student.full_name} />
-                        <AvatarFallback className="bg-primary/20 text-primary font-bold">{initials}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm truncate text-white/95">{student.full_name}</h4>
-                        <p className="text-xs text-muted-foreground truncate">{student.email}</p>
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          {subjects.map(s => (
-                            <Badge key={s.id} variant="secondary" className="text-[10px] px-1.5 py-0 bg-background/40 text-white/70 border border-white/5">
-                              {s.name} ({s.level})
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
+
+            <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+              <SelectTrigger className="w-full bg-card border border-border rounded-xl py-2.5 px-4 text-sm text-muted-foreground hover:bg-muted transition-colors [&>svg]:ml-2 h-auto">
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-4 flex items-center justify-center font-bold">≡</span>
+                  <SelectValue placeholder="All Subjects" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border text-muted-foreground">
+                <SelectItem value="All Subjects">All Subjects</SelectItem>
+                {uniqueSubjects.map(sub => (
+                  <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* 2. Right Student Detail Panel */}
-          <div className="md:col-span-2 flex flex-col border rounded-xl bg-card/30 overflow-hidden">
-            {selectedGroup ? (
-              <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2 custom-scrollbar">
+            {loading ? (
+              <div className="flex justify-center py-8"><Loader2 className="animate-spin text-[#D4AF37]" /></div>
+            ) : filteredStudents.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8 text-sm">No students found</div>
+            ) : (
+              filteredStudents.map(({ student, subjects }) => {
+                const isActive = student.id === selectedStudentId;
+                const studentProg = studentsProgressMap[student.id];
+                const progressPercent = studentProg?.percent || 0;
+                const progressPath = studentProg?.trendPath || "M0,28 L100,28";
                 
-                {/* Detail Header */}
-                <div className="p-6 border-b bg-card/60 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-14 w-14 border-2 border-primary/20">
-                      <AvatarImage src={selectedGroup.student.avatar_url} alt={selectedGroup.student.full_name} />
-                      <AvatarFallback className="bg-primary/20 text-primary text-lg font-bold">
-                        {selectedGroup.student.full_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h2 className="text-2xl font-bold text-white/95">{selectedGroup.student.full_name}</h2>
-                      <p className="text-sm text-muted-foreground">{selectedGroup.student.email}</p>
+                return (
+                  <StudentCard 
+                    key={student.id}
+                    name={student.full_name} 
+                    level={subjects[0]?.level || "Student"}
+                    progress={progressPercent.toString()}
+                    path={progressPath}
+                    active={isActive}
+                    status="online"
+                    onClick={() => {
+                      setSelectedStudentId(student.id);
+                      setActiveTab('messages');
+                    }}
+                  />
+                );
+              })
+            )}
+          </div>
+
+          <div className="p-4 border-t border-border">
+            <button className="w-full flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Users size={16} />
+              View All Students
+            </button>
+          </div>
+        </section>
+
+        {/* Right Main Content Area */}
+        <main className="flex-1 flex flex-col min-w-0 bg-background p-4 overflow-hidden">
+          
+          {selectedGroup ? (
+            <>
+              {/* Top Header Card */}
+              <div className="bg-card border border-border rounded-2xl p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4 shrink-0">
+                <div className="flex items-center gap-5">
+                  <div className="relative">
+                    <img 
+                      src={selectedGroup.student.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedGroup.student.full_name}`} 
+                      alt={selectedGroup.student.full_name} 
+                      className="w-16 h-16 rounded-full bg-muted border-2 border-[#D4AF37] object-cover"
+                    />
+                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-[#0B0C10] rounded-full"></div>
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold text-foreground mb-1">{selectedGroup.student.full_name}</h1>
+                    <p className="text-sm text-muted-foreground mb-3">{selectedGroup.student.email}</p>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className="bg-muted text-muted-foreground px-2.5 py-1 rounded-md border border-slate-700 flex items-center gap-1.5">
+                        <BookOpen size={12} /> {selectedGroup.subjects[0]?.level || "Student"}
+                      </span>
+                      <span className="bg-muted text-muted-foreground px-2.5 py-1 rounded-md border border-slate-700 flex items-center gap-1.5">
+                        <Clock size={12} /> Active Enrollment
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Tabs */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow flex flex-col min-h-0">
-                  <div className="px-6 border-b bg-card/20">
-                    <TabsList className="bg-background/40 h-10 p-0.5 border border-white/5 rounded-lg my-2">
-                      <TabsTrigger value="overview" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md text-xs font-semibold px-4">
-                        Overview
-                      </TabsTrigger>
-                      <TabsTrigger value="messages" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md text-xs font-semibold px-4">
-                        Chat Tracking
-                      </TabsTrigger>
-                      <TabsTrigger value="deadlines" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-md text-xs font-semibold px-4">
-                        Deadlines
-                      </TabsTrigger>
-                    </TabsList>
+                <div className="flex items-end gap-4 min-w-[200px]">
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground mb-1">Overall Progress</p>
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className="text-3xl font-bold text-green-400">{progressData.percent}%</span>
+                      {progressData.percent > 0 && <span className="text-green-400 text-sm flex items-center">↗</span>}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{progressData.completed} of {progressData.total} tasks completed</p>
                   </div>
+                  <div className="w-24 h-12 opacity-80">
+                    <Sparkline 
+                      color={progressData.percent >= 50 || progressData.total === 0 ? "#4ade80" : "#facc15"} 
+                      path={progressData.trendPath} 
+                    />
+                  </div>
+                </div>
+              </div>
 
-                  {/* TAB 1: OVERVIEW */}
-                  <TabsContent value="overview" className="flex-grow overflow-y-auto p-6 space-y-6 focus-visible:outline-none">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Card className="bg-background/25 border-white/5">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-semibold text-white/80">Enrolled Subjects</CardTitle>
-                          <CardDescription>Subjects this student takes with you</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                          {selectedGroup.subjects.map(s => (
-                            <div 
-                              key={s.id} 
-                              onClick={() => handleSubjectClick(s)}
-                              className="flex items-center justify-between p-2.5 rounded-lg bg-background/30 border border-white/5 hover:border-primary/50 hover:bg-primary/5 cursor-pointer transition-all duration-200 group"
-                              title="Click to view pending assignments"
-                            >
-                              <span className="font-medium text-sm text-white/90 group-hover:text-primary transition-colors">{s.name}</span>
-                              <Badge variant="outline" className="text-xs border-white/15 text-white/60 group-hover:border-primary/30 group-hover:text-primary/80">{s.level}</Badge>
-                            </div>
-                          ))}
-                        </CardContent>
-                      </Card>
 
-                      <Card className="bg-background/25 border-white/5">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-semibold text-white/80">Platform Stats</CardTitle>
-                          <CardDescription>Tracking milestones</CardDescription>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-2 gap-4 text-center">
-                          <div className="bg-background/30 border border-white/5 p-3 rounded-lg">
-                            <span className="text-xs text-muted-foreground block">Progress Mean</span>
-                            <span className="text-2xl font-bold text-primary mt-1 block">84%</span>
-                          </div>
-                          <div className="bg-background/30 border border-white/5 p-3 rounded-lg">
-                            <span className="text-xs text-muted-foreground block">Completed Tasks</span>
-                            <span className="text-2xl font-bold text-royal mt-1 block">9 / 11</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <Card className="bg-background/25 border-white/5">
-                      <CardHeader>
-                        <CardTitle className="text-base text-white/90">Tutor Notes</CardTitle>
-                        <CardDescription>Keep track of private observations regarding learning path</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <Textarea 
-                          placeholder="Write feedback notes here (auto-saved locally)..."
-                          className="bg-background/45 border-white/10 text-white/90 text-sm h-32 focus:border-primary/50"
-                          defaultValue={localStorage.getItem(`drmax_notes_${tutorId}_${selectedGroup.student.id}`) || ''}
-                          onChange={e => localStorage.setItem(`drmax_notes_${tutorId}_${selectedGroup.student.id}`, e.target.value)}
-                        />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  {/* TAB 2: CHAT MESSAGES */}
-                  <TabsContent value="messages" className="flex-grow flex flex-col min-h-0 focus-visible:outline-none">
-                    
-                    {useChatFallback && (
-                      <div className="mx-6 mt-4 p-3 bg-royal/10 border border-royal/20 text-royal rounded-lg text-xs flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                        <span>Supabase database message tables are not setup. Chatting is running in <b>Local Mode</b> (saved locally in your browser).</span>
-                      </div>
-                    )}
-
-                    {chatLoading ? (
-                      <div className="flex-grow flex items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                          {messages.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-                              <MessageSquare className="h-12 w-12 opacity-20 mb-2" />
-                              <p className="text-sm">Start a conversation with {selectedGroup.student.full_name}</p>
-                            </div>
-                          ) : (
-                            messages.map(msg => {
-                              const isMe = msg.sender_id === tutorId;
-                              return (
-                                <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                  <div className={`max-w-[70%] p-3 rounded-2xl text-sm ${
-                                    isMe 
-                                      ? 'bg-primary text-primary-foreground rounded-tr-none' 
-                                      : 'bg-muted text-foreground rounded-tl-none border border-white/5'
-                                  }`}>
-                                    <p className="leading-relaxed">{msg.message}</p>
-                                    <span className="text-[10px] opacity-75 mt-1 block text-right">
-                                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })
-                          )}
-                          <div ref={chatBottomRef} />
+              {/* Lower Split Grid */}
+              <div className="flex-1 grid grid-cols-1 xl:grid-cols-5 gap-4 min-h-0 overflow-hidden">
+                
+                {/* Left Side (Chat & Progress) */}
+                <div className="xl:col-span-3 flex flex-col gap-4 min-h-0">
+                  
+                  {activeTab === 'messages' && (
+                    <div className="flex-1 flex flex-col bg-card border border-border rounded-2xl overflow-hidden min-h-0">
+                      <div className="p-4 border-b border-border flex justify-between items-center bg-card">
+                        <div className="flex items-center gap-2 font-medium text-foreground">
+                          <MessageSquare size={18} className="text-muted-foreground" />
+                          Chat with {selectedGroup.student.full_name.split(' ')[0]}
                         </div>
-
-                        {/* Input bar */}
-                        <form onSubmit={handleSendMessage} className="p-4 border-t bg-card/30 flex gap-2">
-                          <Input
-                            placeholder="Type a message..."
-                            value={newMessage}
-                            onChange={e => setNewMessage(e.target.value)}
-                            className="bg-background/60 border-white/10 text-white/95"
-                          />
-                          <Button type="submit" size="icon" className="bg-royal hover:bg-royal/80 text-obsidian">
-                            <Send className="w-4 h-4" />
-                          </Button>
-                        </form>
-                      </>
-                    )}
-                  </TabsContent>
-
-                  {/* TAB 3: DEADLINES */}
-                  <TabsContent value="deadlines" className="flex-grow flex flex-col min-h-0 focus-visible:outline-none p-6 space-y-4">
-                    
-                    {useDeadlineFallback && (
-                      <div className="p-3 bg-royal/10 border border-royal/20 text-royal rounded-lg text-xs flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                        <span>Supabase database deadline tables are not setup. Task manager is running in <b>Local Mode</b> (saved locally).</span>
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                          <Search size={18} className="cursor-pointer hover:text-foreground" />
+                          <span className="text-xl leading-none mb-1 cursor-pointer hover:text-foreground">⋮</span>
+                        </div>
                       </div>
-                    )}
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-white/90">Student Task Deadlines</h3>
-                        <p className="text-xs text-muted-foreground">Assign work to complete before the specified due date.</p>
-                      </div>
-                      
-                      {/* Set Deadline Dialog */}
-                      <Dialog open={isDeadlineDialogOpen} onOpenChange={setIsDeadlineDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button size="sm" className="bg-royal hover:bg-royal/80 text-obsidian font-bold">
-                            <Plus className="w-4 h-4 mr-1" />
-                            Set Deadline
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                          <form onSubmit={handleCreateDeadline}>
-                            <DialogHeader>
-                              <DialogTitle>Assign Task & Set Deadline</DialogTitle>
-                              <DialogDescription>Assign a learning module or homework task with a due date.</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                              <div className="space-y-2">
-                                <label className="text-xs font-semibold">Task Title *</label>
-                                <Input 
-                                  placeholder="e.g. Read Modern Europe Chapter 3" 
-                                  value={newDeadlineTitle} 
-                                  onChange={e => setNewDeadlineTitle(e.target.value)}
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-xs font-semibold">Subject Context *</label>
-                                <Select value={newDeadlineSubjectId} onValueChange={setNewDeadlineSubjectId} required>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a subject" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {selectedGroup.subjects.map(s => (
-                                      <SelectItem key={s.id} value={s.id}>{s.name} ({s.level})</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-xs font-semibold">Description / Instruction</label>
-                                <Textarea 
-                                  placeholder="Provide instructions on what is expected..." 
-                                  value={newDeadlineDesc}
-                                  onChange={e => setNewDeadlineDesc(e.target.value)}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-xs font-semibold">Due Date & Time *</label>
-                                <Input 
-                                  type="datetime-local" 
-                                  value={newDeadlineDate} 
-                                  onChange={e => setNewDeadlineDate(e.target.value)}
-                                  required
-                                />
-                              </div>
-                            </div>
-                            <DialogFooter>
-                              <Button type="button" variant="outline" onClick={resetDeadlineForm}>Cancel</Button>
-                              <Button type="submit" disabled={submittingDeadline} className="bg-royal hover:bg-royal/80 text-obsidian font-bold">
-                                {submittingDeadline && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                Assign Task
-                              </Button>
-                            </DialogFooter>
-                          </form>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-
-                    {deadlinesLoading ? (
-                      <div className="flex-grow flex items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      </div>
-                    ) : (
-                      <div className="flex-grow overflow-y-auto space-y-3">
-                        {deadlines.length === 0 ? (
-                          <div className="h-full flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl py-12">
-                            <CalendarClock className="h-10 w-10 opacity-20 mb-2" />
-                            <p className="text-sm">No deadlines set for this student yet.</p>
-                          </div>
+                      <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                        {chatLoading ? (
+                           <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-[#D4AF37]" /></div>
+                        ) : messages.length === 0 ? (
+                           <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+                             <MessageSquare className="h-10 w-10 opacity-20 mb-2" />
+                             <p className="text-sm">Start a conversation</p>
+                           </div>
                         ) : (
-                          deadlines.map(deadline => {
-                            const completed = deadline.status === 'completed';
-                            const isOverdue = new Date(deadline.due_date) < new Date() && !completed;
+                          messages.map(msg => {
+                            const isMe = msg.sender_id === tutorId;
                             return (
-                              <div 
-                                key={deadline.id} 
-                                className={`p-4 rounded-xl flex items-start gap-4 border transition-all ${
-                                  completed 
-                                    ? 'bg-royal/5 border-royal/10 opacity-70' 
-                                    : isOverdue
-                                    ? 'bg-burgundy/5 border-burgundy/10'
-                                    : 'bg-background/30 border-white/5 hover:border-white/10'
-                                }`}
-                              >
-                                <button 
-                                  onClick={() => handleToggleDeadline(deadline)}
-                                  className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                                    completed 
-                                      ? 'bg-royal border-royal text-white' 
-                                      : 'border-white/20 hover:border-white/40 bg-background/50'
-                                  }`}
-                                >
-                                  {completed && <Check className="w-3.5 h-3.5" />}
-                                </button>
-                                
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <h4 className={`font-semibold text-sm ${completed ? 'line-through text-white/50' : 'text-white/90'}`}>
-                                      {deadline.title}
-                                    </h4>
-                                    <Badge variant="secondary" className="text-[10px] bg-background/50 border border-white/5">
-                                      {deadline.subjects?.name || 'Subject'}
-                                    </Badge>
-                                    <Badge className={`text-[10px] ${
-                                      completed 
-                                        ? 'bg-royal text-royal dark:bg-royal/40 dark:text-royal' 
-                                        : isOverdue 
-                                        ? 'bg-burgundy text-burgundy dark:bg-burgundy/40 dark:text-burgundy animate-pulse'
-                                        : 'bg-royal text-royal dark:bg-royal/40 dark:text-royal'
-                                    }`}>
-                                      {completed ? 'Completed' : isOverdue ? 'Overdue' : 'Pending'}
-                                    </Badge>
+                              <div key={msg.id} className={`flex items-start gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                {!isMe && (
+                                  <img src={selectedGroup.student.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedGroup.student.full_name}`} alt="Student" className="w-8 h-8 rounded-full bg-muted object-cover" />
+                                )}
+                                <div className={`flex flex-col gap-1 max-w-[80%] ${isMe ? 'items-end' : ''}`}>
+                                  <div className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                                    isMe 
+                                      ? 'bg-[#D4AF37]/20 border border-[#D4AF37]/30 text-[#D4AF37] rounded-tr-sm' 
+                                      : 'bg-muted text-foreground rounded-tl-sm'
+                                  }`}>
+                                    {msg.message}
                                   </div>
-                                  
-                                  {deadline.description && (
-                                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                      {deadline.description}
-                                    </p>
-                                  )}
-                                  
-                                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-2">
-                                    <Calendar className="w-3.5 h-3.5 text-primary" />
-                                    <span>Due: {new Date(deadline.due_date).toLocaleString()}</span>
+                                  <div className={`flex items-center gap-1 text-[10px] text-muted-foreground ${isMe ? 'mr-1' : 'ml-1'}`}>
+                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {isMe && <span className="text-[#D4AF37]">✓✓</span>}
                                   </div>
                                 </div>
-
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="text-muted-foreground hover:text-burgundy hover:bg-burgundy/10 h-8 w-8"
-                                  onClick={() => handleDeleteDeadline(deadline.id)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
                               </div>
                             );
                           })
                         )}
+                        <div ref={chatBottomRef} />
                       </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </div>
-            ) : (
-              <div className="flex-grow flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-                <Users className="h-16 w-16 opacity-10 mb-3" />
-                <h3 className="text-lg font-medium text-white/70">Select a Student</h3>
-                <p className="text-sm max-w-sm mt-1">
-                  Click on a student from the sidebar to view their profile, send messages, and set deadlines.
-                </p>
-              </div>
-            )}
-          </div>
 
-        </div>
-      )}
+                      <form onSubmit={handleSendMessage} className="p-4 bg-card border-t border-border">
+                        <div className="relative flex items-center bg-muted/50 border border-slate-700/50 rounded-xl overflow-hidden focus-within:border-slate-500 transition-colors">
+                          <input 
+                            type="text" 
+                            value={newMessage}
+                            onChange={e => setNewMessage(e.target.value)}
+                            placeholder="Type a message..." 
+                            className="flex-1 bg-transparent py-3 pl-4 pr-24 text-sm text-foreground focus:outline-none placeholder:text-muted-foreground"
+                          />
+                          <div className="absolute right-3 flex items-center gap-3">
+                            <Paperclip size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                            <Smile size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                            <button type="submit" className="w-8 h-8 bg-[#D4AF37] hover:bg-[#c29f2f] rounded-lg flex items-center justify-center text-black ml-1 transition-colors">
+                              <Send size={14} className="-ml-0.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  )}
 
-      {/* Pending Assignments Modal */}
-      <Dialog open={isPendingAssignmentsOpen} onOpenChange={setIsPendingAssignmentsOpen}>
-        <DialogContent className="sm:max-w-[550px] max-h-[80vh] flex flex-col border-white/10 bg-obsidian/95 backdrop-blur-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-white text-xl">
-              <FileText className="w-5 h-5 text-royal" />
-              <span>Pending Assignments - {pendingAssignmentsSubject?.name}</span>
-            </DialogTitle>
-            <DialogDescription className="text-white/60">
-              View assignments not yet submitted by {selectedGroup?.student.full_name}. Set a deadline as a reminder.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-y-auto my-4 pr-1 space-y-3">
-            {pendingAssignmentsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : pendingAssignmentsList.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-white/10 rounded-xl bg-white/5">
-                <CheckCircle2 className="w-12 h-12 text-royal mx-auto mb-3" />
-                <h4 className="font-semibold text-white">All Completed!</h4>
-                <p className="text-sm text-white/60 mt-1">This student has submitted all assignments for this subject.</p>
-              </div>
-            ) : (
-              pendingAssignmentsList.map((item, idx) => (
-                <div 
-                  key={idx} 
-                  className="flex items-center justify-between gap-4 p-3 rounded-lg border border-white/5 bg-white/5 hover:border-royal/30 transition-colors"
-                >
-                  <div className="min-w-0">
-                    <h4 className="font-semibold text-sm text-white/90">Assignment {item.assignmentNum}</h4>
-                    <p className="text-xs text-white/60 truncate mt-0.5">Topic: {item.topicTitle}</p>
+                  {activeTab !== 'messages' && (
+                     <div className="flex-1 flex flex-col bg-card border border-border rounded-2xl p-4 overflow-y-auto custom-scrollbar">
+                       <h3 className="text-foreground font-medium mb-4">Dashboard View</h3>
+                       <p className="text-muted-foreground text-sm">Navigate to Chat to see messages, or Deadlines for tasks.</p>
+                     </div>
+                  )}
+
+                  {/* Subject Progress Overview */}
+                  <div className="bg-card border border-border rounded-2xl p-4 shrink-0">
+                    <div className="flex items-center gap-2 font-medium text-foreground mb-3">
+                      <BookOpen size={18} className="text-[#D4AF37]" />
+                      Subject Progress Overview
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                      {selectedGroup.subjects.map((s, idx) => {
+                        const subjectData = progressData.subjectProgress?.find(sp => sp.name === s.name);
+                        const percent = subjectData ? subjectData.percent : 0;
+                        return (
+                          <ProgressBar key={s.id} label={s.name} percent={percent} color={idx % 2 === 0 ? "bg-green-500" : "bg-[#D4AF37]"} />
+                        );
+                      })}
+                    </div>
                   </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="border-royal/20 text-royal hover:bg-royal/10 hover:text-royal gap-1.5 whitespace-nowrap text-xs h-8"
-                    onClick={() => handleRemindShortcut(item)}
-                  >
-                    <CalendarClock className="w-3.5 h-3.5" />
-                    Remind / Set Deadline
-                  </Button>
                 </div>
-              ))
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setIsPendingAssignmentsOpen(false)} className="border-white/10 hover:bg-white/10">
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+                {/* Right Side (Widgets) */}
+                <div className="xl:col-span-2 flex flex-col gap-4 min-h-0 overflow-y-auto custom-scrollbar pr-1">
+                  
+                  {/* Upcoming Deadlines */}
+                  <div className="bg-card border border-border rounded-2xl p-4 flex flex-col min-h-[200px]">
+                    <div className="flex justify-between items-center mb-3 shrink-0">
+                      <div className="flex items-center gap-2 font-medium text-foreground">
+                        <Calendar size={18} className="text-purple-400" />
+                        Upcoming Deadlines
+                      </div>
+                      <Dialog open={isDeadlineDialogOpen} onOpenChange={setIsDeadlineDialogOpen}>
+                        <DialogTrigger asChild>
+                           <button className="text-xs text-[#D4AF37] hover:underline flex items-center gap-1">
+                             <Plus size={12} /> Add
+                           </button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px] border-border bg-background text-foreground">
+                           <form onSubmit={handleCreateDeadline}>
+                             <DialogHeader>
+                               <DialogTitle className="text-[#D4AF37]">Assign Task</DialogTitle>
+                               <DialogDescription className="text-muted-foreground">Assign a task with a due date.</DialogDescription>
+                             </DialogHeader>
+                             <div className="space-y-4 py-4">
+                               <div className="space-y-2">
+                                 <label className="text-xs font-semibold">Task Title</label>
+                                 <Input className="bg-card border-border text-foreground" value={newDeadlineTitle} onChange={e => setNewDeadlineTitle(e.target.value)} required />
+                               </div>
+                               <div className="space-y-2">
+                                 <label className="text-xs font-semibold">Subject</label>
+                                 <Select value={newDeadlineSubjectId} onValueChange={setNewDeadlineSubjectId} required>
+                                   <SelectTrigger className="bg-card border-border text-foreground">
+                                     <SelectValue placeholder="Select a subject" />
+                                   </SelectTrigger>
+                                   <SelectContent className="bg-background border-border text-foreground">
+                                     {selectedGroup.subjects.map(s => (
+                                       <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                     ))}
+                                   </SelectContent>
+                                 </Select>
+                               </div>
+                               <div className="space-y-2">
+                                 <label className="text-xs font-semibold">Due Date</label>
+                                 <Input type="datetime-local" className="bg-card border-border text-foreground" value={newDeadlineDate} onChange={e => setNewDeadlineDate(e.target.value)} required />
+                               </div>
+                             </div>
+                             <DialogFooter>
+                               <Button type="button" variant="ghost" onClick={resetDeadlineForm} className="text-muted-foreground">Cancel</Button>
+                               <Button type="submit" disabled={submittingDeadline} className="bg-[#D4AF37] text-black hover:bg-[#c29f2f]">
+                                 {submittingDeadline ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                                 Assign Task
+                               </Button>
+                             </DialogFooter>
+                           </form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                    
+                    <div className="space-y-3 flex-1 overflow-y-auto">
+                      {deadlinesLoading ? (
+                        <div className="flex justify-center py-4"><Loader2 className="animate-spin text-[#D4AF37]" /></div>
+                      ) : deadlines.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No upcoming deadlines.</p>
+                      ) : (
+                        deadlines.filter(d => d.status !== 'completed').map((d, i) => {
+                           const colors = ["bg-red-500", "bg-[#D4AF37]", "bg-green-500", "bg-purple-500"];
+                           const timeColors = ["text-red-400", "text-[#D4AF37]", "text-green-400", "text-purple-400"];
+                           const colorIdx = i % colors.length;
+                           const daysLeft = Math.max(0, Math.ceil((new Date(d.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+                           return (
+                             <DeadlineItem 
+                               key={d.id}
+                               dotColor={colors[colorIdx]} 
+                               title={d.title} 
+                               date={new Date(d.due_date).toLocaleDateString()} 
+                               timeLeft={`${daysLeft} days left`} 
+                               timeColor={timeColors[colorIdx]} 
+                               onComplete={() => handleToggleDeadline(d)}
+                             />
+                           );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div className="bg-card border border-border rounded-2xl p-4">
+                    <div className="flex items-center gap-2 font-medium text-foreground mb-3">
+                      <ActivityIcon />
+                      Recent Activity
+                    </div>
+                    
+                    <div className="space-y-4 relative before:absolute before:inset-y-0 before:left-3 before:w-px before:bg-muted">
+                      {recentActivities.length > 0 ? (
+                        recentActivities.map((activity, i) => {
+                          const isCompleted = activity.type === 'completed';
+                          const dateStr = new Date(activity.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                          const prefix = isCompleted ? "Completed: " : "Assigned: ";
+                          return (
+                            <ActivityItem 
+                              key={i}
+                              title={`${prefix}${activity.title}`} 
+                              time={dateStr} 
+                              iconColor={isCompleted ? "bg-green-500/20 text-green-500" : "bg-indigo-500/20 text-indigo-400"}
+                              icon={isCompleted ? "✓" : "→"}
+                            />
+                          );
+                        })
+                      ) : (
+                        <p className="text-sm text-muted-foreground pl-8">No recent activity.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Quick Notes */}
+                  <div className="bg-[#1A1810]/80 border border-[#D4AF37]/20 rounded-2xl p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="flex items-center gap-2 font-medium text-[#D4AF37]">
+                        <ClipboardList size={18} />
+                        Quick Notes
+                      </div>
+                      <button className="text-xs text-[#D4AF37] hover:underline">Add Note</button>
+                    </div>
+                    
+                    <textarea 
+                       className="w-full bg-transparent text-sm text-muted-foreground leading-relaxed mb-6 resize-none focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/50 rounded-lg p-2 -ml-2 h-24"
+                       defaultValue={localStorage.getItem(`drmax_notes_${tutorId}_${selectedGroup.student.id}`) || "Pelaiah is showing great improvement in analytical thinking. Encourage more class participation."}
+                       onChange={e => localStorage.setItem(`drmax_notes_${tutorId}_${selectedGroup.student.id}`, e.target.value)}
+                    />
+                    
+                    <p className="text-[10px] text-muted-foreground">Auto-saved locally</p>
+                  </div>
+
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+              <Users className="h-16 w-16 opacity-20 mb-4" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">Select a Student</h3>
+              <p className="text-sm text-center max-w-sm">Choose a student from the list to view their progress, chat history, and deadlines.</p>
+            </div>
+          )}
+        </main>
+
+      </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #334155; }
+      `}} />
     </div>
   );
 }
 
+// Helper Components
+function StudentCard({ name, level, progress, path, active = false, status = 'online', onClick }: { name: string, level: string, progress: string, path?: string, active?: boolean, status?: 'online' | 'away', onClick: () => void }) {
+  return (
+    <div onClick={onClick} className={`p-4 rounded-xl border transition-all cursor-pointer ${
+      active 
+        ? 'bg-[#D4AF37]/5 border-[#D4AF37]/50' 
+        : 'bg-card border-border hover:border-slate-700'
+    }`}>
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`} alt={name} className="w-10 h-10 rounded-full bg-muted object-cover" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start mb-0.5">
+            <h4 className="text-sm font-medium text-foreground truncate pr-2">{name}</h4>
+            <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${status === 'online' ? 'bg-green-500' : 'bg-[#D4AF37]'}`}></div>
+          </div>
+          <p className="text-xs text-muted-foreground mb-2">{level}</p>
+          <div className="flex items-center justify-between">
+            <span className={active ? 'text-green-400 text-xs font-medium' : 'text-muted-foreground text-xs font-medium'}>
+              {progress}%
+            </span>
+            <div className="w-12 h-4 opacity-70">
+              <Sparkline color={active || Number(progress) >= 50 ? '#4ade80' : '#facc15'} path={path} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
+function Tab({ icon, label, active = false, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick: () => void }) {
+  return (
+    <button onClick={onClick} className={`flex items-center gap-2 px-6 py-3 border-b-2 transition-colors text-sm whitespace-nowrap ${
+      active 
+        ? 'border-[#D4AF37] text-[#D4AF37] font-medium bg-[#D4AF37]/5 rounded-t-lg' 
+        : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-card rounded-t-lg'
+    }`}>
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function ProgressBar({ label, percent, color }: { label: string, percent: number, color: string }) {
+  return (
+    <div>
+      <div className="flex justify-between text-xs mb-1.5">
+        <span className="text-muted-foreground font-medium truncate pr-2">{label}</span>
+        <span className="text-muted-foreground shrink-0">{percent}%</span>
+      </div>
+      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+        <div className={`h-full ${color} rounded-full`} style={{ width: `${percent}%` }}></div>
+      </div>
+    </div>
+  );
+}
+
+function DeadlineItem({ dotColor, title, date, timeLeft, timeColor, onComplete }: { dotColor: string, title: string, date: string, timeLeft: string, timeColor: string, onComplete: () => void }) {
+  return (
+    <div className="flex items-start gap-3 group">
+      <button onClick={onComplete} className={`w-3 h-3 rounded-full mt-1.5 ${dotColor} hover:scale-110 transition-transform flex items-center justify-center`}>
+         <Check size={8} className="text-black opacity-0 group-hover:opacity-100" />
+      </button>
+      <div className="flex-1 min-w-0">
+        <h4 className="text-sm font-medium text-foreground mb-0.5 truncate">{title}</h4>
+        <p className="text-xs text-muted-foreground">{date}</p>
+      </div>
+      <div className={`text-xs font-medium ${timeColor} mt-0.5 shrink-0`}>{timeLeft}</div>
+    </div>
+  );
+}
+
+function ActivityItem({ title, time, iconColor, icon }: { title: string, time: string, iconColor: string, icon: string }) {
+  return (
+    <div className="relative pl-8 flex items-start gap-3">
+      <div className={`absolute left-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border border-[#0B0C10] ${iconColor}`}>
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <h4 className="text-sm text-foreground mb-0.5 truncate">{title}</h4>
+        <div className="flex justify-between items-center">
+          <p className="text-xs text-muted-foreground">{time}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActivityIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+    </svg>
+  );
+}
+
+function Sparkline({ color, path }: { color: string, path?: string }) {
+  const dPath = path || "M0,25 C10,20 20,28 30,15 C40,5 50,22 60,10 C70,0 80,18 90,8 L100,5";
+  return (
+    <svg viewBox="0 0 100 30" className="w-full h-full" preserveAspectRatio="none">
+      <path 
+        d={dPath} 
+        fill="none" 
+        stroke={color} 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

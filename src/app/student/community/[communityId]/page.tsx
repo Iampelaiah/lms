@@ -260,7 +260,29 @@ export default function CommunityPostsPage() {
               {profile?.id && (
                 <CreatePostDialog communityId={communityId} authorId={profile.id} />
               )}
-              <Button variant="outline">Join</Button>
+              {(() => {
+                const isSubscribed = typeof window !== 'undefined' 
+                  ? (JSON.parse(localStorage.getItem('community_subscriptions') || '[]')).includes(communityId)
+                  : false;
+                  
+                return (
+                  <Button 
+                    variant={isSubscribed ? "secondary" : "outline"}
+                    onClick={() => {
+                      const subs = JSON.parse(localStorage.getItem('community_subscriptions') || '[]');
+                      const newSubs = isSubscribed 
+                        ? subs.filter((id: string) => id !== communityId)
+                        : [...subs, communityId];
+                      localStorage.setItem('community_subscriptions', JSON.stringify(newSubs));
+                      window.dispatchEvent(new Event('community_subscriptions_updated'));
+                      // Force a re-render of this component
+                      setCommunity({...community});
+                    }}
+                  >
+                    {isSubscribed ? "Joined" : "Join"}
+                  </Button>
+                );
+              })()}
               <Button variant="ghost" size="icon">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
@@ -293,7 +315,7 @@ export default function CommunityPostsPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleVote(post.id, 1)}
-                  className={post.userVote === 1 ? 'text-royal' : ''}
+                  className={post.userVote === 1 ? 'text-gold' : ''}
                 >
                   <ArrowBigUp />
                 </Button>
@@ -302,7 +324,7 @@ export default function CommunityPostsPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleVote(post.id, -1)}
-                  className={post.userVote === -1 ? 'text-royal' : ''}
+                  className={post.userVote === -1 ? 'text-gold' : ''}
                 >
                   <ArrowBigDown />
                 </Button>

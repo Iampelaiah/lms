@@ -84,7 +84,7 @@ export default function LiveClassDetailPage() {
         <p className="text-muted-foreground mb-6">
           Your account is currently pending administrator approval.
         </p>
-        <Button className="bg-royal hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl" asChild>
+        <Button className="bg-gold hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl" asChild>
           <Link href="/student">Back to Dashboard</Link>
         </Button>
       </div>
@@ -96,7 +96,7 @@ export default function LiveClassDetailPage() {
       <div className="h-[60vh] flex flex-col items-center justify-center text-center max-w-md mx-auto px-4">
         <h1 className="text-2xl font-bold mb-2">Class Not Found</h1>
         <p className="text-muted-foreground mb-6">The requested live class session could not be found.</p>
-        <Button className="bg-royal hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl" asChild>
+        <Button className="bg-gold hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl" asChild>
           <Link href="/student/live-classes">Back to Live Classes</Link>
         </Button>
       </div>
@@ -134,41 +134,41 @@ export default function LiveClassDetailPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto px-4 sm:px-6 py-4">
-      <Link href="/student/live-classes" className="inline-flex items-center text-sm text-royal hover:text-[#800000] transition-colors">
+      <Link href="/student/live-classes" className="inline-flex items-center text-sm text-gold hover:text-[#800000] transition-colors">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Live Classes
       </Link>
 
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-white">{liveClass.title}</h1>
-        <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">{liveClass.title}</h1>
+        <div className="flex flex-wrap items-center gap-4 text-sm text-foreground/">
           <div className="flex items-center gap-2">
-            <Avatar className="w-6 h-6 border border-white/10">
+            <Avatar className="w-6 h-6 border border-border">
               <AvatarImage src={liveClass.tutor?.avatar_url} />
               <AvatarFallback>{liveClass.tutor?.full_name?.[0]}</AvatarFallback>
             </Avatar>
             <span>Tutor: {liveClass.tutor?.full_name}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Calendar className="w-4 h-4 text-royal" />
+            <Calendar className="w-4 h-4 text-gold" />
             <span>Scheduled: {liveClass.schedule ? new Date(liveClass.schedule).toLocaleString() : 'TBD'}</span>
           </div>
-          <span className="capitalize px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/5 border border-white/10 text-white/80">
+          <span className="capitalize px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted border border-border text-foreground/">
             {liveClass.status}
           </span>
         </div>
       </div>
 
       {liveClass.status === 'ongoing' ? (
-        <Card className="bg-[#07140D] border-white/5 shadow-2xl rounded-[2rem] overflow-hidden p-8 text-center max-w-xl mx-auto space-y-6">
+        <Card className="bg-[#07140D] border-border shadow-2xl rounded-[2rem] overflow-hidden p-8 text-center max-w-xl mx-auto space-y-6">
           <div className="w-20 h-20 bg-burgundy/10 rounded-full flex items-center justify-center mx-auto animate-pulse">
             <Video className="w-10 h-10 text-burgundy" />
           </div>
           <div className="space-y-2">
             <h2 className="text-xl font-bold">This Class is Live Now!</h2>
-            <p className="text-white/40 text-sm">Join the interactive virtual classroom to interact with your tutor and peers.</p>
+            <p className="text-foreground/ text-sm">Join the interactive virtual classroom to interact with your tutor and peers.</p>
           </div>
-          <Button className="w-full bg-royal hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl py-6 max-w-xs" asChild>
+          <Button className="w-full bg-gold hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl py-6 max-w-xs" asChild>
             <Link href={`/classroom/${liveClass.agora_channel_name || liveClass.id}?role=participant&name=${profile?.full_name || 'Guest'}`}>
               Join Room Now
             </Link>
@@ -177,7 +177,7 @@ export default function LiveClassDetailPage() {
       ) : liveClass.status === 'completed' ? (
         <div className="space-y-6">
           {embedUrl ? (
-            <div className="relative aspect-video w-full bg-obsidian/40 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+            <div className="relative aspect-video w-full bg-background/40 rounded-3xl overflow-hidden border border-border shadow-2xl">
               <iframe
                 src={embedUrl}
                 className="absolute inset-0 w-full h-full"
@@ -187,7 +187,7 @@ export default function LiveClassDetailPage() {
               />
             </div>
           ) : isDirectVideo && liveClass.recording_url ? (
-            <div className="relative aspect-video w-full bg-obsidian/40 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+            <div className="relative aspect-video w-full bg-background/40 rounded-3xl overflow-hidden border border-border shadow-2xl">
               <video
                 src={liveClass.recording_url}
                 controls
@@ -196,39 +196,39 @@ export default function LiveClassDetailPage() {
               />
             </div>
           ) : liveClass.recording_url ? (
-            <Card className="bg-[#07140D] border-white/5 shadow-2xl rounded-[2rem] overflow-hidden p-8 text-center max-w-xl mx-auto space-y-6">
-              <div className="w-20 h-20 bg-royal/10 rounded-full flex items-center justify-center mx-auto">
-                <Play className="w-10 h-10 text-royal" />
+            <Card className="bg-[#07140D] border-border shadow-2xl rounded-[2rem] overflow-hidden p-8 text-center max-w-xl mx-auto space-y-6">
+              <div className="w-20 h-20 bg-gold/10 rounded-full flex items-center justify-center mx-auto">
+                <Play className="w-10 h-10 text-gold" />
               </div>
               <div className="space-y-2">
                 <h2 className="text-xl font-bold">Recording Available</h2>
-                <p className="text-white/40 text-sm">A recording has been uploaded for this completed live class. Click below to watch the session.</p>
+                <p className="text-foreground/ text-sm">A recording has been uploaded for this completed live class. Click below to watch the session.</p>
               </div>
-              <Button className="w-full bg-royal hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl py-6 max-w-xs" asChild>
+              <Button className="w-full bg-gold hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl py-6 max-w-xs" asChild>
                 <a href={liveClass.recording_url} target="_blank" rel="noreferrer">
                   Watch Recording
                 </a>
               </Button>
             </Card>
           ) : (
-            <Card className="bg-[#07140D] border-white/5 shadow-2xl rounded-[2rem] overflow-hidden p-12 text-center max-w-xl mx-auto space-y-4">
-              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto">
-                <Video className="w-8 h-8 text-white/20" />
+            <Card className="bg-[#07140D] border-border shadow-2xl rounded-[2rem] overflow-hidden p-12 text-center max-w-xl mx-auto space-y-4">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+                <Video className="w-8 h-8 text-foreground/" />
               </div>
-              <h2 className="text-xl font-bold text-white/80">Recording Coming Soon</h2>
-              <p className="text-white/40 text-sm max-w-sm mx-auto">
+              <h2 className="text-xl font-bold text-foreground/">Recording Coming Soon</h2>
+              <p className="text-foreground/ text-sm max-w-sm mx-auto">
                 This class is marked as completed, but the recording is not yet uploaded. Please check back later.
               </p>
             </Card>
           )}
         </div>
       ) : (
-        <Card className="bg-[#07140D] border-white/5 shadow-2xl rounded-[2rem] overflow-hidden p-12 text-center max-w-xl mx-auto space-y-4">
-          <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto">
-            <Calendar className="w-8 h-8 text-white/20" />
+        <Card className="bg-[#07140D] border-border shadow-2xl rounded-[2rem] overflow-hidden p-12 text-center max-w-xl mx-auto space-y-4">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+            <Calendar className="w-8 h-8 text-foreground/" />
           </div>
-          <h2 className="text-xl font-bold text-white/80">Class has not started</h2>
-          <p className="text-white/40 text-sm max-w-sm mx-auto">
+          <h2 className="text-xl font-bold text-foreground/">Class has not started</h2>
+          <p className="text-foreground/ text-sm max-w-sm mx-auto">
             This class is scheduled for {liveClass.schedule ? new Date(liveClass.schedule).toLocaleString() : 'TBD'}. You can join once the status becomes ongoing.
           </p>
         </Card>

@@ -110,35 +110,35 @@ function FinalizeClassDialog({
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-obsidian border-white/10 text-white rounded-3xl">
+      <DialogContent className="sm:max-w-[425px] bg-background border-border text-foreground rounded-3xl">
         <form onSubmit={handleSave}>
           <DialogHeader>
             <DialogTitle>Finalize Class</DialogTitle>
-            <DialogDescription className="text-white/40">
+            <DialogDescription className="text-foreground/">
               Provide the recording and presentation links. These will be automatically distributed to all students enrolled in this subject.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="recording-url" className="text-white/60">Recording URL (Optional)</Label>
+              <Label htmlFor="recording-url" className="text-foreground/">Recording URL (Optional)</Label>
               <Input
                 id="recording-url"
                 type="url"
                 placeholder="https://example.com/recording.mp4"
                 value={recordingUrl}
                 onChange={(e) => setRecordingUrl(e.target.value)}
-                className="bg-white/5 border-white/10 rounded-xl py-6 focus-visible:ring-1 focus-visible:ring-primary text-white"
+                className="bg-muted border-border rounded-xl py-6 focus-visible:ring-1 focus-visible:ring-primary text-foreground"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="presentation-url" className="text-white/60">Presentation URL (Optional)</Label>
+              <Label htmlFor="presentation-url" className="text-foreground/">Presentation URL (Optional)</Label>
               <Input
                 id="presentation-url"
                 type="url"
                 placeholder="https://example.com/slides.pdf"
                 value={presentationUrl}
                 onChange={(e) => setPresentationUrl(e.target.value)}
-                className="bg-white/5 border-white/10 rounded-xl py-6 focus-visible:ring-1 focus-visible:ring-primary text-white"
+                className="bg-muted border-border rounded-xl py-6 focus-visible:ring-1 focus-visible:ring-primary text-foreground"
               />
             </div>
           </div>
@@ -147,7 +147,7 @@ function FinalizeClassDialog({
               type="button"
               variant="ghost"
               onClick={() => setOpen(false)}
-              className="bg-white/5 border-white/10 rounded-xl hover:bg-white/10 hover:text-white"
+              className="bg-muted border-border rounded-xl hover:bg-muted hover:text-foreground"
               disabled={saving}
             >
               Cancel
@@ -155,7 +155,7 @@ function FinalizeClassDialog({
             <Button
               type="submit"
               disabled={saving}
-              className="bg-royal hover:bg-royal/80 text-obsidian font-bold rounded-xl"
+              className="bg-gold hover:bg-gold/80 text-obsidian font-bold rounded-xl"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Finalize & Send Resources'}
             </Button>
@@ -186,8 +186,8 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                             {liveClass.status}
                         </Badge>
                         <div className="relative aspect-[3/2] w-full bg-muted">
-                            {liveClass.imageUrl ? (
-                                <Image src={liveClass.imageUrl} alt={liveClass.title} fill className="object-cover" />
+                            {liveClass.image_url ? (
+                                <Image src={liveClass.image_url} alt={liveClass.title} fill className="object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                     <Video className="w-12 h-12 text-muted-foreground/20" />
@@ -206,17 +206,17 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                          {liveClass.status === "completed" ? (
                              <div className="flex gap-2 w-full">
                                  {liveClass.recording_url && (
-                                     <Button className="flex-1 rounded-xl py-6 bg-white/5 hover:bg-white/10 text-white border-white/10" variant="outline" asChild>
+                                     <Button className="flex-1 rounded-xl py-6 bg-muted hover:bg-muted text-foreground border-border" variant="outline" asChild>
                                          <a href={liveClass.recording_url} target="_blank" rel="noreferrer">
-                                             <Video className="mr-2 h-4 w-4 text-royal" />
+                                             <Video className="mr-2 h-4 w-4 text-gold" />
                                              Video
                                          </a>
                                      </Button>
                                  )}
                                  {liveClass.presentation_url && (
-                                     <Button className="flex-1 rounded-xl py-6 bg-white/5 hover:bg-white/10 text-white border-white/10" variant="outline" asChild>
+                                     <Button className="flex-1 rounded-xl py-6 bg-muted hover:bg-muted text-foreground border-border" variant="outline" asChild>
                                          <a href={liveClass.presentation_url} target="_blank" rel="noreferrer">
-                                             <FileText className="mr-2 h-4 w-4 text-royal" />
+                                             <FileText className="mr-2 h-4 w-4 text-gold" />
                                              Slides
                                          </a>
                                      </Button>
@@ -225,7 +225,7 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                                      liveClass={liveClass}
                                      onSaved={onUpdate}
                                      trigger={
-                                         <Button className="flex-1 rounded-xl py-6 bg-white/5 hover:bg-white/10 text-white border-white/10">
+                                         <Button className="flex-1 rounded-xl py-6 bg-muted hover:bg-muted text-foreground border-border">
                                              Edit Resources
                                          </Button>
                                      }
@@ -299,7 +299,7 @@ export default function TutorLiveClassesPage() {
                     tutorId={profile?.id || ''} 
                     onClassScheduled={fetchClasses}
                     trigger={
-                        <Button className="bg-royal hover:bg-royal/80 text-obsidian font-bold h-12 px-6">
+                        <Button className="bg-gold hover:bg-gold/80 text-obsidian font-bold h-12 px-6">
                             <CalendarPlus className="mr-2 h-5 w-5" />
                             Schedule New Class
                         </Button>

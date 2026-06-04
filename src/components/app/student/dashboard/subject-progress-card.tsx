@@ -40,7 +40,7 @@ export function DetailedProgressCard({
       );
 
   return (
-    <Card className="shrink-0 w-[85vw] snap-center sm:w-auto rounded-[2rem] shadow-sm border-white/5">
+    <Card className="shrink-0 w-[85vw] snap-center sm:w-auto rounded-[2rem] shadow-sm border-border">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
@@ -48,8 +48,8 @@ export function DetailedProgressCard({
             <CardDescription>Overall Progress</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-fin-lime">{overallProgress}%</span>
-            <BookOpen className="h-6 w-6 text-fin-lime" />
+            <span className="text-2xl font-bold text-gold">{overallProgress}%</span>
+            <BookOpen className="h-6 w-6 text-gold" />
           </div>
         </div>
         <Progress value={overallProgress} className="mt-2 h-2" />
@@ -74,7 +74,7 @@ export function DetailedProgressCard({
                     <Card className="bg-muted/50 rounded-2xl border-none">
                       <CardContent className="flex items-center justify-between p-3">
                         <p className="text-sm font-medium truncate">{topic.name}</p>
-                        <Badge variant={topic.progress > 70 ? 'default' : 'secondary'} className={topic.progress > 70 ? "bg-fin-lime text-fin-green hover:bg-fin-lime/80" : ""}>
+                        <Badge variant={topic.progress > 70 ? 'default' : 'secondary'} className={topic.progress > 70 ? "bg-gold text-background hover:bg-gold/80" : ""}>
                           {topic.progress}%
                         </Badge>
                       </CardContent>

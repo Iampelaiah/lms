@@ -63,18 +63,18 @@ export function CreateThreadModal({ onClose, onSubmit }: CreateThreadModalProps)
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-obsidian border border-white/10 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="bg-background border border-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-obsidian/50">
-          <h2 className="text-lg font-bold text-white/90">Create a new thread</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/50">
+          <h2 className="text-lg font-bold text-foreground/">Create a new thread</h2>
           <button 
             onClick={onClose}
-            className="p-1 rounded-full text-white/60 hover:text-white/90 hover:bg-obsidian transition-colors"
+            className="p-1 rounded-full text-foreground/ hover:text-foreground/ hover:bg-background transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -85,12 +85,12 @@ export function CreateThreadModal({ onClose, onSubmit }: CreateThreadModalProps)
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Community Selector */}
             <div className="flex-1 space-y-1">
-              <label className="text-xs font-bold text-white/60 uppercase tracking-wider">Choose Community</label>
+              <label className="text-xs font-bold text-foreground/ uppercase tracking-wider">Choose Community</label>
               <select 
                 required
                 value={newThreadCommunity}
                 onChange={(e) => setNewThreadCommunity(e.target.value)}
-                className="w-full bg-obsidian border border-white/10 rounded-md px-3 py-2 text-sm text-white/90 focus:outline-none focus:border-royal focus:ring-1 focus:ring-orange-500"
+                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground/ focus:outline-none focus:border-gold focus:ring-1 focus:ring-orange-500"
               >
                 <option value="" disabled>Select a subject...</option>
                 {mockCommunities.map(c => (
@@ -101,11 +101,11 @@ export function CreateThreadModal({ onClose, onSubmit }: CreateThreadModalProps)
 
             {/* Tag Selector */}
             <div className="sm:w-1/3 space-y-1">
-              <label className="text-xs font-bold text-white/60 uppercase tracking-wider">Tag</label>
+              <label className="text-xs font-bold text-foreground/ uppercase tracking-wider">Tag</label>
               <select 
                 value={newThreadTag}
                 onChange={(e) => setNewThreadTag(e.target.value)}
-                className="w-full bg-obsidian border border-white/10 rounded-md px-3 py-2 text-sm text-white/90 focus:outline-none focus:border-royal focus:ring-1 focus:ring-orange-500"
+                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground/ focus:outline-none focus:border-gold focus:ring-1 focus:ring-orange-500"
               >
                 <option value="Discussion">Discussion</option>
                 <option value="Question">Question</option>
@@ -117,43 +117,43 @@ export function CreateThreadModal({ onClose, onSubmit }: CreateThreadModalProps)
 
           {/* Title */}
           <div className="space-y-1">
-            <label className="text-xs font-bold text-white/60 uppercase tracking-wider">Title</label>
+            <label className="text-xs font-bold text-foreground/ uppercase tracking-wider">Title</label>
             <input 
               type="text" 
               required
               placeholder="An interesting title"
               value={newThreadTitle}
               onChange={(e) => setNewThreadTitle(e.target.value)}
-              className="w-full bg-obsidian border border-white/10 rounded-md px-3 py-2 text-sm text-white/90 focus:outline-none focus:border-royal focus:ring-1 focus:ring-orange-500"
+              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground/ focus:outline-none focus:border-gold focus:ring-1 focus:ring-orange-500"
             />
           </div>
 
           {/* Content Area */}
           <div className="space-y-1">
-            <label className="text-xs font-bold text-white/60 uppercase tracking-wider">Body</label>
+            <label className="text-xs font-bold text-foreground/ uppercase tracking-wider">Body</label>
             <textarea 
               required
               rows={5}
               placeholder="What are your thoughts?"
               value={newThreadContent}
               onChange={(e) => setNewThreadContent(e.target.value)}
-              className="w-full bg-obsidian border border-white/10 rounded-md px-3 py-2 text-sm text-white/90 focus:outline-none focus:border-royal focus:ring-1 focus:ring-orange-500 resize-none"
+              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground/ focus:outline-none focus:border-gold focus:ring-1 focus:ring-orange-500 resize-none"
             />
           </div>
 
           {/* Image Preview */}
           {imagePreview && (
-            <div className="relative group rounded-lg overflow-hidden border border-white/10">
+            <div className="relative group rounded-lg overflow-hidden border border-border">
               <img 
                 src={imagePreview} 
                 alt="Upload preview" 
                 className="w-full max-h-48 object-cover"
               />
-              <div className="absolute inset-0 bg-obsidian/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 bg-background/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <button 
                   type="button"
                   onClick={handleRemoveImage}
-                  className="flex items-center gap-2 bg-burgundy hover:bg-burgundy text-white text-sm font-bold px-4 py-2 rounded-full transition-colors"
+                  className="flex items-center gap-2 bg-burgundy hover:bg-burgundy text-foreground text-sm font-bold px-4 py-2 rounded-full transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                   Remove
@@ -172,11 +172,11 @@ export function CreateThreadModal({ onClose, onSubmit }: CreateThreadModalProps)
           />
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between pt-4 border-t border-border">
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-royal hover:bg-royal/10 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-gold hover:bg-gold/10 transition-colors"
             >
               <ImageIcon className="w-4 h-4" />
               {imagePreview ? 'Change Image' : 'Add Image'}
@@ -186,13 +186,13 @@ export function CreateThreadModal({ onClose, onSubmit }: CreateThreadModalProps)
               <button 
                 type="button" 
                 onClick={onClose}
-                className="px-4 py-2 rounded-full text-sm font-bold text-white/90 hover:bg-obsidian transition-colors"
+                className="px-4 py-2 rounded-full text-sm font-bold text-foreground/ hover:bg-background transition-colors"
               >
                 Cancel
               </button>
               <button 
                 type="submit" 
-                className="px-6 py-2 rounded-full text-sm font-bold bg-royal hover:bg-royal text-white transition-colors"
+                className="px-6 py-2 rounded-full text-sm font-bold bg-gold hover:bg-gold text-foreground transition-colors"
               >
                 Post
               </button>

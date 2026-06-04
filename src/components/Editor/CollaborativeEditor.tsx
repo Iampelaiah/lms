@@ -7,7 +7,7 @@ import { RefreshCw } from 'lucide-react';
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), {
   ssr: false,
   loading: () => (
-    <div className="w-full rounded-xl border border-white/10 bg-obsidian/60 flex items-center justify-center py-12 text-white/60">
+    <div className="w-full rounded-xl border border-border bg-background/60 flex items-center justify-center py-12 text-foreground/">
       <RefreshCw className="w-5 h-5 animate-spin mr-2" />
       <span className="text-sm">Loading editor...</span>
     </div>

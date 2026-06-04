@@ -182,6 +182,7 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
                 status: insertStatus,
                 tutor_id: tutorId,
                 subject_id: insertSubjectId,
+                image_url: imageUrl,
                 approval_status: 'approved' // Setting approved for immediate visibility for now
             })
             .then(({ error }) => {
@@ -206,48 +207,48 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button className="bg-royal hover:bg-royal text-[#0A1A12] font-bold rounded-xl transition-all hover:scale-105">
+                    <Button className="bg-gold hover:bg-gold text-[#0A1A12] font-bold rounded-xl transition-all hover:scale-105">
                         <CalendarPlus className="mr-2 h-4 w-4" />
                         Schedule New Class
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] bg-obsidian border-white/10 text-white overflow-hidden p-0 gap-0">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-royal via-[#6A994E] to-[#A7C957] animate-gradient" />
+            <DialogContent className="sm:max-w-[500px] bg-background border-border text-foreground overflow-hidden p-0 gap-0">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gold via-[#6A994E] to-[#A7C957] animate-gradient" />
                 
                 <DialogHeader className="p-8 pb-4 text-left">
                     <DialogTitle className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
                         Schedule New Live Class
                     </DialogTitle>
-                    <DialogDescription className="text-white/40">
+                    <DialogDescription className="text-foreground/">
                         Craft your next session. Fill in the details below.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="px-8 pb-8 flex flex-col gap-6">
                     <div className="flex flex-col gap-2">
-                        <Label htmlFor="title" className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20">Session Title</Label>
+                        <Label htmlFor="title" className="text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/">Session Title</Label>
                         <Input 
                             id="title" 
                             value={title} 
                             onChange={(e) => setTitle(e.target.value)} 
                             placeholder="e.g. Masterclass: Advanced Physics" 
-                            className="bg-white/5 border-white/10 rounded-xl h-12 text-base focus:ring-[#A7C957]/20"
+                            className="bg-muted border-border rounded-xl h-12 text-base focus:ring-[#A7C957]/20"
                         />
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20">Subject</Label>
+                        <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/">Subject</Label>
                         <Select value={subjectId} onValueChange={setSubjectId}>
-                            <SelectTrigger className="bg-white/5 border-white/10 rounded-xl h-12 text-sm focus:ring-[#A7C957]/20">
+                            <SelectTrigger className="bg-muted border-border rounded-xl h-12 text-sm focus:ring-[#A7C957]/20">
                                 <SelectValue placeholder="Select Subject" />
                             </SelectTrigger>
-                            <SelectContent className="bg-obsidian border-white/10 text-white rounded-xl">
+                            <SelectContent className="bg-background border-border text-foreground rounded-xl">
                                 {subjects.length === 0 ? (
                                     <SelectItem value="none" disabled>No subjects assigned</SelectItem>
                                 ) : (
                                     subjects.map(s => (
-                                        <SelectItem key={s.id} value={s.id} className="focus:bg-royal focus:text-[#0A1A12]">
+                                        <SelectItem key={s.id} value={s.id} className="focus:bg-gold focus:text-[#0A1A12]">
                                             {s.name} ({s.level})
                                         </SelectItem>
                                     ))
@@ -256,51 +257,97 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
                         </Select>
                     </div>
 
+                    <div className="flex flex-col gap-2">
+                        <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/">Class Banner / Thumbnail</Label>
+                        <div className="relative group border-2 border-dashed border-border rounded-xl hover:border-gold/50 transition-colors bg-muted/50 overflow-hidden">
+                            {imageUrl ? (
+                                <div className="relative aspect-[3/1] w-full">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={imageUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <p className="text-white text-sm font-bold flex items-center gap-2">
+                                            <Upload className="w-4 h-4" /> Change Image
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
+                                    <div className="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center mb-3">
+                                        <Upload className="w-5 h-5 text-gold" />
+                                    </div>
+                                    <p className="text-sm font-bold text-foreground">Upload class banner</p>
+                                    <p className="text-xs text-muted-foreground mt-1">JPEG, PNG up to 10MB</p>
+                                </div>
+                            )}
+                            
+                            {uploading && (
+                                <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center">
+                                    <Loader2 className="w-6 h-6 text-gold animate-spin mb-2" />
+                                    <div className="w-3/4 bg-muted rounded-full h-1.5 overflow-hidden">
+                                        <div 
+                                            className="bg-gold h-full transition-all duration-300" 
+                                            style={{ width: `${uploadProgress}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                            
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={uploadThumbnail} 
+                                disabled={uploading}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                            />
+                        </div>
+                        {uploadError && <p className="text-xs text-burgundy font-medium">{uploadError}</p>}
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex flex-col gap-2">
-                            <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20">Date</Label>
+                            <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/">Date</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant="outline" className="bg-white/5 border-white/10 rounded-xl h-12 text-left justify-start text-white hover:bg-white/10">
-                                        <CalendarIcon className="mr-2 h-4 w-4 text-royal" />
+                                    <Button variant="outline" className="bg-muted border-border rounded-xl h-12 text-left justify-start text-foreground hover:bg-muted">
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-gold" />
                                         {date ? format(date, "MMM d, yyyy") : <span>Pick a date</span>}
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 bg-obsidian border-white/10 text-white rounded-xl" align="start">
+                                <PopoverContent className="w-auto p-0 bg-background border-border text-foreground rounded-xl" align="start">
                                     <Calendar
                                         mode="single"
                                         selected={date}
                                         onSelect={setDate}
                                         initialFocus
-                                        className="bg-transparent text-white"
+                                        className="bg-transparent text-foreground"
                                     />
                                 </PopoverContent>
                             </Popover>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20">Start Time</Label>
+                            <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/">Start Time</Label>
                             <div className="relative">
-                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-royal pointer-events-none" />
+                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gold pointer-events-none" />
                                 <Input 
                                     type="time" 
                                     value={time}
                                     onChange={(e) => setTime(e.target.value)}
-                                    className="bg-white/5 border-white/10 rounded-xl h-12 pl-12 focus:ring-[#A7C957]/20 [appearance:none] [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-50"
+                                    className="bg-muted border-border rounded-xl h-12 pl-12 focus:ring-[#A7C957]/20 [appearance:none] [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-50"
                                 />
                             </div>
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20">Stream Status</Label>
+                        <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/">Stream Status</Label>
                         <Select value={status} onValueChange={setStatus}>
-                            <SelectTrigger className="bg-white/5 border-white/10 rounded-xl h-12 text-sm focus:ring-[#A7C957]/20">
+                            <SelectTrigger className="bg-muted border-border rounded-xl h-12 text-sm focus:ring-[#A7C957]/20">
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
-                            <SelectContent className="bg-obsidian border-white/10 text-white rounded-xl">
-                                <SelectItem value="upcoming" className="focus:bg-royal focus:text-[#0A1A12]">Upcoming Session</SelectItem>
-                                <SelectItem value="ongoing" className="focus:bg-royal focus:text-[#0A1A12]">Live Now</SelectItem>
-                                <SelectItem value="completed" className="focus:bg-royal focus:text-[#0A1A12]">Past Session</SelectItem>
+                            <SelectContent className="bg-background border-border text-foreground rounded-xl">
+                                <SelectItem value="upcoming" className="focus:bg-gold focus:text-[#0A1A12]">Upcoming Session</SelectItem>
+                                <SelectItem value="ongoing" className="focus:bg-gold focus:text-[#0A1A12]">Live Now</SelectItem>
+                                <SelectItem value="completed" className="focus:bg-gold focus:text-[#0A1A12]">Past Session</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -310,7 +357,7 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
                     <Button 
                         onClick={handleSchedule} 
                         disabled={loading || !title || !date || !subjectId || uploading} 
-                        className="w-full h-14 bg-gradient-to-r from-royal to-royal hover:from-royal hover:to-royal text-[#0A1A12] font-bold rounded-2xl text-base transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-royal/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:scale-100"
+                        className="w-full h-14 bg-gradient-to-r from-gold to-gold hover:from-gold hover:to-gold text-[#0A1A12] font-bold rounded-2xl text-base transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-gold/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:scale-100"
                     >
                         {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Video className="h-5 w-5" />}
                         {loading ? 'Finalizing Class...' : 'Create & Schedule Class'}

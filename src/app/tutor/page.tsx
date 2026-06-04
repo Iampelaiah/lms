@@ -53,7 +53,7 @@ type StatCardProps = {
 
 function StatCard({ title, value, icon: Icon, change, changeType }: StatCardProps) {
     return (
-        <Card>
+        <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">{title}</CardTitle>
                 <Icon className="h-4 w-4 text-muted-foreground" />
@@ -61,7 +61,7 @@ function StatCard({ title, value, icon: Icon, change, changeType }: StatCardProp
             <CardContent>
                 <div className="text-2xl font-bold">{value}</div>
                 {change && (
-                    <p className={`text-xs ${changeType === 'increase' ? 'text-royal' : 'text-burgundy'}`}>
+                    <p className={`text-xs ${changeType === 'increase' ? 'text-gold' : 'text-burgundy'}`}>
                         {change} from last week
                     </p>
                 )}
@@ -74,14 +74,16 @@ function TutorStats() {
     const [stats, setStats] = React.useState({
         totalStudents: "0",
         engagementRate: "0%",
+        engagementChange: "0% from last week",
+        engagementChangeType: "neutral" as "increase" | "decrease" | "neutral",
         assignmentsToGrade: "0",
         upcomingSession: "None scheduled"
     });
     const [loading, setLoading] = React.useState(true);
-    const supabase = createClient();
+    const supabase = React.useMemo(() => createClient(), []);
     const { profile } = useUser();
 
-    const fetchTutorStats = async () => {
+    const fetchTutorStats = React.useCallback(async () => {
         if (!profile?.id) {
             setLoading(false);
             return;
@@ -89,7 +91,7 @@ function TutorStats() {
 
         try {
             // Run both Supabase queries in parallel — cuts wait time roughly in half.
-            const [{ count: studentCount }, { data: upcomingClass }] = await Promise.all([
+            const [{ count: studentCount }, { data: upcomingClass }, { count: unmarkedCount }, { data: coursesData }] = await Promise.all([
                 supabase
                     .from('profiles')
                     .select('*', { count: 'exact', head: true })
@@ -102,12 +104,49 @@ function TutorStats() {
                     .order('schedule', { ascending: true })
                     .limit(1)
                     .single(),
+                supabase
+                    .from('student_assignments')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('tutor_id', profile.id)
+                    .eq('status', 'unmarked'),
+                supabase
+                    .from('courses')
+                    .select('id, enrollments(status, created_at)')
+                    .eq('tutor_id', profile.id)
             ]);
+
+            let totalE = 0;
+            let activeE = 0;
+            let recentActiveE = 0;
+
+            if (coursesData) {
+                const oneWeekAgo = new Date();
+                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+                coursesData.forEach((c: any) => {
+                    if (c.enrollments) {
+                        c.enrollments.forEach((e: any) => {
+                            totalE++;
+                            if (e.status === 'approved' || e.status === 'active') {
+                                activeE++;
+                                if (new Date(e.created_at) > oneWeekAgo) {
+                                    recentActiveE++;
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+
+            const calculatedRate = totalE > 0 ? Math.round((activeE / totalE) * 100) : 0;
+            const changeNum = totalE > 0 ? Math.round((recentActiveE / totalE) * 100) : 0;
 
             setStats({
                 totalStudents: studentCount?.toString() || "0",
-                engagementRate: "78%",
-                assignmentsToGrade: "12",
+                engagementRate: `${calculatedRate}%`,
+                engagementChange: changeNum > 0 ? `+${changeNum}% from last week` : "0% from last week",
+                engagementChangeType: changeNum > 0 ? "increase" : "neutral",
+                assignmentsToGrade: unmarkedCount?.toString() || "0",
                 upcomingSession: upcomingClass
                     ? `${new Date(upcomingClass.schedule).toLocaleDateString()}, ${new Date(upcomingClass.schedule).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                     : "None scheduled"
@@ -117,11 +156,52 @@ function TutorStats() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [profile?.id, supabase]);
 
     React.useEffect(() => {
         fetchTutorStats();
-    }, [profile?.id]);
+
+        if (!profile?.id) return;
+
+        const channel = supabase
+            .channel(`tutor-stats-${profile.id}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'classes',
+                filter: `tutor_id=eq.${profile.id}`
+            }, () => {
+                fetchTutorStats();
+            })
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'profiles',
+                filter: `role=eq.student`
+            }, () => {
+                fetchTutorStats();
+            })
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'student_assignments',
+                filter: `tutor_id=eq.${profile.id}`
+            }, () => {
+                fetchTutorStats();
+            })
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'enrollments'
+            }, () => {
+                fetchTutorStats();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [fetchTutorStats, profile?.id, supabase]);
 
     if (loading) return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />)}
@@ -129,7 +209,7 @@ function TutorStats() {
 
     const cards = [
         { title: "Total Students", value: stats.totalStudents, icon: Users },
-        { title: "Engagement Rate", value: stats.engagementRate, icon: Activity, change: "+5%", changeType: "increase" as const },
+        { title: "Engagement Rate", value: stats.engagementRate, icon: Activity, change: stats.engagementChange, changeType: stats.engagementChangeType },
         { title: "Assignments to Grade", value: stats.assignmentsToGrade, icon: FileCheck },
         { title: "Upcoming Session", value: stats.upcomingSession, icon: CalendarClock },
     ];
@@ -142,6 +222,7 @@ function TutorStats() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
+                    className="h-full"
                 >
                     <StatCard {...card} />
                 </motion.div>
@@ -197,40 +278,6 @@ function TutorTools({ profileId }: { profileId?: string }) {
     )
 }
 
-function SecurityAlert() {
-    const { user } = useUser();
-    const [isVisible, setIsVisible] = React.useState(false);
-
-    React.useEffect(() => {
-        if (user?.app_metadata?.provider === 'google' || user?.app_metadata?.providers?.includes('google')) {
-            setIsVisible(true);
-        }
-    }, [user]);
-
-    if (!isVisible) return null;
-
-    return (
-        <Card className="border-royal bg-amber-50/50 dark:bg-royal/20">
-            <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-royal dark:bg-royal/40 rounded-full">
-                        <Shield className="w-5 h-5 text-royal dark:text-royal" />
-                    </div>
-                    <div>
-                        <p className="font-semibold text-sm">Secure Your Account</p>
-                        <p className="text-xs text-muted-foreground">Since you signed in with Google, we recommend setting up a permanent password for extra security.</p>
-                    </div>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setIsVisible(false)}>Later</Button>
-                    <Button size="sm" asChild>
-                        <Link href="/tutor/settings?tab=security">Set Password</Link>
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
 
 export default function TutorPage() {
     const { profile, loading } = useUser();
@@ -250,7 +297,6 @@ export default function TutorPage() {
     return (
         <div className="p-4 sm:p-6 space-y-8 max-w-7xl mx-auto">
             <SchoolHeader />
-            <SecurityAlert />
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">

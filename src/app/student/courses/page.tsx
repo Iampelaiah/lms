@@ -67,12 +67,12 @@ export default async function CoursesPage() {
                               {enrollment ? (
                                 <div className="mt-4">
                                   {enrollment.status === 'pending' ? (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-royal/10 text-royal border border-royal/20">
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-gold/10 text-gold border border-gold/20">
                                       <Clock className="w-4 h-4" />
                                       Awaiting Approval
                                     </span>
                                   ) : enrollment.status === 'approved' ? (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-royal/10 text-royal border border-royal/20">
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-gold/10 text-gold border border-gold/20">
                                       <CheckCircle className="w-4 h-4" />
                                       Approved
                                     </span>
