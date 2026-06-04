@@ -88,6 +88,7 @@ function SubjectSkeleton() {
 
 export default function StudyPanelPage() {
     const [subjects, setSubjects] = useState<any[]>([]);
+    const [selectedReviewSubject, setSelectedReviewSubject] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const supabase = createClient();
 
@@ -110,6 +111,9 @@ export default function StudyPanelPage() {
                 // extract the nested 'subjects' object
                 const enrolledSubjects = data.map((e: any) => e.subjects).filter(Boolean);
                 setSubjects(enrolledSubjects);
+                if (enrolledSubjects.length > 0) {
+                    setSelectedReviewSubject(enrolledSubjects[0]);
+                }
             }
             setLoading(false);
         };
@@ -172,23 +176,42 @@ export default function StudyPanelPage() {
                             />
                             </div>
                             
-                            <p className="text-[10px] text-muted-foreground mb-6 font-medium">Recent: Data Visualization in Python</p>
+                            <p className="text-[10px] text-muted-foreground mb-6 font-medium">
+                                Recent: {selectedReviewSubject ? selectedReviewSubject.name : 'None'}
+                            </p>
                             
-                            <div className="flex items-center justify-between mb-8 px-2">
-                            <div className="w-8 h-8 rounded-full bg-royal text-royal flex items-center justify-center border border-white shadow-sm"><BrainCircuit className="w-4 h-4" /></div>
-                            <div className="w-8 h-8 rounded-full bg-royal text-royal flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
-                            <div className="w-8 h-8 rounded-full bg-royal text-royal flex items-center justify-center border border-white shadow-sm -ml-2"><Database className="w-4 h-4" /></div>
-                            <div className="w-8 h-8 rounded-full bg-royal text-royal flex items-center justify-center border border-white shadow-sm -ml-2"><Layout className="w-4 h-4" /></div>
-                            <div className="w-8 h-8 rounded-full bg-white/5 text-white/60 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center ml-auto text-muted-foreground hover:bg-white/5 transition-colors cursor-pointer"><ChevronRight className="w-4 h-4" /></div>
+                            <div className="flex items-center justify-start gap-1.5 mb-8 px-2 overflow-x-auto no-scrollbar">
+                            {subjects.slice(0, 5).map((subject) => {
+                                const Icon = iconMap[subject.name] || Book;
+                                const isSelected = selectedReviewSubject?.id === subject.id;
+                                return (
+                                    <div 
+                                        key={subject.id} 
+                                        title={subject.name}
+                                        onClick={() => setSelectedReviewSubject(subject)}
+                                        className={`w-8 h-8 rounded-full flex shrink-0 items-center justify-center border border-white shadow-sm cursor-pointer transition-colors ${isSelected ? 'bg-royal text-royal' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                    </div>
+                                )
+                            })}
+                            {subjects.length > 5 && (
+                                <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center ml-auto text-muted-foreground hover:bg-white/5 transition-colors cursor-pointer">
+                                    <ChevronRight className="w-4 h-4" />
+                                </div>
+                            )}
                             </div>
 
                             <div className="flex items-center gap-3">
-                            <Button variant="outline" className="flex-1 rounded-xl h-11 font-semibold border-white/10 shadow-sm">
+                            <Button variant="outline" className="flex-1 rounded-xl h-11 font-semibold border-white/10 shadow-sm" disabled={!selectedReviewSubject}>
                                 Practice
                             </Button>
-                            <Button className="flex-1 rounded-xl h-11 font-semibold bg-obsidian text-white hover:bg-obsidian dark:bg-white dark:text-white dark:hover:bg-white/5">
-                                Start Quiz →
+                            <Button asChild={!!selectedReviewSubject} className="flex-1 rounded-xl h-11 font-semibold bg-obsidian text-white hover:bg-obsidian dark:bg-white dark:text-white dark:hover:bg-white/5" disabled={!selectedReviewSubject}>
+                                {selectedReviewSubject ? (
+                                    <Link href={`/student/courses/${selectedReviewSubject.id}`}>Start Quiz →</Link>
+                                ) : (
+                                    <span>Start Quiz →</span>
+                                )}
                             </Button>
                             </div>
                         </CardContent>
