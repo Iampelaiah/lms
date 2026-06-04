@@ -97,7 +97,7 @@ export default function StudyPanelPage() {
     const supabase = createClient();
 
     useEffect(() => {
-                const fetchSubjects = async () => {
+        const fetchSubjects = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 setLoading(false);
@@ -128,25 +128,6 @@ export default function StudyPanelPage() {
                         const filtered = topicsData.filter((t: any) => subjectIds.includes(t.module?.subject_id));
                         setTopics(filtered);
                     }
-                }
-            }
-            setLoading(false);
-                return;
-            }
-
-            // Only fetch subjects where the student has an approved enrollment
-            const { data } = await supabase
-                .from('enrollments')
-                .select('subjects(*)')
-                .eq('student_id', user.id)
-                .eq('status', 'approved');
-
-            if (data) {
-                // extract the nested 'subjects' object
-                const enrolledSubjects = data.map((e: any) => e.subjects).filter(Boolean);
-                setSubjects(enrolledSubjects);
-                if (enrolledSubjects.length > 0) {
-                    setSelectedReviewSubject(enrolledSubjects[0]);
                 }
             }
             setLoading(false);
