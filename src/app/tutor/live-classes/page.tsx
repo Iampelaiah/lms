@@ -234,7 +234,7 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                          ) : (
                              <div className="flex gap-2 w-full">
                                 <Button className="flex-1 rounded-xl py-6" asChild variant={liveClass.status === "ongoing" ? "destructive" : "default"}>
-                                    <Link href={`/classroom/${liveClass.meeting_link || liveClass.id}?role=host`}>
+                                    <Link href={`/classroom/${liveClass.meeting_link || liveClass.id}?role=host&subjectId=${liveClass.subject_id}`}>
                                         <Video className="mr-2 h-4 w-4" />
                                         {liveClass.status === "ongoing" ? "Join Now" : "Start Class"}
                                     </Link>

@@ -17,6 +17,7 @@ function ClassroomContent() {
   const meetingId = params.meetingId as string;
   const role = searchParams.get('role') || 'participant';
   const userName = searchParams.get('name') || 'Guest';
+  const subjectId = searchParams.get('subjectId') || undefined;
   
   const [agoraData, setAgoraData] = useState<{ token: string; rtmToken?: string; appId: string; uid: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +91,7 @@ function ClassroomContent() {
       uid={agoraData.uid}
       userName={userName}
       role={role}
+      subjectId={subjectId}
       onLeave={() => {
         if (role === 'tutor') {
           router.push('/tutor');
