@@ -76,26 +76,25 @@ function AiTutorAssistant({ courses }: { courses: any[] }) {
   );
 }
 
-function UpcomingLiveClass({ upcomingClass, loading }: { upcomingClass: any | null; loading: boolean }) {
+function UpcomingLiveClass({ upcomingClasses, loading }: { upcomingClasses: any[]; loading: boolean }) {
+  const [selectedOffset, setSelectedOffset] = useState(0);
+
   if (loading) {
     return (
       <div className="animate-pulse bg-obsidian rounded-3xl p-5 h-40 border border-white/5 flex-1"></div>
     );
   }
 
-  if (!upcomingClass) {
-    return (
-      <motion.div layout className="bg-obsidian text-white rounded-[2rem] p-6 shadow-2xl relative">
-        <h3 className="font-bold text-lg mb-2">Upcoming Timeline</h3>
-        <p className="text-white/60 text-sm bg-white/5 p-4 rounded-xl text-center">No upcoming lessons scheduled.</p>
-      </motion.div>
-    );
-  }
-
-  const startTime = upcomingClass.start_date ? new Date(upcomingClass.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase() : '10:00 am';
-  const duration = upcomingClass.duration_minutes || 60;
-  const endTime = upcomingClass.start_date ? new Date(new Date(upcomingClass.start_date).getTime() + duration * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase() : '11:00 am';
-  const subjectName = upcomingClass.module?.subject?.name || upcomingClass.title;
+  const selectedDate = new Date();
+  selectedDate.setDate(selectedDate.getDate() + selectedOffset);
+  selectedDate.setHours(0, 0, 0, 0);
+  
+  const upcomingClass = upcomingClasses?.find(c => {
+    if (!c.start_date) return false;
+    const cDate = new Date(c.start_date);
+    cDate.setHours(0, 0, 0, 0);
+    return cDate.getTime() === selectedDate.getTime();
+  });
 
   return (
     <motion.div layout className="bg-obsidian text-white rounded-[2rem] p-6 flex flex-col shadow-2xl relative">
@@ -104,46 +103,64 @@ function UpcomingLiveClass({ upcomingClass, loading }: { upcomingClass: any | nu
         <span className="text-[9px] uppercase tracking-widest font-extrabold px-3 py-1 bg-white/10 rounded-full">Next Up</span>
       </div>
 
-      {/* Horizontal Date Selector (Dynamically centered around today) */}
       <div className="flex items-end justify-center gap-1.5 sm:gap-3 mb-6 w-full">
         {Array.from({ length: 5 }).map((_, i) => {
+          const offset = i - 2;
           const date = new Date();
-          date.setDate(date.getDate() + (i - 2)); // i=0 => -2 days, i=2 => 0 (today)
-          const isToday = i === 2;
+          date.setDate(date.getDate() + offset);
+          const isSelected = selectedOffset === offset;
           const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
           const dayNumber = date.getDate();
           
           return (
-            <div key={i} className={`flex flex-col items-center justify-center transition-all duration-300 ${
-              isToday 
+            <div 
+              key={i} 
+              onClick={() => setSelectedOffset(offset)}
+              className={`flex flex-col items-center justify-center transition-all duration-300 cursor-pointer ${
+              isSelected 
               ? 'w-12 h-16 sm:w-14 sm:h-20 bg-royal text-obsidian rounded-[1.25rem] sm:rounded-full shadow-lg scale-105 z-10' 
-              : 'w-10 h-14 sm:w-10 sm:h-16 bg-white/5 text-white/60 rounded-full hover:bg-white/10 cursor-pointer'
+              : 'w-10 h-14 sm:w-10 sm:h-16 bg-white/5 text-white/60 rounded-full hover:bg-white/10'
             }`}>
-              <span className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${isToday ? 'text-obsidian/70' : 'opacity-60'}`}>{dayName}</span>
-              <span className={`font-extrabold text-lg sm:text-xl leading-none ${!isToday ? 'opacity-90' : ''}`}>{dayNumber}</span>
+              <span className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${isSelected ? 'text-obsidian/70' : 'opacity-60'}`}>{dayName}</span>
+              <span className={`font-extrabold text-lg sm:text-xl leading-none ${!isSelected ? 'opacity-90' : ''}`}>{dayNumber}</span>
             </div>
           );
         })}
       </div>
 
-      <div className="rounded-[1.25rem] bg-royal text-obsidian p-4 relative overflow-hidden transition-transform duration-300 hover:-translate-y-1 cursor-pointer shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-obsidian text-white rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white/10">
-            <Clock className="w-5 h-5 text-royal" />
-          </div>
-          <div className="pr-2 flex-1">
-            <h4 className="font-extrabold text-[15px] leading-tight mb-0.5 text-obsidian truncate">{upcomingClass.title}</h4>
-            <p className="text-[10px] font-bold opacity-70 text-obsidian uppercase tracking-wide">{subjectName}</p>
-          </div>
+      {upcomingClass ? (
+        (() => {
+          const startTime = upcomingClass.start_date ? new Date(upcomingClass.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase() : '10:00 am';
+          const duration = upcomingClass.duration_minutes || 60;
+          const endTime = upcomingClass.start_date ? new Date(new Date(upcomingClass.start_date).getTime() + duration * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase() : '11:00 am';
+          const subjectName = upcomingClass.module?.subject?.name || upcomingClass.title;
+
+          return (
+            <div className="rounded-[1.25rem] bg-royal text-obsidian p-4 relative overflow-hidden transition-transform duration-300 hover:-translate-y-1 shadow-lg cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-obsidian text-white rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white/10">
+                  <Clock className="w-5 h-5 text-royal" />
+                </div>
+                <div className="pr-2 flex-1">
+                  <h4 className="font-extrabold text-[15px] leading-tight mb-0.5 text-obsidian truncate">{upcomingClass.title}</h4>
+                  <p className="text-[10px] font-bold opacity-70 text-obsidian uppercase tracking-wide">{subjectName}</p>
+                </div>
+              </div>
+              
+              <div className="mt-4 flex items-center justify-between pt-3 border-t border-obsidian/10 text-xs font-bold text-obsidian">
+                <span className="opacity-80 uppercase tracking-wider text-[10px]">
+                  {new Date(upcomingClass.start_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                </span>
+                <span className="bg-obsidian/5 px-2 py-1 rounded-md">{startTime} - {endTime}</span>
+              </div>
+            </div>
+          )
+        })()
+      ) : (
+        <div className="rounded-[1.25rem] bg-white/5 border border-white/10 text-white/60 p-4 relative flex flex-col items-center justify-center h-[104px]">
+           <p className="text-xs">No lessons scheduled</p>
         </div>
-        
-        <div className="mt-4 flex items-center justify-between pt-3 border-t border-obsidian/10 text-xs font-bold text-obsidian">
-          <span className="opacity-80 uppercase tracking-wider text-[10px]">
-            {new Date(upcomingClass.start_date || new Date()).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-          </span>
-          <span className="bg-obsidian/5 px-2 py-1 rounded-md">{startTime} - {endTime}</span>
-        </div>
-      </div>
+      )}
     </motion.div>
   )
 }
@@ -214,7 +231,7 @@ export default function StudentDashboardPage() {
   const { profile } = useUser();
   const [courses, setCourses] = React.useState<any[]>([]);
   const [loadingCourses, setLoadingCourses] = React.useState(true);
-  const [upcomingClass, setUpcomingClass] = useState<LiveClass | null>(null);
+  const [upcomingClasses, setUpcomingClasses] = useState<any[]>([]);
   const [loadingUpcoming, setLoadingUpcoming] = useState(true);
   const supabase = React.useMemo(() => createClient(), []);
   const userName = profile?.full_name || 'Student';
@@ -249,10 +266,9 @@ export default function StudentDashboardPage() {
                 subject:subjects (name)
               )
             `)
-            .gte('start_date', new Date().toISOString())
+            .gte('start_date', new Date(new Date().setDate(new Date().getDate() - 2)).toISOString())
             .order('start_date', { ascending: true })
-            .limit(1)
-            .maybeSingle()
+            .lte('start_date', new Date(new Date().setDate(new Date().getDate() + 3)).toISOString())
         ]);
 
         const enrollments = enrollmentsResult.data;
@@ -278,9 +294,9 @@ export default function StudentDashboardPage() {
         }
 
         if (upcomingClassResult.data) {
-          setUpcomingClass(upcomingClassResult.data as any);
+          setUpcomingClasses(upcomingClassResult.data as any[]);
         } else {
-          setUpcomingClass(null);
+          setUpcomingClasses([]);
         }
       } catch (err) {
         console.error('Error fetching student dashboard data:', err);
@@ -399,7 +415,7 @@ export default function StudentDashboardPage() {
             ========================================= */}
         <aside className="flex flex-col gap-4 h-full pb-6">
           <AiTutorAssistant courses={courses} />
-          <UpcomingLiveClass upcomingClass={upcomingClass} loading={loadingUpcoming} />
+          <UpcomingLiveClass upcomingClasses={upcomingClasses} loading={loadingUpcoming} />
         </aside>
       </div>
     </div>

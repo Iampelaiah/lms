@@ -80,7 +80,7 @@ const Navbar = () => {
       <div className="flex-1 flex items-center justify-end gap-6">
         <Link href="/login" className="text-white text-xs font-bold hover:opacity-80 transition-opacity">Login</Link>
         <Button className="bg-white text-fin-green hover:bg-white/90 font-bold px-5 h-8 rounded-full text-xs" asChild>
-            <Link href="/signup">Enroll now</Link>
+            <Link href="/login?mode=signup">Enroll now</Link>
         </Button>
         {/* aria-label required: icon-only button must have an accessible name */}
         <Button variant="ghost" size="icon" className="text-white" aria-label="Toggle navigation menu">
@@ -136,7 +136,7 @@ const Hero = () => {
             className="mt-10 flex items-center gap-4"
           >
             <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-7 h-11 rounded-full text-base group shadow-xl shadow-black/20" asChild>
-              <Link href="/signup">
+              <Link href="/login?mode=signup">
                 Start learning <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
@@ -411,7 +411,7 @@ const StudySimulator = () => {
             </div>
 
             <Button className="w-full bg-fin-green text-white hover:bg-fin-green/90 h-[60px] rounded-2xl font-bold text-base transition-all active:scale-95" asChild>
-              <Link href="/signup">Unlock Full Potential</Link>
+              <Link href="/login?mode=signup">Unlock Full Potential</Link>
             </Button>
           </div>
         </motion.div>
@@ -531,7 +531,7 @@ const Footer = () => {
             Start your digital <br /> learning journey
           </motion.h2>
           <Button size="lg" className="bg-fin-lime text-fin-green hover:bg-fin-lime/90 font-bold px-16 h-24 rounded-full text-3xl group transition-all duration-500 shadow-2xl shadow-fin-lime/20" asChild>
-            <Link href="/signup">
+            <Link href="/login?mode=signup">
                 Enroll Today <ArrowRight className="ml-6 w-10 h-10 group-hover:translate-x-3 transition-transform" />
             </Link>
           </Button>
