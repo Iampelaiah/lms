@@ -252,7 +252,7 @@ export default function StudyPanelPage() {
                             </Button>
                                                         <Button asChild={!!selectedReviewTopic} className="flex-1 rounded-xl h-11 font-semibold bg-obsidian text-white hover:bg-obsidian dark:bg-white dark:text-white dark:hover:bg-white/5" disabled={!selectedReviewTopic}>
                                 {selectedReviewTopic ? (
-                                    <Link href={/student/quiz?topicId= + selectedReviewTopic.id}>Start Quiz →</Link>
+                                    <Link href={`/student/quiz?topicId=${selectedReviewTopic.id}`}>Start Quiz →</Link>
                                 ) : (
                                     <span>Start Quiz →</span>
                                 )}
