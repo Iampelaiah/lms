@@ -95,7 +95,7 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: \${window.location.origin}/auth/callback?next=/\\\`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/${role}${!isLogin ? '&action=signup' : ''}`,
       },
     });
 
@@ -131,7 +131,7 @@ function LoginForm() {
     } else {
       const firstName = formData.get('first-name') as string;
       const lastName = formData.get('last-name') as string;
-      formData.append('fullName', \ \);
+      formData.append('fullName', `${firstName} ${lastName}`);
       
       const result = await signup(formData);
       if (result?.error) {
@@ -181,19 +181,23 @@ function LoginForm() {
             <button
               key={r.id}
               onClick={() => setRole(r.id)}
-              className={\elative rounded-[1.5rem] p-3 flex flex-col justify-between h-28 transition-all duration-200 text-left overflow-hidden \\}
+              className={`relative rounded-[1.5rem] p-3 flex flex-col justify-between h-28 transition-all duration-200 text-left overflow-hidden ${
+                role === r.id
+                  ? 'bg-royal/10 border border-royal shadow-[0_0_15px_rgba(0,255,204,0.2)] ring-1 ring-royal scale-105 z-20'
+                  : 'bg-white/5 border border-white/10 hover:bg-white/10 opacity-60 hover:opacity-100'
+              }`}
             >
               <div className="absolute inset-0 pointer-events-none">
-                <Image src={\/\.png\} alt={r.name} fill className="object-cover" priority />
-                <div className={\bsolute inset-0 transition-opacity duration-200 \\} />
+                <Image src={`/${r.id}.png`} alt={r.name} fill className="object-cover" priority />
+                <div className={`absolute inset-0 transition-opacity duration-200 ${role === r.id ? 'bg-royal/10' : 'bg-obsidian/40'}`} />
               </div>
 
               <div className="relative z-10 flex flex-col h-full justify-between">
-                <div className={\w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-lg \\}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-lg ${role === r.id ? 'bg-royal text-obsidian' : 'bg-white/20 text-white'}`}>
                   <r.icon className="w-4 h-4" />
                 </div>
                 <div className="space-y-2">
-                  <p className={\ont-bold text-sm leading-snug drop-shadow-md \\}>
+                  <p className={`font-bold text-sm leading-snug drop-shadow-md ${role === r.id ? 'text-white' : 'text-white/60'}`}>
                     {isLogin ? 'Sign in as' : 'Sign up as'} <br /> {r.name}
                   </p>
                 </div>
@@ -223,11 +227,11 @@ function LoginForm() {
           <div className="space-y-3">
             {/* Social Buttons */}
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium" onClick={handleGoogleAuth} disabled={!mounted || isLoading}>
+              <Button variant="outline" type="button" className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium" onClick={handleGoogleAuth} disabled={!mounted || isLoading}>
                 <GoogleIcon className="w-5 h-5" />
                 Google
               </Button>
-              <Button variant="outline" className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium" onClick={() => window.open('https://wa.me/yournumber', '_blank')}>
+              <Button variant="outline" type="button" className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium" onClick={() => window.open('https://wa.me/yournumber', '_blank')}>
                 <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
                 WhatsApp
               </Button>
