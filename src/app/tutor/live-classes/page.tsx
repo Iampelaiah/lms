@@ -64,6 +64,7 @@ function FinalizeClassDialog({
           resourcesToInsert.push({
               title: `${liveClass.title} - Recording`,
               format: 'video',
+              type: 'video',
               source: 'live_class_automation',
               file_url: recUrl,
               live_class_id: liveClass.id,
@@ -75,6 +76,7 @@ function FinalizeClassDialog({
           resourcesToInsert.push({
               title: `${liveClass.title} - Presentation`,
               format: 'ppt',
+              type: 'document',
               source: 'live_class_automation',
               file_url: presUrl,
               live_class_id: liveClass.id,

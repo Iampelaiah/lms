@@ -469,6 +469,7 @@ function ClassroomInner({
         const { error: notesError } = await supabase.from('resources').insert({
           title: `Class Notes: ${classData?.title || channelName}`,
           format: 'pdf',
+          type: 'document',
           file_url: 'data:text/plain;base64,' + btoa(notes), 
           subject_id: subjectId || null,
           live_class_id: channelName,
@@ -486,6 +487,7 @@ function ClassroomInner({
         const resourcesToInsert = uploadedResources.map(res => ({
           title: res.title,
           format: res.format,
+          type: res.format === 'video' ? 'video' : 'document',
           file_url: res.file_url,
           subject_id: subjectId || null,
           live_class_id: channelName,
