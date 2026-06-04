@@ -88,15 +88,49 @@ function SubjectSkeleton() {
 
 export default function StudyPanelPage() {
     const [subjects, setSubjects] = useState<any[]>([]);
+    const [topics, setTopics] = useState<any[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [selectedReviewTopic, setSelectedReviewTopic] = useState<any>(null);
     const [selectedReviewSubject, setSelectedReviewSubject] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const supabase = createClient();
 
     useEffect(() => {
-        const fetchSubjects = async () => {
+                const fetchSubjects = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 setLoading(false);
+                return;
+            }
+
+            const { data } = await supabase
+                .from('enrollments')
+                .select('subjects(*)')
+                .eq('student_id', user.id)
+                .eq('status', 'approved');
+
+            if (data) {
+                const enrolledSubjects = data.map((e: any) => e.subjects).filter(Boolean);
+                setSubjects(enrolledSubjects);
+                if (enrolledSubjects.length > 0) {
+                    setSelectedReviewSubject(enrolledSubjects[0]);
+                }
+
+                const subjectIds = enrolledSubjects.map((s: any) => s.id);
+                if (subjectIds.length > 0) {
+                    const { data: topicsData } = await supabase
+                        .from('curriculum_items')
+                        .select('id, title, module:curriculum_modules(subject_id)')
+                        .eq('item_type', 'topic');
+                        
+                    if (topicsData) {
+                        const filtered = topicsData.filter((t: any) => subjectIds.includes(t.module?.subject_id));
+                        setTopics(filtered);
+                    }
+                }
+            }
+            setLoading(false);
                 return;
             }
 
@@ -168,16 +202,45 @@ export default function StudyPanelPage() {
                             <h3 className="font-bold text-lg mb-1">Quick Review</h3>
                             <p className="text-sm text-muted-foreground mb-6">Sharpen your knowledge in 2 minutes!</p>
                             
-                            <div className="relative mb-4">
+                                                        <div className="relative mb-4">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input 
-                                placeholder="Choose a topic to review..." 
+                                placeholder={selectedReviewTopic ? selectedReviewTopic.title : "Choose a topic to review..."}
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setIsSearchOpen(true);
+                                }}
+                                onFocus={() => setIsSearchOpen(true)}
+                                onBlur={() => setTimeout(() => setIsSearchOpen(false), 200)}
                                 className="pl-9 h-11 bg-white dark:bg-obsidian border-none rounded-xl shadow-sm text-sm"
                             />
+                            {isSearchOpen && searchQuery.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-obsidian border border-white/10 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto no-scrollbar">
+                                    {topics.filter((t: any) => t.title.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
+                                        topics.filter((t: any) => t.title.toLowerCase().includes(searchQuery.toLowerCase())).map((topic: any) => (
+                                            <div 
+                                                key={topic.id}
+                                                className="px-4 py-2 hover:bg-royal/10 cursor-pointer text-sm font-medium"
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    setSelectedReviewTopic(topic);
+                                                    setSearchQuery('');
+                                                    setIsSearchOpen(false);
+                                                }}
+                                            >
+                                                {topic.title}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="px-4 py-3 text-xs text-muted-foreground">No topics found.</div>
+                                    )}
+                                </div>
+                            )}
                             </div>
                             
                             <p className="text-[10px] text-muted-foreground mb-6 font-medium">
-                                Recent: {selectedReviewSubject ? selectedReviewSubject.name : 'None'}
+                                Selected: <span className="text-royal font-bold">{selectedReviewTopic ? selectedReviewTopic.title : 'None'}</span>
                             </p>
                             
                             <div className="flex items-center justify-start gap-1.5 mb-8 px-2 overflow-x-auto no-scrollbar">
@@ -206,9 +269,9 @@ export default function StudyPanelPage() {
                             <Button variant="outline" className="flex-1 rounded-xl h-11 font-semibold border-white/10 shadow-sm" disabled={!selectedReviewSubject}>
                                 Practice
                             </Button>
-                            <Button asChild={!!selectedReviewSubject} className="flex-1 rounded-xl h-11 font-semibold bg-obsidian text-white hover:bg-obsidian dark:bg-white dark:text-white dark:hover:bg-white/5" disabled={!selectedReviewSubject}>
-                                {selectedReviewSubject ? (
-                                    <Link href={`/student/courses/${selectedReviewSubject.id}`}>Start Quiz →</Link>
+                                                        <Button asChild={!!selectedReviewTopic} className="flex-1 rounded-xl h-11 font-semibold bg-obsidian text-white hover:bg-obsidian dark:bg-white dark:text-white dark:hover:bg-white/5" disabled={!selectedReviewTopic}>
+                                {selectedReviewTopic ? (
+                                    <Link href={/student/quiz?topicId= + selectedReviewTopic.id}>Start Quiz →</Link>
                                 ) : (
                                     <span>Start Quiz →</span>
                                 )}
