@@ -60,7 +60,7 @@ const activityData = [
 
 // Mock Data for Upcoming Deadlines (Fallback)
 const initialDeadlinesData = [
-  { course: 'History', subject_id: '84897f2d-8b01-443b-aa58-5d2bc51d8b76', date: '2026-06-15', type: 'Essay on World War II', status: 'Pending', priority: 'High', color: 'bg-pink-500' },
+  { course: 'History', subject_id: '84897f2d-8b01-443b-aa58-5d2bc51d8b76', date: '2026-06-15', type: 'Essay on World War II', status: 'Pending', priority: 'High', color: 'bg-royal' },
   { course: 'Geography', subject_id: 'e44c6883-93bb-403d-aa8c-7f5dd17c0a87', date: '2026-06-20', type: 'Map Reading Quiz', status: 'Not Started', priority: 'Medium', color: 'bg-royal' },
   { course: 'Divinity', subject_id: '', date: '2026-07-05', type: 'Theological Project', status: 'In Progress', priority: 'High', color: 'bg-royal' },
 ];
@@ -126,7 +126,7 @@ export function ProgressCharts() {
 
     if (deadlinesResult.data && deadlinesResult.data.length > 0) {
       const formattedDeadlines = deadlinesResult.data.map((d: any, index) => {
-        const colors = ['bg-pink-500', 'bg-royal', 'bg-royal', 'bg-purple-500'];
+        const colors = ['bg-royal', 'bg-royal', 'bg-royal', 'bg-royal'];
         return {
           id: d.id,
           subject_id: d.subject_id,

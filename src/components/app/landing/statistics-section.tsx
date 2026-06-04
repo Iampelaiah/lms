@@ -10,7 +10,7 @@ const stats = [
     { title: 'Active Students', value: '10,000+', icon: Users, color: 'text-royal' },
     { title: 'Completion Rate', value: '92%', icon: CheckCircle, color: 'text-royal' },
     { title: 'Pass Rate', value: '98%', icon: GraduationCap, color: 'text-royal' },
-    { title: 'Courses Available', value: '500+', icon: BarChart3, color: 'text-purple-500' },
+    { title: 'Courses Available', value: '500+', icon: BarChart3, color: 'text-royal' },
 ];
 
 const chartData = [

@@ -79,8 +79,8 @@ export function RecentActivity({ tutorId }: { tutorId?: string }) {
                         target: c.title,
                         time: new Date(c.created_at),
                         icon: FileText,
-                        iconColor: 'text-purple-500',
-                        iconBg: 'bg-purple-500/10'
+                        iconColor: 'text-royal',
+                        iconBg: 'bg-royal/10'
                     }));
                 }
 

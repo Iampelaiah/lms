@@ -29,7 +29,7 @@ function AiStudyPanel() {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
-      className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-6 text-white shadow-xl shadow-purple-500/20 transition-transform duration-300 hover:-translate-y-1 group"
+      className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-obsidian via-burgundy to-royal p-6 text-white shadow-xl shadow-burgundy/20 transition-transform duration-300 hover:-translate-y-1 group"
     >
       <div className="absolute top-0 right-0 p-6 opacity-20 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform duration-700">
         <Sparkles className="w-24 h-24" />
@@ -41,7 +41,7 @@ function AiStudyPanel() {
         </div>
         <h2 className="text-xl font-bold mb-1.5">AI-Powered Study Panel</h2>
         <p className="text-sm text-white/80 mb-5 line-clamp-2 leading-relaxed">Unlock tailored insights, instant concept breakdowns, and personalized quizzes powered by your AI Study Buddy.</p>
-        <Button asChild className="bg-white text-purple-600 px-5 py-2.5 h-auto rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-md w-fit">
+        <Button asChild className="bg-white text-obsidian px-5 py-2.5 h-auto rounded-full text-sm font-semibold flex items-center gap-2 hover:bg-neutral-50 transition-colors shadow-md w-fit">
           <Link href="/student/study-panel">
             Enter Study Panel
             <ChevronRight className="w-4 h-4" />

@@ -7,8 +7,8 @@ const calendarLegend = [
     { subject: "Mathematics", color: "bg-royal" },
     { subject: "Physics", color: "bg-royal" },
     { subject: "History", color: "bg-royal" },
-    { subject: "Chemistry", color: "bg-purple-300" },
-    { subject: "Biology", color: "bg-pink-300" },
+    { subject: "Chemistry", color: "bg-royal" },
+    { subject: "Biology", color: "bg-royal" },
     { subject: "English Literature", color: "bg-royal" },
     { subject: "Computer Science", color: "bg-burgundy" },
 ]

@@ -177,8 +177,8 @@ export default function StudyPanelPage() {
                             <div className="flex items-center justify-between mb-8 px-2">
                             <div className="w-8 h-8 rounded-full bg-royal text-royal flex items-center justify-center border border-white shadow-sm"><BrainCircuit className="w-4 h-4" /></div>
                             <div className="w-8 h-8 rounded-full bg-royal text-royal flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
-                            <div className="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Database className="w-4 h-4" /></div>
-                            <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Layout className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full bg-royal text-royal flex items-center justify-center border border-white shadow-sm -ml-2"><Database className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full bg-royal text-royal flex items-center justify-center border border-white shadow-sm -ml-2"><Layout className="w-4 h-4" /></div>
                             <div className="w-8 h-8 rounded-full bg-white/5 text-white/60 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
                             <div className="w-8 h-8 rounded-full flex items-center justify-center ml-auto text-muted-foreground hover:bg-white/5 transition-colors cursor-pointer"><ChevronRight className="w-4 h-4" /></div>
                             </div>
