@@ -196,9 +196,9 @@ function StudentList() {
                                             <TableCell>{student.updated_at ? new Date(student.updated_at).toLocaleDateString() : 'N/A'}</TableCell>
                                             <TableCell>
                                                 {student.is_approved ? (
-                                                    <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Active</Badge>
+                                                    <Badge className="bg-royal text-royal hover:bg-royal">Active</Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-orange-500 border-orange-500/20 bg-orange-500/10">Pending</Badge>
+                                                    <Badge variant="outline" className="text-royal border-royal/20 bg-royal/10">Pending</Badge>
                                                 )}
                                             </TableCell>
                                             <TableCell>
@@ -210,7 +210,7 @@ function StudentList() {
                                                     <Button 
                                                         size="sm" 
                                                         variant="outline"
-                                                        className={student.is_approved ? "text-burgundy border-burgundy/20 hover:bg-burgundy/10" : "text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/10"}
+                                                        className={student.is_approved ? "text-burgundy border-burgundy/20 hover:bg-burgundy/10" : "text-royal border-royal/20 hover:bg-royal/10"}
                                                         onClick={() => toggleApproveStudent(student.id, student.is_approved)}
                                                     >
                                                         {student.is_approved ? "Suspend" : "Approve"}

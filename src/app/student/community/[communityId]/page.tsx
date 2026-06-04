@@ -293,7 +293,7 @@ export default function CommunityPostsPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleVote(post.id, 1)}
-                  className={post.userVote === 1 ? 'text-orange-500' : ''}
+                  className={post.userVote === 1 ? 'text-royal' : ''}
                 >
                   <ArrowBigUp />
                 </Button>
@@ -302,7 +302,7 @@ export default function CommunityPostsPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleVote(post.id, -1)}
-                  className={post.userVote === -1 ? 'text-blue-500' : ''}
+                  className={post.userVote === -1 ? 'text-royal' : ''}
                 >
                   <ArrowBigDown />
                 </Button>

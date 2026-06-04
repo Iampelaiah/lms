@@ -126,7 +126,7 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-black overflow-hidden">
+    <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-obsidian overflow-hidden">
       {/* Left Column */}
       <div className="hidden lg:flex relative bg-obsidian p-10 flex-col justify-between overflow-hidden">
         {/* Background Video Placeholder */}
@@ -146,7 +146,7 @@ export default function SignupPage() {
             <h1 className="text-4xl font-bold text-white leading-tight tracking-tight">
               Welcome <br /> Back
             </h1>
-            <p className="text-gray-400 text-sm">
+            <p className="text-white/60 text-sm">
               The future of personalized learning, powered by AI. Select your role to access your workspace.
             </p>
           </div>
@@ -171,7 +171,7 @@ export default function SignupPage() {
               }`}
             >
               <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs relative z-10 ${
-                role === r.id ? 'bg-royal text-black' : 'bg-white/20 text-white'
+                role === r.id ? 'bg-royal text-obsidian' : 'bg-white/20 text-white'
               }`}>
                 <r.icon className="w-3.5 h-3.5" />
               </div>
@@ -188,11 +188,11 @@ export default function SignupPage() {
       </div>
 
       {/* Right Column - Form */}
-      <div className="flex items-center justify-center p-6 lg:p-10 bg-black overflow-y-auto">
+      <div className="flex items-center justify-center p-6 lg:p-10 bg-obsidian overflow-y-auto">
         <div className="w-full max-w-md space-y-4">
           <div className="text-center space-y-1">
             <h2 className="text-2xl font-bold text-white">Sign Up Account</h2>
-            <p className="text-gray-500 text-xs">Enter your personal data to create your account.</p>
+            <p className="text-white/60 text-xs">Enter your personal data to create your account.</p>
           </div>
 
           {errorMessage && (
@@ -210,7 +210,7 @@ export default function SignupPage() {
               <Button 
                 type="button"
                 variant="outline" 
-                className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
+                className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
               >
@@ -219,7 +219,7 @@ export default function SignupPage() {
               </Button>
               <Button 
                 variant="outline" 
-                className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
+                className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
                 onClick={handleWhatsAppLogin}
                 disabled={isLoading}
               >
@@ -230,10 +230,10 @@ export default function SignupPage() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-[#2A2A2A]" />
+                <span className="w-full border-t border-white/10" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-black px-2 text-gray-500">Or</span>
+                <span className="bg-obsidian px-2 text-white/60">Or</span>
               </div>
             </div>
 
@@ -245,7 +245,7 @@ export default function SignupPage() {
                     id="first-name"
                     name="first-name"
                     placeholder="eg. John"
-                    className="bg-[#1A1A1A] border-none text-white h-10 rounded-xl placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-white/20"
+                    className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20"
                     required
                   />
                 </div>
@@ -255,7 +255,7 @@ export default function SignupPage() {
                     id="last-name"
                     name="last-name"
                     placeholder="eg. Francisco"
-                    className="bg-[#1A1A1A] border-none text-white h-10 rounded-xl placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-white/20"
+                    className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20"
                     required
                   />
                 </div>
@@ -268,7 +268,7 @@ export default function SignupPage() {
                   name="email"
                   type="email"
                   placeholder="eg. johnfrans@gmail.com"
-                  className="bg-[#1A1A1A] border-none text-white h-10 rounded-xl placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-white/20"
+                  className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20"
                   required
                 />
               </div>
@@ -281,21 +281,21 @@ export default function SignupPage() {
                     name="password"
                     type="password"
                     placeholder="Enter your password"
-                    className="bg-[#1A1A1A] border-none text-white h-10 rounded-xl placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-white/20 pr-10"
+                    className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20 pr-10"
                     required
                     minLength={8}
                   />
                 </div>
-                <p className="text-[10px] text-gray-600">Must be at least 8 characters.</p>
+                <p className="text-[10px] text-white/60">Must be at least 8 characters.</p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="role-select" className="text-white text-xs font-medium">I am a...</Label>
                 <Select value={role} onValueChange={setRole}>
-                  <SelectTrigger id="role-select" className="bg-[#1A1A1A] border-none text-white h-10 rounded-xl focus:ring-1 focus:ring-white/20">
+                  <SelectTrigger id="role-select" className="bg-white/5 border-none text-white h-10 rounded-xl focus:ring-1 focus:ring-white/20">
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1A1A1A] border-[#2A2A2A] text-white">
+                  <SelectContent className="bg-white/5 border-white/10 text-white">
                     <SelectItem value="student" className="focus:bg-white/10 focus:text-white">Student</SelectItem>
                     <SelectItem value="tutor" className="focus:bg-white/10 focus:text-white">Tutor</SelectItem>
                     <SelectItem value="parent" className="focus:bg-white/10 focus:text-white">Parent</SelectItem>
@@ -306,7 +306,7 @@ export default function SignupPage() {
 
               <Button 
                 type="submit" 
-                className="w-full bg-white text-black hover:bg-white/90 h-10 rounded-full font-bold text-sm mt-4"
+                className="w-full bg-white text-obsidian hover:bg-white/90 h-10 rounded-full font-bold text-sm mt-4"
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign Up'}
@@ -314,7 +314,7 @@ export default function SignupPage() {
             </form>
 
             <div className="text-center text-xs">
-              <span className="text-gray-500">Already have an account? </span>
+              <span className="text-white/60">Already have an account? </span>
               <Link href="/login" className="text-white font-bold hover:underline">
                 Log in
               </Link>

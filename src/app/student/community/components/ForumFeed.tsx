@@ -42,7 +42,7 @@ export function ForumFeed({ posts, savedPostIds, isAdmin, onVote, onComment, onO
   return (
     <main className="space-y-4">
       {/* Sort & Filter Bar */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-2 flex items-center justify-between sticky top-4 z-10 shadow-lg">
+      <div className="bg-obsidian border border-white/10 rounded-lg p-2 flex items-center justify-between sticky top-4 z-10 shadow-lg">
         <div className="flex items-center gap-1">
           {['Best', 'Hot', 'New', 'Top'].map((sort) => {
             const isActive = activeSort === sort;
@@ -52,8 +52,8 @@ export function ForumFeed({ posts, savedPostIds, isAdmin, onVote, onComment, onO
                 onClick={() => setActiveSort(sort)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${
                   isActive 
-                    ? 'bg-zinc-800 text-orange-500' 
-                    : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
+                    ? 'bg-obsidian text-royal' 
+                    : 'text-white/60 hover:bg-obsidian hover:text-white/90'
                 }`}
               >
                 {sort === 'Hot' && <Flame className="w-4 h-4" />}
@@ -65,16 +65,16 @@ export function ForumFeed({ posts, savedPostIds, isAdmin, onVote, onComment, onO
             );
           })}
         </div>
-        <div className="flex items-center gap-1 text-zinc-400">
+        <div className="flex items-center gap-1 text-white/60">
           <button 
             onClick={() => setViewMode('card')}
-            className={`p-1.5 rounded ${viewMode === 'card' ? 'bg-zinc-800 text-zinc-200' : 'hover:bg-zinc-800'}`}
+            className={`p-1.5 rounded ${viewMode === 'card' ? 'bg-obsidian text-white/90' : 'hover:bg-obsidian'}`}
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
           <button 
             onClick={() => setViewMode('compact')}
-            className={`p-1.5 rounded ${viewMode === 'compact' ? 'bg-zinc-800 text-zinc-200' : 'hover:bg-zinc-800'}`}
+            className={`p-1.5 rounded ${viewMode === 'compact' ? 'bg-obsidian text-white/90' : 'hover:bg-obsidian'}`}
           >
             <List className="w-4 h-4" />
           </button>
@@ -85,7 +85,7 @@ export function ForumFeed({ posts, savedPostIds, isAdmin, onVote, onComment, onO
       <div className="md:hidden block">
         <button 
           onClick={onOpenCreateModal}
-          className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-4 rounded-full transition-colors shadow-[0_0_15px_rgba(249,115,22,0.3)]"
+          className="w-full flex items-center justify-center gap-2 bg-royal hover:bg-royal text-white font-bold py-3 px-4 rounded-full transition-colors shadow-[0_0_15px_rgba(249,115,22,0.3)]"
         >
           <Plus className="w-5 h-5" />
           Create Thread

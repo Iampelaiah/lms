@@ -57,7 +57,7 @@ const Navbar = () => {
     >
       {/* Left: Nav Links in Pill */}
       <div className="flex-1 hidden lg:flex items-center">
-        <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 flex gap-8 text-[10px] font-semibold text-white/90">
+        <div className="bg-obsidian/20 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 flex gap-8 text-[10px] font-semibold text-white/90">
             <a href="#methodology" className="hover:text-white transition-colors">Methodology</a>
             <a href="#curriculum" className="hover:text-white transition-colors">Curriculum</a>
             <a href="#resources" className="hover:text-white transition-colors">Resources</a>
@@ -199,7 +199,7 @@ const Hero = () => {
               </div>
             </div>
             {/* Shadow for separation */}
-            <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-black/40 blur-[120px] rounded-full -z-10 pointer-events-none" />
+            <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-obsidian/40 blur-[120px] rounded-full -z-10 pointer-events-none" />
           </motion.div>
         </div>
       </div>
@@ -326,10 +326,10 @@ const Features = () => {
                         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/5 w-fit ml-auto flex items-center gap-4">
                              <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Ongoing session</span>
                              <div className="flex -space-x-2">
-                                <div className="w-6 h-6 rounded-full border-2 border-fin-green bg-blue-500 overflow-hidden">
+                                <div className="w-6 h-6 rounded-full border-2 border-fin-green bg-royal overflow-hidden">
                                     <Image src="https://picsum.photos/seed/face1/40/40" alt="user" width={40} height={40} />
                                 </div>
-                                <div className="w-6 h-6 rounded-full border-2 border-fin-green bg-green-500 overflow-hidden">
+                                <div className="w-6 h-6 rounded-full border-2 border-fin-green bg-royal overflow-hidden">
                                     <Image src="https://picsum.photos/seed/face2/40/40" alt="user" width={40} height={40} />
                                 </div>
                              </div>

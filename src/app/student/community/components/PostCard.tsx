@@ -53,23 +53,23 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden hover:border-zinc-700 transition-colors"
+      className="flex flex-col bg-obsidian border border-white/10 rounded-lg overflow-hidden hover:border-white/10 transition-colors"
     >
       <div className="flex">
         {/* Vote Sidebar */}
-        <div className="w-12 bg-zinc-900/50 flex flex-col items-center py-2 gap-1 border-r border-zinc-800">
+        <div className="w-12 bg-obsidian/50 flex flex-col items-center py-2 gap-1 border-r border-white/10">
           <button 
             onClick={() => handleVote(1)} 
-            className={`p-1 rounded hover:bg-zinc-800 transition-colors ${localVoteState === 1 ? 'text-orange-500' : 'text-zinc-400'}`}
+            className={`p-1 rounded hover:bg-obsidian transition-colors ${localVoteState === 1 ? 'text-royal' : 'text-white/60'}`}
           >
             <ArrowBigUp className="w-6 h-6" fill={localVoteState === 1 ? 'currentColor' : 'none'} />
           </button>
-          <span className={`text-sm font-bold ${localVoteState === 1 ? 'text-orange-500' : localVoteState === -1 ? 'text-blue-500' : 'text-zinc-200'}`}>
+          <span className={`text-sm font-bold ${localVoteState === 1 ? 'text-royal' : localVoteState === -1 ? 'text-royal' : 'text-white/90'}`}>
             {post.votes}
           </span>
           <button 
             onClick={() => handleVote(-1)} 
-            className={`p-1 rounded hover:bg-zinc-800 transition-colors ${localVoteState === -1 ? 'text-blue-500' : 'text-zinc-400'}`}
+            className={`p-1 rounded hover:bg-obsidian transition-colors ${localVoteState === -1 ? 'text-royal' : 'text-white/60'}`}
           >
             <ArrowBigDown className="w-6 h-6" fill={localVoteState === -1 ? 'currentColor' : 'none'} />
           </button>
@@ -79,8 +79,8 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
         <div className="flex-1 p-3 flex flex-col sm:flex-row gap-4">
           <div className="flex-1 space-y-2">
             {/* Header */}
-            <div className="flex items-center gap-2 text-xs text-zinc-400">
-              <span className="font-bold text-zinc-200 hover:underline cursor-pointer">{post.community_name}</span>
+            <div className="flex items-center gap-2 text-xs text-white/60">
+              <span className="font-bold text-white/90 hover:underline cursor-pointer">{post.community_name}</span>
               <span>•</span>
               <span>Posted by u/{post.author_name || 'Anonymous'}</span>
               <span>•</span>
@@ -89,14 +89,14 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
 
             {/* Title & Tag */}
             <div>
-              <span className="inline-block px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-[10px] font-bold uppercase tracking-wider mb-2 border border-orange-500/20">
+              <span className="inline-block px-2 py-0.5 rounded-full bg-royal/10 text-royal text-[10px] font-bold uppercase tracking-wider mb-2 border border-royal/20">
                 {post.tag}
               </span>
-              <h2 className="text-lg font-semibold text-zinc-100">{post.title}</h2>
+              <h2 className="text-lg font-semibold text-white/90">{post.title}</h2>
             </div>
 
             {/* Snippet */}
-            <p className="text-sm text-zinc-400 line-clamp-3">
+            <p className="text-sm text-white/60 line-clamp-3">
               {post.content}
             </p>
 
@@ -104,7 +104,7 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
             <div className="flex items-center gap-1 pt-2 flex-wrap">
               <button 
                 onClick={() => setShowComments(!showComments)}
-                className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-medium transition-colors ${showComments ? 'bg-zinc-800 text-zinc-200' : 'text-zinc-400 hover:bg-zinc-800'}`}
+                className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-medium transition-colors ${showComments ? 'bg-obsidian text-white/90' : 'text-white/60 hover:bg-obsidian'}`}
               >
                 <MessageSquare className="w-4 h-4" />
                 {comments.length} Comments
@@ -114,12 +114,12 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
 
               <button 
                 onClick={onToggleSave}
-                className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-medium transition-colors ${isSaved ? 'text-orange-500' : 'text-zinc-400 hover:bg-zinc-800'}`}
+                className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-medium transition-colors ${isSaved ? 'text-royal' : 'text-white/60 hover:bg-obsidian'}`}
               >
                 <Bookmark className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} />
                 {isSaved ? 'Saved' : 'Save'}
               </button>
-              <button className="flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-medium text-zinc-400 hover:bg-zinc-800 transition-colors sm:ml-auto">
+              <button className="flex items-center gap-1.5 px-2 py-1.5 rounded text-xs font-medium text-white/60 hover:bg-obsidian transition-colors sm:ml-auto">
                 <Flag className="w-4 h-4" />
                 Report
               </button>
@@ -141,7 +141,7 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
 
           {/* Optional Thumbnail */}
           {post.image_url && (
-            <div className="hidden sm:block w-32 h-32 flex-shrink-0 rounded-md overflow-hidden border border-zinc-800">
+            <div className="hidden sm:block w-32 h-32 flex-shrink-0 rounded-md overflow-hidden border border-white/10">
               <Image src={post.image_url} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" alt="Thumbnail" />
             </div>
           )}
@@ -155,12 +155,12 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t border-zinc-800 bg-zinc-900/30 overflow-hidden"
+            className="border-t border-white/10 bg-obsidian/30 overflow-hidden"
           >
             <div className="p-4 space-y-4">
               {/* Comment Input */}
               <form onSubmit={handleCommentSubmit} className="flex gap-2 items-start">
-                <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-royal flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
                   Y
                 </div>
                 <div className="flex-1 flex gap-2">
@@ -169,12 +169,12 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
                     placeholder="Add a comment..." 
                     value={newCommentText}
                     onChange={(e) => setNewCommentText(e.target.value)}
-                    className="flex-1 bg-obsidian border border-zinc-800 rounded-md px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-orange-500"
+                    className="flex-1 bg-obsidian border border-white/10 rounded-md px-3 py-2 text-sm text-white/90 focus:outline-none focus:border-royal"
                   />
                   <button 
                     type="submit" 
                     disabled={!newCommentText.trim()}
-                    className="bg-orange-600 hover:bg-orange-500 disabled:opacity-50 disabled:hover:bg-orange-600 text-white px-3 py-2 rounded-md flex items-center gap-2 text-sm font-bold transition-colors"
+                    className="bg-royal hover:bg-royal disabled:opacity-50 disabled:hover:bg-royal text-white px-3 py-2 rounded-md flex items-center gap-2 text-sm font-bold transition-colors"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -185,8 +185,8 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
               <div className="space-y-3 pl-10">
                 {comments.map(comment => (
                   <div key={comment.id} className="text-sm">
-                    <span className="font-bold text-zinc-300 mr-2">{comment.author}</span>
-                    <span className="text-zinc-400">{comment.text}</span>
+                    <span className="font-bold text-white/90 mr-2">{comment.author}</span>
+                    <span className="text-white/60">{comment.text}</span>
                   </div>
                 ))}
               </div>

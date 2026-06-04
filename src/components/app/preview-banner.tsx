@@ -12,7 +12,7 @@ export function PreviewBanner() {
   }
 
   return (
-    <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-900 dark:text-amber-200 px-4 py-3 text-sm flex items-center justify-center gap-2">
+    <div className="bg-royal/15 border-b border-royal/30 text-royal dark:text-royal px-4 py-3 text-sm flex items-center justify-center gap-2">
       <AlertTriangle className="h-4 w-4" />
       <span className="font-medium">Preview Mode:</span>
       <span>Your account is pending admin approval. You have limited access to materials and features.</span>

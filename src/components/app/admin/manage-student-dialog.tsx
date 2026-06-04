@@ -280,8 +280,8 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                     </div>
                     <Badge
                         className={student.is_approved
-                            ? 'bg-blue-100 text-blue-800 hover:bg-blue-100'
-                            : 'bg-orange-100 text-orange-700 hover:bg-orange-100'}
+                            ? 'bg-royal text-royal hover:bg-royal'
+                            : 'bg-royal text-royal hover:bg-royal'}
                     >
                         {student.is_approved ? 'Active' : 'Pending'}
                     </Badge>
@@ -296,7 +296,7 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             {enrollmentsList.filter(e => e.status === 'pending').length > 0 && (
-                                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-200">
+                                <Badge variant="outline" className="bg-royal/10 text-royal border-royal">
                                     {enrollmentsList.filter(e => e.status === 'pending').length} pending
                                 </Badge>
                             )}
@@ -335,14 +335,14 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                                     <div
                                         key={course.id}
                                         className={`flex items-center justify-between gap-3 p-3 rounded-lg border transition-colors ${
-                                            isEnrolled ? 'bg-primary/5 border-primary/20' : isPending ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background'
+                                            isEnrolled ? 'bg-primary/5 border-primary/20' : isPending ? 'bg-royal/5 border-royal/20' : 'bg-background'
                                         }`}
                                     >
                                         <div className="flex items-center gap-2 min-w-0">
                                             {isEnrolled
                                                 ? <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
                                                 : isPending
-                                                ? <Loader2 className="h-4 w-4 text-amber-500 flex-shrink-0 animate-pulse" />
+                                                ? <Loader2 className="h-4 w-4 text-royal flex-shrink-0 animate-pulse" />
                                                 : <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                             }
                                             <div className="flex flex-col min-w-0">
@@ -354,7 +354,7 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                                             {isPending && (
                                                 <Button
                                                     size="sm"
-                                                    className="flex-shrink-0 h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                    className="flex-shrink-0 h-8 px-3 text-xs bg-royal hover:bg-royal text-white"
                                                     onClick={() => approveEnrollment(enrollment.id, course.id)}
                                                     disabled={isToggling}
                                                 >
@@ -366,8 +366,8 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                                                 variant={isEnrolled || isPending ? 'destructive' : 'outline'}
                                                 className={`flex-shrink-0 h-8 px-3 text-xs ${
                                                     isEnrolled || isPending
-                                                        ? 'bg-burgundy/10 text-red-600 border-red-200 hover:bg-burgundy/20 hover:text-red-700'
-                                                        : 'text-emerald-600 border-emerald-200 hover:bg-emerald-500/10'
+                                                        ? 'bg-burgundy/10 text-burgundy border-burgundy hover:bg-burgundy/20 hover:text-burgundy'
+                                                        : 'text-royal border-royal hover:bg-royal/10'
                                                 }`}
                                                 onClick={() => toggleEnrollment(course.id, enrollment)}
                                                 disabled={isToggling}
@@ -462,19 +462,19 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                         <Button
                             variant="outline"
                             size="sm"
-                            className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                            className="w-full text-burgundy border-burgundy hover:bg-red-50 hover:text-burgundy"
                             onClick={() => setShowTransferZone(true)}
                         >
                             <UserX className="h-4 w-4 mr-2" />
                             Transfer Out Student
                         </Button>
                     ) : (
-                        <div className="rounded-lg border border-red-200 bg-red-50/50 p-4 space-y-3">
+                        <div className="rounded-lg border border-burgundy bg-red-50/50 p-4 space-y-3">
                             <div className="flex items-start gap-2">
-                                <AlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
+                                <AlertTriangle className="h-4 w-4 text-burgundy flex-shrink-0 mt-0.5" />
                                 <div className="text-sm">
-                                    <p className="font-semibold text-red-700">Transfer Out Confirmation</p>
-                                    <p className="text-red-600/80 text-xs mt-1">
+                                    <p className="font-semibold text-burgundy">Transfer Out Confirmation</p>
+                                    <p className="text-burgundy/80 text-xs mt-1">
                                         This will revoke all access for{' '}
                                         <span className="font-bold">{displayName}</span> and mark them as transferred.
                                         Type their full name below to confirm.
@@ -485,7 +485,7 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                                 placeholder={`Type "${displayName}" to confirm`}
                                 value={confirmName}
                                 onChange={(e) => setConfirmName(e.target.value)}
-                                className="border-red-300 focus-visible:ring-red-400 bg-white"
+                                className="border-burgundy focus-visible:ring-red-400 bg-white"
                             />
                             <div className="flex gap-2">
                                 <Button
@@ -499,7 +499,7 @@ export function ManageStudentDialog({ student, onStudentRemoved }: ManageStudent
                                 </Button>
                                 <Button
                                     size="sm"
-                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                    className="flex-1 bg-burgundy hover:bg-burgundy text-white"
                                     onClick={handleTransferOut}
                                     disabled={
                                         isTransferring ||

@@ -54,10 +54,10 @@ function AiStudyPanel() {
 
 function AiTutorAssistant({ courses }: { courses: any[] }) {
   return (
-    <motion.div layout className="bg-white/60 dark:bg-neutral-900/40 backdrop-blur-xl rounded-[1.5rem] p-5 border border-white/20 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-transform duration-300 hover:-translate-y-1">
+    <motion.div layout className="bg-obsidian backdrop-blur-xl rounded-[1.5rem] p-5 border border-royal/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-transform duration-300 hover:-translate-y-1">
       <div className="flex items-center gap-3 mb-3">
-         <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-xl">
-           <Lightbulb className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+         <div className="bg-royal dark:bg-royal/30 p-2 rounded-xl">
+           <Lightbulb className="w-4 h-4 text-royal dark:text-royal" />
          </div>
          <h3 className="font-bold text-sm">AI Tutor Assistant</h3>
       </div>
@@ -66,7 +66,7 @@ function AiTutorAssistant({ courses }: { courses: any[] }) {
         <input 
           type="text" 
           placeholder="Ask anything..." 
-          className="w-full bg-neutral-100/80 dark:bg-neutral-800/80 border-none rounded-xl py-2.5 pl-4 pr-10 text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+          className="w-full bg-white/5/80 dark:bg-obsidian/80 border-none rounded-xl py-2.5 pl-4 pr-10 text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
         />
         <button className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-primary text-white p-1.5 rounded-lg hover:scale-105 transition-transform">
           <ChevronRight className="w-3.5 h-3.5" />
@@ -79,15 +79,15 @@ function AiTutorAssistant({ courses }: { courses: any[] }) {
 function UpcomingLiveClass({ upcomingClass, loading }: { upcomingClass: any | null; loading: boolean }) {
   if (loading) {
     return (
-      <div className="animate-pulse bg-[#1e2532] rounded-3xl p-5 h-40 border border-white/5 flex-1"></div>
+      <div className="animate-pulse bg-obsidian rounded-3xl p-5 h-40 border border-white/5 flex-1"></div>
     );
   }
 
   if (!upcomingClass) {
     return (
-      <motion.div layout className="bg-[#1e2532] text-white rounded-[2rem] p-6 shadow-2xl relative">
+      <motion.div layout className="bg-obsidian text-white rounded-[2rem] p-6 shadow-2xl relative">
         <h3 className="font-bold text-lg mb-2">Upcoming Timeline</h3>
-        <p className="text-neutral-400 text-sm bg-white/5 p-4 rounded-xl text-center">No upcoming lessons scheduled.</p>
+        <p className="text-white/60 text-sm bg-white/5 p-4 rounded-xl text-center">No upcoming lessons scheduled.</p>
       </motion.div>
     );
   }
@@ -98,7 +98,7 @@ function UpcomingLiveClass({ upcomingClass, loading }: { upcomingClass: any | nu
   const subjectName = upcomingClass.module?.subject?.name || upcomingClass.title;
 
   return (
-    <motion.div layout className="bg-[#1e2532] text-white rounded-[2rem] p-6 flex flex-col shadow-2xl relative">
+    <motion.div layout className="bg-obsidian text-white rounded-[2rem] p-6 flex flex-col shadow-2xl relative">
       <div className="flex items-center justify-between mb-5">
         <h3 className="font-bold text-lg tracking-tight">Timeline Manager</h3>
         <span className="text-[9px] uppercase tracking-widest font-extrabold px-3 py-1 bg-white/10 rounded-full">Next Up</span>
@@ -116,32 +116,32 @@ function UpcomingLiveClass({ upcomingClass, loading }: { upcomingClass: any | nu
           return (
             <div key={i} className={`flex flex-col items-center justify-center transition-all duration-300 ${
               isToday 
-              ? 'w-12 h-16 sm:w-14 sm:h-20 bg-[#d2f34c] text-[#1e2532] rounded-[1.25rem] sm:rounded-full shadow-lg scale-105 z-10' 
-              : 'w-10 h-14 sm:w-10 sm:h-16 bg-white/5 text-neutral-400 rounded-full hover:bg-white/10 cursor-pointer'
+              ? 'w-12 h-16 sm:w-14 sm:h-20 bg-royal text-obsidian rounded-[1.25rem] sm:rounded-full shadow-lg scale-105 z-10' 
+              : 'w-10 h-14 sm:w-10 sm:h-16 bg-white/5 text-white/60 rounded-full hover:bg-white/10 cursor-pointer'
             }`}>
-              <span className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${isToday ? 'text-[#1e2532]/70' : 'opacity-60'}`}>{dayName}</span>
+              <span className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${isToday ? 'text-obsidian/70' : 'opacity-60'}`}>{dayName}</span>
               <span className={`font-extrabold text-lg sm:text-xl leading-none ${!isToday ? 'opacity-90' : ''}`}>{dayNumber}</span>
             </div>
           );
         })}
       </div>
 
-      <div className="rounded-[1.25rem] bg-[#d2f34c] text-[#1e2532] p-4 relative overflow-hidden transition-transform duration-300 hover:-translate-y-1 cursor-pointer shadow-lg">
+      <div className="rounded-[1.25rem] bg-royal text-obsidian p-4 relative overflow-hidden transition-transform duration-300 hover:-translate-y-1 cursor-pointer shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#1e2532] text-white rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white/10">
-            <Clock className="w-5 h-5 text-[#d2f34c]" />
+          <div className="w-10 h-10 bg-obsidian text-white rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-white/10">
+            <Clock className="w-5 h-5 text-royal" />
           </div>
           <div className="pr-2 flex-1">
-            <h4 className="font-extrabold text-[15px] leading-tight mb-0.5 text-[#1e2532] truncate">{upcomingClass.title}</h4>
-            <p className="text-[10px] font-bold opacity-70 text-[#1e2532] uppercase tracking-wide">{subjectName}</p>
+            <h4 className="font-extrabold text-[15px] leading-tight mb-0.5 text-obsidian truncate">{upcomingClass.title}</h4>
+            <p className="text-[10px] font-bold opacity-70 text-obsidian uppercase tracking-wide">{subjectName}</p>
           </div>
         </div>
         
-        <div className="mt-4 flex items-center justify-between pt-3 border-t border-[#1e2532]/10 text-xs font-bold text-[#1e2532]">
+        <div className="mt-4 flex items-center justify-between pt-3 border-t border-obsidian/10 text-xs font-bold text-obsidian">
           <span className="opacity-80 uppercase tracking-wider text-[10px]">
             {new Date(upcomingClass.start_date || new Date()).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
           </span>
-          <span className="bg-[#1e2532]/5 px-2 py-1 rounded-md">{startTime} - {endTime}</span>
+          <span className="bg-obsidian/5 px-2 py-1 rounded-md">{startTime} - {endTime}</span>
         </div>
       </div>
     </motion.div>
@@ -174,23 +174,23 @@ function NotificationBell() {
         {hasNotifications ? (
           <div className="flex flex-col gap-3">
              {isAlertVisible && (
-                <div className="relative bg-amber-50/80 dark:bg-amber-950/30 backdrop-blur-md border border-amber-200/50 dark:border-amber-900/50 rounded-2xl p-4 shadow-sm">
+                <div className="relative bg-amber-50/80 dark:bg-royal/30 backdrop-blur-md border border-royal/50 dark:border-royal/50 rounded-2xl p-4 shadow-sm">
                   <button 
                     onClick={() => setIsAlertVisible(false)}
-                    className="absolute top-3 right-3 text-amber-600/50 hover:text-amber-600 transition-colors p-1"
+                    className="absolute top-3 right-3 text-royal/50 hover:text-royal transition-colors p-1"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                   <div className="flex gap-3 mb-3">
-                    <div className="bg-amber-100 dark:bg-amber-900/50 p-2 rounded-xl h-fit">
-                      <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <div className="bg-royal dark:bg-royal/50 p-2 rounded-xl h-fit">
+                      <ShieldAlert className="w-4 h-4 text-royal dark:text-royal" />
                     </div>
                     <div className="pt-0.5">
-                      <h4 className="font-bold text-amber-900 dark:text-amber-200 text-sm leading-none mb-1">Secure Your Account</h4>
-                      <p className="text-[11px] text-amber-700/80 dark:text-amber-400/80 pr-4 leading-tight">We noticed you logged in via Google. Set a password for backup access.</p>
+                      <h4 className="font-bold text-royal dark:text-royal text-sm leading-none mb-1">Secure Your Account</h4>
+                      <p className="text-[11px] text-royal/80 dark:text-royal/80 pr-4 leading-tight">We noticed you logged in via Google. Set a password for backup access.</p>
                     </div>
                   </div>
-                  <Button asChild className="w-full bg-amber-200/50 dark:bg-amber-900/50 hover:bg-amber-200 dark:hover:bg-amber-900 text-amber-900 dark:text-amber-200 text-[11px] font-bold py-2 rounded-xl transition-colors h-auto uppercase tracking-wide">
+                  <Button asChild className="w-full bg-royal/50 dark:bg-royal/50 hover:bg-royal dark:hover:bg-royal text-royal dark:text-royal text-[11px] font-bold py-2 rounded-xl transition-colors h-auto uppercase tracking-wide">
                     <Link href="/student/settings?tab=security">Setup Password</Link>
                   </Button>
                 </div>
@@ -198,7 +198,7 @@ function NotificationBell() {
           </div>
         ) : (
           <div className="text-center py-8">
-            <div className="w-12 h-12 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 rounded-full bg-obsidian/5 dark:bg-white/5 flex items-center justify-center mx-auto mb-3">
               <Bell className="w-5 h-5 text-muted-foreground/40" />
             </div>
             <p className="text-sm font-medium text-foreground">You're all caught up</p>
@@ -310,7 +310,7 @@ export default function StudentDashboardPage() {
   }, [fetchDashboardData, profile?.id, supabase]);
 
   return (
-    <div className="min-h-screen text-neutral-900 dark:text-neutral-100 font-sans font-[family-name:var(--font-inter)] selection:bg-primary/30">
+    <div className="min-h-screen text-white dark:text-white/90 font-sans font-[family-name:var(--font-inter)] selection:bg-primary/30">
       <div className="w-full grid grid-cols-1 lg:grid-cols-[66%_34%] gap-6 h-full">
         
         {/* =========================================
@@ -346,7 +346,7 @@ export default function StudentDashboardPage() {
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1.5">Welcome back, {userName.split(' ')[0]}!</h1>
-              <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">"The capacity to learn is a gift; the ability to learn is a skill; the willingness to learn is a choice."</p>
+              <p className="text-xs sm:text-sm text-white/60 dark:text-white/60">"The capacity to learn is a gift; the ability to learn is a skill; the willingness to learn is a choice."</p>
             </div>
             <div className="flex items-center gap-2 mt-4">
               <NotificationBell />
@@ -364,7 +364,7 @@ export default function StudentDashboardPage() {
             <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 sm:grid sm:grid-cols-2 sm:overflow-visible sm:snap-none sm:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                 {loadingCourses ? (
                   [1, 2].map((i) => (
-                    <div key={i} className="animate-pulse shrink-0 w-[85vw] snap-center sm:w-auto rounded-[2rem] bg-white/40 dark:bg-neutral-900/20 backdrop-blur-sm border border-neutral-200/50 dark:border-neutral-800/50 h-64" />
+                    <div key={i} className="animate-pulse shrink-0 w-[85vw] snap-center sm:w-auto rounded-[2rem] bg-white/40 dark:bg-obsidian/20 backdrop-blur-sm border border-white/10/50 dark:border-white/10/50 h-64" />
                   ))
                 ) : courses.length > 0 ? (
                   courses.map((course, index) => (
@@ -377,9 +377,9 @@ export default function StudentDashboardPage() {
                       />
                   ))
                 ) : (
-                  <div className="col-span-full flex flex-col items-center justify-center text-center p-8 rounded-[2rem] bg-white/40 dark:bg-neutral-900/20 backdrop-blur-sm border border-neutral-200/50 dark:border-neutral-800/50 min-h-[300px]">
-                      <div className="bg-neutral-100 dark:bg-neutral-800 p-5 rounded-[2rem] mb-6 shadow-inner">
-                        <BookOpen className="w-10 h-10 text-neutral-400 dark:text-neutral-500" />
+                  <div className="col-span-full flex flex-col items-center justify-center text-center p-8 rounded-[2rem] bg-white/40 dark:bg-obsidian/20 backdrop-blur-sm border border-white/10/50 dark:border-white/10/50 min-h-[300px]">
+                      <div className="bg-white/5 dark:bg-obsidian p-5 rounded-[2rem] mb-6 shadow-inner">
+                        <BookOpen className="w-10 h-10 text-white/60 dark:text-white/60" />
                       </div>
                       <h4 className="text-xl font-semibold mb-2">No Subjects Enrolled</h4>
                       <p className="text-muted-foreground max-w-sm mb-8">
@@ -405,4 +405,5 @@ export default function StudentDashboardPage() {
     </div>
   );
 }
+
 

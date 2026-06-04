@@ -365,11 +365,11 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
                                                             {item.item_type === 'live_class' ? (
-                                                                <Badge variant="secondary" className="bg-blue-500/10 text-blue-600"><Video className="w-3 h-3 mr-1"/> Live Class</Badge>
+                                                                <Badge variant="secondary" className="bg-royal/10 text-royal"><Video className="w-3 h-3 mr-1"/> Live Class</Badge>
                                                             ) : item.item_type === 'test' ? (
-                                                                <Badge variant="secondary" className="bg-orange-500/10 text-orange-600"><FileQuestion className="w-3 h-3 mr-1"/> Test</Badge>
+                                                                <Badge variant="secondary" className="bg-royal/10 text-royal"><FileQuestion className="w-3 h-3 mr-1"/> Test</Badge>
                                                             ) : (
-                                                                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600"><BookOpen className="w-3 h-3 mr-1"/> Topic</Badge>
+                                                                <Badge variant="secondary" className="bg-royal/10 text-royal"><BookOpen className="w-3 h-3 mr-1"/> Topic</Badge>
                                                             )}
                                                             
                                                             <Select value={item.exam_allocation_2026} onValueChange={(v) => updateItem(mIdx, iIdx, 'exam_allocation_2026', v)}>
@@ -481,13 +481,13 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                                             ))}
 
                                             <div className="flex flex-wrap gap-2 pt-2">
-                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'topic')} className="flex-1 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500/10 border border-emerald-500/20">
+                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'topic')} className="flex-1 bg-royal/5 text-royal hover:bg-royal/10 border border-royal/20">
                                                     <BookOpen className="w-3 h-3 mr-2" /> Add Topic
                                                 </Button>
-                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'live_class')} className="flex-1 bg-blue-500/5 text-blue-600 hover:bg-blue-500/10 border border-blue-500/20">
+                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'live_class')} className="flex-1 bg-royal/5 text-royal hover:bg-royal/10 border border-royal/20">
                                                     <Video className="w-3 h-3 mr-2" /> Add Live Class
                                                 </Button>
-                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'test')} className="flex-1 bg-orange-500/5 text-orange-600 hover:bg-orange-500/10 border border-orange-500/20">
+                                                <Button size="sm" variant="secondary" onClick={() => addItem(mIdx, 'test')} className="flex-1 bg-royal/5 text-royal hover:bg-royal/10 border border-royal/20">
                                                     <FileQuestion className="w-3 h-3 mr-2" /> Add Test
                                                 </Button>
                                             </div>

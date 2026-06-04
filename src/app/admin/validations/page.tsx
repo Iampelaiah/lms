@@ -122,7 +122,7 @@ function CoursesPendingReview() {
             <CardContent>
                 {courses.length === 0 ? (
                     <div className="py-16 text-center border border-dashed rounded-xl">
-                        <CheckCircle2 className="h-10 w-10 mx-auto text-emerald-500/40 mb-3" />
+                        <CheckCircle2 className="h-10 w-10 mx-auto text-royal/40 mb-3" />
                         <p className="font-medium text-muted-foreground">All courses are reviewed!</p>
                         <p className="text-sm text-muted-foreground/70 mt-1">New courses submitted by tutors will appear here automatically.</p>
                     </div>
@@ -153,7 +153,7 @@ function CoursesPendingReview() {
                                             : '—'}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                                        <Badge variant="secondary" className="bg-royal text-royal border-royal">
                                             <Clock className="mr-1 h-3 w-3" />
                                             Pending Review
                                         </Badge>
@@ -163,7 +163,7 @@ function CoursesPendingReview() {
                                             <Button
                                                 variant="outline"
                                                 size="icon"
-                                                className="text-green-600 hover:bg-green-50 hover:text-green-700 border-green-200 hover:border-green-300 h-8 w-8"
+                                                className="text-royal hover:bg-green-50 hover:text-royal border-royal hover:border-royal h-8 w-8"
                                                 onClick={() => handleAction(course.id, true)}
                                                 disabled={actionId === course.id}
                                                 title="Approve Course"
@@ -175,7 +175,7 @@ function CoursesPendingReview() {
                                             <Button
                                                 variant="outline"
                                                 size="icon"
-                                                className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200 hover:border-red-300 h-8 w-8"
+                                                className="text-burgundy hover:bg-red-50 hover:text-burgundy border-burgundy hover:border-burgundy h-8 w-8"
                                                 onClick={() => handleAction(course.id, false)}
                                                 disabled={actionId === course.id}
                                                 title="Reject Course"
@@ -305,7 +305,7 @@ function AssignmentsPendingReview() {
             <CardContent>
                 {assignments.length === 0 ? (
                     <div className="py-16 text-center border border-dashed rounded-xl">
-                        <CheckCircle2 className="h-10 w-10 mx-auto text-emerald-500/40 mb-3" />
+                        <CheckCircle2 className="h-10 w-10 mx-auto text-royal/40 mb-3" />
                         <p className="font-medium text-muted-foreground">No assignments pending review!</p>
                         <p className="text-sm text-muted-foreground/70 mt-1">New assignments will appear here automatically when submitted by tutors.</p>
                     </div>
@@ -338,7 +338,7 @@ function AssignmentsPendingReview() {
                                             : '—'}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                                        <Badge variant="secondary" className="bg-royal text-royal border-royal">
                                             <Clock className="mr-1 h-3 w-3" />
                                             Pending Review
                                         </Badge>
@@ -348,7 +348,7 @@ function AssignmentsPendingReview() {
                                             <Button
                                                 variant="outline"
                                                 size="icon"
-                                                className="text-green-600 hover:bg-green-50 hover:text-green-700 border-green-200 hover:border-green-300 h-8 w-8"
+                                                className="text-royal hover:bg-green-50 hover:text-royal border-royal hover:border-royal h-8 w-8"
                                                 onClick={() => handleAction(assignment.id, true)}
                                                 disabled={actionId === assignment.id}
                                                 title="Approve Assignment"
@@ -360,7 +360,7 @@ function AssignmentsPendingReview() {
                                             <Button
                                                 variant="outline"
                                                 size="icon"
-                                                className="text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200 hover:border-red-300 h-8 w-8"
+                                                className="text-burgundy hover:bg-red-50 hover:text-burgundy border-burgundy hover:border-burgundy h-8 w-8"
                                                 onClick={() => handleAction(assignment.id, false)}
                                                 disabled={actionId === assignment.id}
                                                 title="Reject Assignment"

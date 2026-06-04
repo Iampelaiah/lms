@@ -43,7 +43,7 @@ export function SecuritySettings() {
         </div>
         <div>
           <h2 className="text-xl font-bold text-white">Security Settings</h2>
-          <p className="text-gray-500 text-sm">Manage your password and account security.</p>
+          <p className="text-white/60 text-sm">Manage your password and account security.</p>
         </div>
       </div>
 
@@ -61,25 +61,25 @@ export function SecuritySettings() {
               name="password"
               type="password"
               placeholder="Enter new password"
-              className="bg-[#1A1A1A] border-none text-white h-12 rounded-xl placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-white/20"
+              className="bg-white/5 border-none text-white h-12 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20"
               required
               minLength={8}
             />
-            <p className="text-[10px] text-gray-600">Must be at least 8 characters. We recommend a mix of letters, numbers, and symbols.</p>
+            <p className="text-[10px] text-white/60">Must be at least 8 characters. We recommend a mix of letters, numbers, and symbols.</p>
           </div>
         </div>
 
         <Button 
           type="submit" 
           disabled={isLoading}
-          className="bg-white text-black hover:bg-white/90 rounded-full px-8 py-6 font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
+          className="bg-white text-obsidian hover:bg-white/90 rounded-full px-8 py-6 font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg"
         >
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Set New Password'}
         </Button>
       </form>
 
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6">
-        <p className="text-amber-500 text-xs leading-relaxed">
+      <div className="bg-royal/10 border border-royal/20 rounded-2xl p-6">
+        <p className="text-royal text-xs leading-relaxed">
           <strong>Note:</strong> If you signed up with Google, setting a password allows you to log in using your email directly in the future.
         </p>
       </div>

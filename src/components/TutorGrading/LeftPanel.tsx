@@ -43,14 +43,14 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
   const getMarkColor = (mark: number, max: number) => {
     const ratio = mark / max;
     if (ratio >= 0.8) return 'bg-royal';
-    if (ratio >= 0.5) return 'bg-amber-400';
+    if (ratio >= 0.5) return 'bg-royal';
     return 'bg-burgundy';
   };
 
   const getTextColor = (mark: number, max: number) => {
     const ratio = mark / max;
     if (ratio >= 0.8) return 'text-royal';
-    if (ratio >= 0.5) return 'text-amber-400';
+    if (ratio >= 0.5) return 'text-royal';
     return 'text-burgundy';
   };
 
@@ -75,37 +75,37 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
         
         {/* Marking Overview */}
         <section>
-          <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Marking Overview</h2>
+          <h2 className="text-[10px] font-bold text-white/60 uppercase tracking-wider mb-3">Marking Overview</h2>
           <div className="bg-white/5 border border-white/10 rounded-xl p-5 transition-all">
             <div className="flex justify-between items-end mb-4">
               <div>
-                <p className="text-xs text-slate-400 font-medium mb-1">Total Mark</p>
+                <p className="text-xs text-white/60 font-medium mb-1">Total Mark</p>
                 <div className="flex items-baseline gap-1">
                   <span className={`text-4xl font-extrabold transition-colors ${getTextColor(totalMark, totalMax)}`}>{totalMark}</span>
-                  <span className="text-lg text-slate-500 font-medium">/ {totalMax}</span>
+                  <span className="text-lg text-white/60 font-medium">/ {totalMax}</span>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-xs text-slate-400 font-medium mb-1">Grade</p>
+                <p className="text-xs text-white/60 font-medium mb-1">Grade</p>
                 <span className={`text-4xl font-extrabold transition-colors ${getTextColor(totalMark, totalMax)}`}>{grade}</span>
               </div>
             </div>
             <div className="pt-3 border-t border-white/5 flex items-center justify-between">
-              <span className="text-xs text-slate-400 font-medium">According to Cambridge Marking Scheme</span>
-              <Info className="w-4 h-4 text-slate-500" />
+              <span className="text-xs text-white/60 font-medium">According to Cambridge Marking Scheme</span>
+              <Info className="w-4 h-4 text-white/60" />
             </div>
           </div>
         </section>
 
         {/* Mark Scheme Breakdown */}
         <section>
-          <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Mark Scheme Breakdown</h2>
+          <h2 className="text-[10px] font-bold text-white/60 uppercase tracking-wider mb-3">Mark Scheme Breakdown</h2>
           <div className="bg-white/5 border border-white/10 rounded-xl divide-y divide-white/5">
             
             <div className="p-4 flex items-center justify-between group">
               <span className="text-sm font-semibold text-white/90">Content</span>
               <div className="flex items-center gap-3">
-                <div className="flex items-center bg-black/20 border border-white/10 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-royal focus-within:border-transparent transition-all">
+                <div className="flex items-center bg-obsidian/20 border border-white/10 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-royal focus-within:border-transparent transition-all">
                   <input 
                     type="number" 
                     min={0} max={contentMax} 
@@ -114,12 +114,12 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
                     onChange={(e) => setContentMark(Math.max(0, Math.min(contentMax, Number(e.target.value))))} 
                     className="w-10 text-center text-sm font-bold bg-transparent border-none focus:outline-none p-1 text-white/90 disabled:opacity-100 disabled:bg-transparent" 
                   />
-                  <div className="flex items-center text-xs font-medium text-slate-500 pr-2 border-l border-white/10 pl-2 py-1 bg-white/5">
+                  <div className="flex items-center text-xs font-medium text-white/60 pr-2 border-l border-white/10 pl-2 py-1 bg-white/5">
                     / <input type="number" min={1} value={contentMax} disabled={isReadOnly} onChange={(e) => {
                       const newMax = Math.max(1, Number(e.target.value));
                       setContentMax(newMax);
                       if (contentMark > newMax) setContentMark(newMax);
-                    }} className="w-8 ml-1 bg-transparent border-none focus:outline-none text-slate-400 disabled:opacity-100 disabled:bg-transparent" />
+                    }} className="w-8 ml-1 bg-transparent border-none focus:outline-none text-white/60 disabled:opacity-100 disabled:bg-transparent" />
                   </div>
                 </div>
                 <div className={`w-2 h-2 rounded-full transition-colors ${getMarkColor(contentMark, contentMax)}`} />
@@ -129,7 +129,7 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
             <div className="p-4 flex items-center justify-between group">
               <span className="text-sm font-semibold text-white/90">Communicative Achievement</span>
               <div className="flex items-center gap-3">
-                <div className="flex items-center bg-black/20 border border-white/10 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-royal focus-within:border-transparent transition-all">
+                <div className="flex items-center bg-obsidian/20 border border-white/10 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-royal focus-within:border-transparent transition-all">
                   <input 
                     type="number" 
                     min={0} max={commMax} 
@@ -138,12 +138,12 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
                     onChange={(e) => setCommMark(Math.max(0, Math.min(commMax, Number(e.target.value))))} 
                     className="w-10 text-center text-sm font-bold bg-transparent border-none focus:outline-none p-1 text-white/90 disabled:opacity-100 disabled:bg-transparent" 
                   />
-                  <div className="flex items-center text-xs font-medium text-slate-500 pr-2 border-l border-white/10 pl-2 py-1 bg-white/5">
+                  <div className="flex items-center text-xs font-medium text-white/60 pr-2 border-l border-white/10 pl-2 py-1 bg-white/5">
                     / <input type="number" min={1} value={commMax} disabled={isReadOnly} onChange={(e) => {
                       const newMax = Math.max(1, Number(e.target.value));
                       setCommMax(newMax);
                       if (commMark > newMax) setCommMark(newMax);
-                    }} className="w-8 ml-1 bg-transparent border-none focus:outline-none text-slate-400 disabled:opacity-100 disabled:bg-transparent" />
+                    }} className="w-8 ml-1 bg-transparent border-none focus:outline-none text-white/60 disabled:opacity-100 disabled:bg-transparent" />
                   </div>
                 </div>
                 <div className={`w-2 h-2 rounded-full transition-colors ${getMarkColor(commMark, commMax)}`} />
@@ -153,7 +153,7 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
             <div className="p-4 flex items-center justify-between group">
               <span className="text-sm font-semibold text-white/90">Organisation</span>
               <div className="flex items-center gap-3">
-                <div className="flex items-center bg-black/20 border border-white/10 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-amber-400 focus-within:border-transparent transition-all">
+                <div className="flex items-center bg-obsidian/20 border border-white/10 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-amber-400 focus-within:border-transparent transition-all">
                   <input 
                     type="number" 
                     min={0} max={orgMax} 
@@ -162,12 +162,12 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
                     onChange={(e) => setOrgMark(Math.max(0, Math.min(orgMax, Number(e.target.value))))} 
                     className="w-10 text-center text-sm font-bold bg-transparent border-none focus:outline-none p-1 text-white/90 disabled:opacity-100 disabled:bg-transparent" 
                   />
-                  <div className="flex items-center text-xs font-medium text-slate-500 pr-2 border-l border-white/10 pl-2 py-1 bg-white/5">
+                  <div className="flex items-center text-xs font-medium text-white/60 pr-2 border-l border-white/10 pl-2 py-1 bg-white/5">
                     / <input type="number" min={1} value={orgMax} disabled={isReadOnly} onChange={(e) => {
                       const newMax = Math.max(1, Number(e.target.value));
                       setOrgMax(newMax);
                       if (orgMark > newMax) setOrgMark(newMax);
-                    }} className="w-8 ml-1 bg-transparent border-none focus:outline-none text-slate-400 disabled:opacity-100 disabled:bg-transparent" />
+                    }} className="w-8 ml-1 bg-transparent border-none focus:outline-none text-white/60 disabled:opacity-100 disabled:bg-transparent" />
                   </div>
                 </div>
                 <div className={`w-2 h-2 rounded-full transition-colors ${getMarkColor(orgMark, orgMax)}`} />
@@ -177,7 +177,7 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
             <div className="p-4 flex items-center justify-between group">
               <span className="text-sm font-semibold text-white/90">Language</span>
               <div className="flex items-center gap-3">
-                <div className="flex items-center bg-black/20 border border-white/10 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-amber-400 focus-within:border-transparent transition-all">
+                <div className="flex items-center bg-obsidian/20 border border-white/10 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-amber-400 focus-within:border-transparent transition-all">
                   <input 
                     type="number" 
                     min={0} max={langMax} 
@@ -186,12 +186,12 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
                     onChange={(e) => setLangMark(Math.max(0, Math.min(langMax, Number(e.target.value))))} 
                     className="w-10 text-center text-sm font-bold bg-transparent border-none focus:outline-none p-1 text-white/90 disabled:opacity-100 disabled:bg-transparent" 
                   />
-                  <div className="flex items-center text-xs font-medium text-slate-500 pr-2 border-l border-white/10 pl-2 py-1 bg-white/5">
+                  <div className="flex items-center text-xs font-medium text-white/60 pr-2 border-l border-white/10 pl-2 py-1 bg-white/5">
                     / <input type="number" min={1} value={langMax} disabled={isReadOnly} onChange={(e) => {
                       const newMax = Math.max(1, Number(e.target.value));
                       setLangMax(newMax);
                       if (langMark > newMax) setLangMark(newMax);
-                    }} className="w-8 ml-1 bg-transparent border-none focus:outline-none text-slate-400 disabled:opacity-100 disabled:bg-transparent" />
+                    }} className="w-8 ml-1 bg-transparent border-none focus:outline-none text-white/60 disabled:opacity-100 disabled:bg-transparent" />
                   </div>
                 </div>
                 <div className={`w-2 h-2 rounded-full transition-colors ${getMarkColor(langMark, langMax)}`} />
@@ -204,8 +204,8 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
         {/* Cambridge Marking Scheme Details */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Cambridge Marking Scheme</h2>
-            <button className="text-xs text-blue-400 font-medium hover:underline">Show descriptors</button>
+            <h2 className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Cambridge Marking Scheme</h2>
+            <button className="text-xs text-royal font-medium hover:underline">Show descriptors</button>
           </div>
           
           <div className="space-y-3">
@@ -214,7 +214,7 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
                 <h3 className="text-sm font-bold text-white/90">Content (0 – {contentMax})</h3>
                 <span className={`text-sm font-bold ${getTextColor(contentMark, contentMax)}`}>{contentMark} / {contentMax}</span>
               </div>
-              <p className="text-xs text-slate-400">The candidate has fulfilled the task.</p>
+              <p className="text-xs text-white/60">The candidate has fulfilled the task.</p>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all hover:bg-white/10 cursor-pointer">
@@ -222,7 +222,7 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
                 <h3 className="text-sm font-bold text-white/90">Communicative Achievement (0 – {commMax})</h3>
                 <span className={`text-sm font-bold ${getTextColor(commMark, commMax)}`}>{commMark} / {commMax}</span>
               </div>
-              <p className="text-xs text-slate-400">The candidate has used the tone and style of the specified format appropriately.</p>
+              <p className="text-xs text-white/60">The candidate has used the tone and style of the specified format appropriately.</p>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all hover:bg-white/10 cursor-pointer">
@@ -230,7 +230,7 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
                 <h3 className="text-sm font-bold text-white/90">Organisation (0 – {orgMax})</h3>
                 <span className={`text-sm font-bold ${getTextColor(orgMark, orgMax)}`}>{orgMark} / {orgMax}</span>
               </div>
-              <p className="text-xs text-slate-400">The candidate has organised the information and ideas.</p>
+              <p className="text-xs text-white/60">The candidate has organised the information and ideas.</p>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all hover:bg-white/10 cursor-pointer">
@@ -238,7 +238,7 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
                 <h3 className="text-sm font-bold text-white/90">Language (0 – {langMax})</h3>
                 <span className={`text-sm font-bold ${getTextColor(langMark, langMax)}`}>{langMark} / {langMax}</span>
               </div>
-              <p className="text-xs text-slate-400">The candidate has used a range of vocabulary and grammatical structures.</p>
+              <p className="text-xs text-white/60">The candidate has used a range of vocabulary and grammatical structures.</p>
             </div>
           </div>
         </section>

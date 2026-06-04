@@ -59,7 +59,7 @@ export default function RichTextEditor({
 
   if (!editor) {
     return (
-      <div className="flex items-center justify-center py-12 text-slate-400">
+      <div className="flex items-center justify-center py-12 text-white/60">
         <RefreshCw className="w-5 h-5 animate-spin mr-2" />
         Initializing editor...
       </div>
@@ -67,7 +67,7 @@ export default function RichTextEditor({
   }
 
   return (
-    <div className="w-full rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col shadow-sm">
+    <div className="w-full rounded-xl border border-white/10 bg-white overflow-hidden flex flex-col shadow-sm">
       {/* Inline styles for ProseMirror */}
       <style>{`
         .tiptap-editor .ProseMirror {
@@ -103,7 +103,7 @@ export default function RichTextEditor({
 
       {/* Toolbar — only in edit mode */}
       {!readOnly && (
-        <div className="flex flex-wrap items-center gap-0.5 p-2 bg-slate-50 border-b border-slate-200">
+        <div className="flex flex-wrap items-center gap-0.5 p-2 bg-slate-50 border-b border-white/10">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             active={editor.isActive('bold')}
@@ -206,7 +206,7 @@ export default function RichTextEditor({
                 active={editor.isActive('highlight')}
                 title="Highlight Selection"
               >
-                <Highlighter className="w-4 h-4 text-amber-500" />
+                <Highlighter className="w-4 h-4 text-royal" />
               </ToolbarButton>
             </>
           )}
@@ -238,8 +238,8 @@ function ToolbarButton({
       title={title}
       className={`p-1.5 rounded-md transition-colors ${
         active 
-          ? 'bg-slate-200 text-slate-900' 
-          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+          ? 'bg-white/5 text-white' 
+          : 'text-white/60 hover:bg-white/5 hover:text-white'
       }`}
     >
       {children}
@@ -248,5 +248,5 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <div className="w-[1px] h-6 bg-slate-200 mx-1" />;
+  return <div className="w-[1px] h-6 bg-white/5 mx-1" />;
 }

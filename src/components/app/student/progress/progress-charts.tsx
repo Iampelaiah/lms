@@ -61,8 +61,8 @@ const activityData = [
 // Mock Data for Upcoming Deadlines (Fallback)
 const initialDeadlinesData = [
   { course: 'History', subject_id: '84897f2d-8b01-443b-aa58-5d2bc51d8b76', date: '2026-06-15', type: 'Essay on World War II', status: 'Pending', priority: 'High', color: 'bg-pink-500' },
-  { course: 'Geography', subject_id: 'e44c6883-93bb-403d-aa8c-7f5dd17c0a87', date: '2026-06-20', type: 'Map Reading Quiz', status: 'Not Started', priority: 'Medium', color: 'bg-blue-500' },
-  { course: 'Divinity', subject_id: '', date: '2026-07-05', type: 'Theological Project', status: 'In Progress', priority: 'High', color: 'bg-amber-500' },
+  { course: 'Geography', subject_id: 'e44c6883-93bb-403d-aa8c-7f5dd17c0a87', date: '2026-06-20', type: 'Map Reading Quiz', status: 'Not Started', priority: 'Medium', color: 'bg-royal' },
+  { course: 'Divinity', subject_id: '', date: '2026-07-05', type: 'Theological Project', status: 'In Progress', priority: 'High', color: 'bg-royal' },
 ];
 
 export function ProgressCharts() {
@@ -126,7 +126,7 @@ export function ProgressCharts() {
 
     if (deadlinesResult.data && deadlinesResult.data.length > 0) {
       const formattedDeadlines = deadlinesResult.data.map((d: any, index) => {
-        const colors = ['bg-pink-500', 'bg-blue-500', 'bg-amber-500', 'bg-purple-500'];
+        const colors = ['bg-pink-500', 'bg-royal', 'bg-royal', 'bg-purple-500'];
         return {
           id: d.id,
           subject_id: d.subject_id,
@@ -176,7 +176,7 @@ export function ProgressCharts() {
       {/* Highlights Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">Highlights</h2>
-        <Button variant="ghost" size="sm" className="text-muted-foreground gap-2 rounded-full hover:bg-neutral-100">
+        <Button variant="ghost" size="sm" className="text-muted-foreground gap-2 rounded-full hover:bg-white/5">
           <RefreshCw className="w-4 h-4" />
           Refresh Data
         </Button>
@@ -185,37 +185,37 @@ export function ProgressCharts() {
       {/* Highlights Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1 */}
-        <Card className="rounded-[1.5rem] border-neutral-200/60 dark:border-neutral-800/60 shadow-sm">
+        <Card className="rounded-[1.5rem] border-white/10/60 dark:border-white/10/60 shadow-sm">
           <CardContent className="p-5 flex flex-col justify-between h-full gap-4">
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                  <GraduationCap className="w-4 h-4" />
                  Courses Enrolled
                </div>
-               <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 border-none rounded-sm px-1.5 text-[10px]">+12%</Badge>
+               <Badge variant="secondary" className="bg-royal text-royal hover:bg-royal dark:bg-royal/30 dark:text-royal border-none rounded-sm px-1.5 text-[10px]">+12%</Badge>
             </div>
             <div className="flex items-end justify-between">
                <span className="text-4xl font-bold">{coursesEnrolled.toString().padStart(2, '0')}</span>
                {/* Mini Bar Chart Mock */}
                <div className="flex items-end gap-1 h-8">
-                 <div className="w-2 bg-orange-200 rounded-t-sm h-[40%]"></div>
-                 <div className="w-2 bg-orange-300 rounded-t-sm h-[60%]"></div>
-                 <div className="w-2 bg-orange-400 rounded-t-sm h-[80%]"></div>
-                 <div className="w-2 bg-orange-500 rounded-t-sm h-[100%]"></div>
+                 <div className="w-2 bg-royal rounded-t-sm h-[40%]"></div>
+                 <div className="w-2 bg-royal rounded-t-sm h-[60%]"></div>
+                 <div className="w-2 bg-royal rounded-t-sm h-[80%]"></div>
+                 <div className="w-2 bg-royal rounded-t-sm h-[100%]"></div>
                </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Card 2 */}
-        <Card className="rounded-[1.5rem] border-neutral-200/60 dark:border-neutral-800/60 shadow-sm">
+        <Card className="rounded-[1.5rem] border-white/10/60 dark:border-white/10/60 shadow-sm">
           <CardContent className="p-5 flex flex-col justify-between h-full gap-4">
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                  <CheckCircle2 className="w-4 h-4" />
                  Lessons Completed
                </div>
-               <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 border-none rounded-sm px-1.5 text-[10px]">+5%</Badge>
+               <Badge variant="secondary" className="bg-royal text-royal hover:bg-royal dark:bg-royal/30 dark:text-royal border-none rounded-sm px-1.5 text-[10px]">+5%</Badge>
             </div>
             <div className="flex items-end justify-between">
                <span className="text-4xl font-bold">{lessonsCompleted}</span>
@@ -228,14 +228,14 @@ export function ProgressCharts() {
         </Card>
 
         {/* Card 3 */}
-        <Card className="rounded-[1.5rem] border-neutral-200/60 dark:border-neutral-800/60 shadow-sm">
+        <Card className="rounded-[1.5rem] border-white/10/60 dark:border-white/10/60 shadow-sm">
           <CardContent className="p-5 flex flex-col justify-between h-full gap-4">
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                  <Flag className="w-4 h-4" />
                  Average Score
                </div>
-               <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 border-none rounded-sm px-1.5 text-[10px]">+10%</Badge>
+               <Badge variant="secondary" className="bg-royal text-royal hover:bg-royal dark:bg-royal/30 dark:text-royal border-none rounded-sm px-1.5 text-[10px]">+10%</Badge>
             </div>
             <div className="flex items-end justify-between">
                <span className="text-4xl font-bold">{averageScore}%</span>
@@ -252,23 +252,23 @@ export function ProgressCharts() {
         </Card>
 
         {/* Card 4 */}
-        <Card className="rounded-[1.5rem] border-neutral-200/60 dark:border-neutral-800/60 shadow-sm">
+        <Card className="rounded-[1.5rem] border-white/10/60 dark:border-white/10/60 shadow-sm">
           <CardContent className="p-5 flex flex-col justify-between h-full gap-4">
             <div className="flex items-center justify-between">
                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                  <Zap className="w-4 h-4" />
                  Learning Streak
                </div>
-               <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 border-none rounded-sm px-1.5 text-[10px]">+6%</Badge>
+               <Badge variant="secondary" className="bg-royal text-royal hover:bg-royal dark:bg-royal/30 dark:text-royal border-none rounded-sm px-1.5 text-[10px]">+6%</Badge>
             </div>
             <div className="flex items-end justify-between">
                <span className="text-4xl font-bold">07<span className="text-lg font-medium text-muted-foreground ml-1">Days</span></span>
                {/* Mini Streak Circles */}
                <div className="flex items-center gap-1 mb-2">
-                 <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
-                 <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
-                 <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
-                 <div className="w-2.5 h-2.5 rounded-full border border-neutral-300 dark:border-neutral-700"></div>
+                 <div className="w-2.5 h-2.5 rounded-full bg-royal"></div>
+                 <div className="w-2.5 h-2.5 rounded-full bg-royal"></div>
+                 <div className="w-2.5 h-2.5 rounded-full bg-royal"></div>
+                 <div className="w-2.5 h-2.5 rounded-full border border-white/10 dark:border-white/10"></div>
                </div>
             </div>
           </CardContent>
@@ -278,7 +278,7 @@ export function ProgressCharts() {
       {/* Middle Analytics Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Area Chart: Progress Overview */}
-        <Card className="lg:col-span-2 rounded-[1.5rem] border-neutral-200/60 shadow-sm">
+        <Card className="lg:col-span-2 rounded-[1.5rem] border-white/10/60 shadow-sm">
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
               <div>
@@ -336,10 +336,10 @@ export function ProgressCharts() {
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-3 rounded-xl shadow-lg flex flex-col gap-1 min-w-[120px]">
+                          <div className="bg-white dark:bg-obsidian border border-white/10 dark:border-white/10 p-3 rounded-xl shadow-lg flex flex-col gap-1 min-w-[120px]">
                             <div className="flex justify-between items-center">
                               <span className="text-xs font-medium text-muted-foreground">Oct 15, 2025</span>
-                              <span className="text-[10px] text-green-600 bg-green-100 px-1 rounded font-bold">+5%</span>
+                              <span className="text-[10px] text-royal bg-royal px-1 rounded font-bold">+5%</span>
                             </div>
                             <span className="font-bold text-lg">{payload[0].value}%</span>
                           </div>
@@ -364,7 +364,7 @@ export function ProgressCharts() {
         </Card>
 
         {/* Donut Chart: Weekly Activity Split */}
-        <Card className="rounded-[1.5rem] border-neutral-200/60 shadow-sm flex flex-col">
+        <Card className="rounded-[1.5rem] border-white/10/60 shadow-sm flex flex-col">
           <CardContent className="p-6 flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-bold text-base flex items-center gap-2">
@@ -419,9 +419,9 @@ export function ProgressCharts() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         
         {/* Table: Upcoming Deadlines */}
-        <Card className="xl:col-span-2 rounded-[1.5rem] border-neutral-200/60 shadow-sm overflow-hidden">
+        <Card className="xl:col-span-2 rounded-[1.5rem] border-white/10/60 shadow-sm overflow-hidden">
           <CardContent className="p-0">
-            <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-neutral-100 dark:border-neutral-800/50 gap-4">
+            <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/10 dark:border-white/10/50 gap-4">
               <h3 className="font-bold text-lg flex items-center gap-2">
                  <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-muted-foreground">
                     <path d="M13 1V15M1 1V15M1 4H13M1 12H13M4 1L10 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -436,7 +436,7 @@ export function ProgressCharts() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-neutral-50/50 dark:bg-neutral-900/50 text-muted-foreground text-xs font-medium">
+                <thead className="bg-neutral-50/50 dark:bg-obsidian/50 text-muted-foreground text-xs font-medium">
                   <tr>
                     <th className="px-6 py-4 font-medium">Course / Task</th>
                     <th className="px-6 py-4 font-medium">Due Date</th>
@@ -447,12 +447,12 @@ export function ProgressCharts() {
                 </thead>
                 <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/50">
                   {deadlines.map((row, i) => (
-                    <tr key={i} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-900/20 transition-colors">
+                    <tr key={i} className="hover:bg-neutral-50/50 dark:hover:bg-obsidian/20 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-2 h-2 rounded-full ${row.color}`}></div>
                           <Link href={row.subject_id ? `/student/courses/${row.subject_id}` : '#'} className="hover:underline decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">
-                            <span className="font-medium text-neutral-900 dark:text-neutral-100">{row.course}</span>
+                            <span className="font-medium text-white dark:text-white/90">{row.course}</span>
                           </Link>
                         </div>
                       </td>
@@ -460,9 +460,9 @@ export function ProgressCharts() {
                       <td className="px-6 py-4 text-muted-foreground">{row.type}</td>
                       <td className="px-6 py-4">
                         <span className={`text-xs font-semibold px-2 py-1 rounded-md ${
-                          row.status === 'Pending' ? 'text-orange-600 bg-orange-100/50 dark:bg-orange-900/20 dark:text-orange-400' :
-                          row.status === 'Not Started' ? 'text-blue-600 bg-blue-100/50 dark:bg-blue-900/20 dark:text-blue-400' :
-                          'text-green-600 bg-green-100/50 dark:bg-green-900/20 dark:text-green-400'
+                          row.status === 'Pending' ? 'text-royal bg-royal/50 dark:bg-royal/20 dark:text-royal' :
+                          row.status === 'Not Started' ? 'text-royal bg-royal/50 dark:bg-royal/20 dark:text-royal' :
+                          'text-royal bg-royal/50 dark:bg-royal/20 dark:text-royal'
                         }`}>
                           {row.status}
                         </span>

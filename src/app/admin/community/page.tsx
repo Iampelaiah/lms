@@ -41,9 +41,9 @@ export default function AdminForum() {
   };
 
   return (
-    <div className="min-h-screen bg-obsidian text-zinc-200 pb-12">
-      <div className="bg-zinc-900 border-b border-zinc-800 py-4 px-6 mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-zinc-100">Community Forums</h1>
+    <div className="min-h-screen bg-obsidian text-white/90 pb-12">
+      <div className="bg-obsidian border-b border-white/10 py-4 px-6 mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-white/90">Community Forums</h1>
         <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border border-burgundy/30 bg-burgundy/10 text-burgundy/80">
           Admin — Full Control
         </span>

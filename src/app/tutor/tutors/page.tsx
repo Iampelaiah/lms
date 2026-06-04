@@ -163,7 +163,7 @@ function TutorList() {
                                 <TableCell>{tutor.coursesAssigned}</TableCell>
                                 <TableCell>{tutor.totalStudents}</TableCell>
                                 <TableCell>
-                                    <Badge variant={tutor.status === 'Active' ? 'default' : 'secondary'} className={tutor.status === 'Active' ? 'bg-green-100 text-green-800' : ''}>{tutor.status}</Badge>
+                                    <Badge variant={tutor.status === 'Active' ? 'default' : 'secondary'} className={tutor.status === 'Active' ? 'bg-royal text-royal' : ''}>{tutor.status}</Badge>
                                 </TableCell>
                                 <TableCell>
                                     <Button variant="outline">View</Button>

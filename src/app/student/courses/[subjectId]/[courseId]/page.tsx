@@ -60,7 +60,7 @@ export default function LessonViewPage() {
       </div>
       
       {lesson.video_url && (
-        <div className="aspect-video w-full overflow-hidden rounded-xl bg-black shadow-lg">
+        <div className="aspect-video w-full overflow-hidden rounded-xl bg-obsidian shadow-lg">
            {/* Replace with a real video player later */}
            <div className="w-full h-full flex flex-col items-center justify-center text-white/40">
               <PlayCircle className="w-16 h-16 mb-4" />

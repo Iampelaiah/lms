@@ -229,8 +229,8 @@ export default function TutorAssignmentsPage() {
       ) : (
         <Tabs defaultValue="unmarked" className="w-full">
           <TabsList className="bg-white/5 border border-white/10 p-1 rounded-lg">
-            <TabsTrigger value="unmarked" className="rounded-md data-[state=active]:bg-royal data-[state=active]:text-black">Inbox ({submissions.filter((s:any) => s.status === 'unmarked').length})</TabsTrigger>
-            <TabsTrigger value="marked" className="rounded-md data-[state=active]:bg-royal data-[state=active]:text-black">Marked ({submissions.filter((s:any) => s.status === 'completed' || s.status === 'graded').length})</TabsTrigger>
+            <TabsTrigger value="unmarked" className="rounded-md data-[state=active]:bg-royal data-[state=active]:text-obsidian">Inbox ({submissions.filter((s:any) => s.status === 'unmarked').length})</TabsTrigger>
+            <TabsTrigger value="marked" className="rounded-md data-[state=active]:bg-royal data-[state=active]:text-obsidian">Marked ({submissions.filter((s:any) => s.status === 'completed' || s.status === 'graded').length})</TabsTrigger>
           </TabsList>
           
           <TabsContent value="unmarked" className="mt-6">
@@ -241,7 +241,7 @@ export default function TutorAssignmentsPage() {
                     <CheckCircle className="h-12 w-12" />
                   </div>
                   <h3 className="text-xl font-semibold text-white/95">Inbox Clear!</h3>
-                  <p className="text-slate-400 max-w-sm">No student assignments are currently waiting to be marked.</p>
+                  <p className="text-white/60 max-w-sm">No student assignments are currently waiting to be marked.</p>
                 </CardContent>
               </Card>
             ) : (
@@ -254,12 +254,12 @@ export default function TutorAssignmentsPage() {
                     <Table>
                       <TableHeader className="border-white/10">
                         <TableRow className="hover:bg-transparent border-white/10">
-                          <TableHead className="text-slate-400">Student</TableHead>
-                          <TableHead className="text-slate-400">Subject</TableHead>
-                          <TableHead className="text-slate-400">Topic</TableHead>
-                          <TableHead className="text-slate-400">Task</TableHead>
-                          <TableHead className="text-slate-400">Submitted</TableHead>
-                          <TableHead className="text-slate-400 text-right">Actions</TableHead>
+                          <TableHead className="text-white/60">Student</TableHead>
+                          <TableHead className="text-white/60">Subject</TableHead>
+                          <TableHead className="text-white/60">Topic</TableHead>
+                          <TableHead className="text-white/60">Task</TableHead>
+                          <TableHead className="text-white/60">Submitted</TableHead>
+                          <TableHead className="text-white/60 text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -275,22 +275,22 @@ export default function TutorAssignmentsPage() {
                                   </Avatar>
                                   <div className="flex flex-col">
                                     <span className="font-semibold text-sm">{sub.profiles?.full_name}</span>
-                                    <span className="text-[10px] text-slate-500">{sub.profiles?.email}</span>
+                                    <span className="text-[10px] text-white/60">{sub.profiles?.email}</span>
                                   </div>
                                 </div>
                               </TableCell>
                               <TableCell className="text-white/80 font-medium text-sm">
-                                {sub.subjects?.name} <span className="text-[10px] text-slate-500 ml-1.5">({sub.subjects?.level})</span>
+                                {sub.subjects?.name} <span className="text-[10px] text-white/60 ml-1.5">({sub.subjects?.level})</span>
                               </TableCell>
-                              <TableCell className="text-slate-300 text-sm max-w-[200px] truncate">{sub.module_items?.title}</TableCell>
+                              <TableCell className="text-white/90 text-sm max-w-[200px] truncate">{sub.module_items?.title}</TableCell>
                               <TableCell>
                                 <Badge className="bg-royal/10 text-royal border-royal/20 hover:bg-royal/20">Assignment {sub.assignment_number}</Badge>
                               </TableCell>
-                              <TableCell className="text-slate-400 text-xs">
+                              <TableCell className="text-white/60 text-xs">
                                 {new Date(sub.submitted_at).toLocaleDateString()}
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button onClick={() => openMarkingDialog(sub)} className="bg-royal hover:bg-royal/80 text-black font-bold size-sm text-xs gap-1.5 h-8">
+                                <Button onClick={() => openMarkingDialog(sub)} className="bg-royal hover:bg-royal/80 text-obsidian font-bold size-sm text-xs gap-1.5 h-8">
                                   <Award className="w-3.5 h-3.5" />
                                   Mark Assignment
                                 </Button>
@@ -310,7 +310,7 @@ export default function TutorAssignmentsPage() {
             {submissions.filter((s:any) => s.status === 'completed' || s.status === 'graded').length === 0 ? (
               <Card className="border-dashed border-white/10 bg-card/25 py-16 text-center">
                 <CardContent className="flex flex-col items-center gap-4">
-                  <p className="text-slate-400 max-w-sm">No marked assignments yet.</p>
+                  <p className="text-white/60 max-w-sm">No marked assignments yet.</p>
                 </CardContent>
               </Card>
             ) : (
@@ -323,12 +323,12 @@ export default function TutorAssignmentsPage() {
                     <Table>
                       <TableHeader className="border-white/10">
                         <TableRow className="hover:bg-transparent border-white/10">
-                          <TableHead className="text-slate-400">Student</TableHead>
-                          <TableHead className="text-slate-400">Subject</TableHead>
-                          <TableHead className="text-slate-400">Topic</TableHead>
-                          <TableHead className="text-slate-400">Task</TableHead>
-                          <TableHead className="text-slate-400">Marked Date</TableHead>
-                          <TableHead className="text-slate-400 text-right">Actions</TableHead>
+                          <TableHead className="text-white/60">Student</TableHead>
+                          <TableHead className="text-white/60">Subject</TableHead>
+                          <TableHead className="text-white/60">Topic</TableHead>
+                          <TableHead className="text-white/60">Task</TableHead>
+                          <TableHead className="text-white/60">Marked Date</TableHead>
+                          <TableHead className="text-white/60 text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -344,18 +344,18 @@ export default function TutorAssignmentsPage() {
                                   </Avatar>
                                   <div className="flex flex-col">
                                     <span className="font-semibold text-sm">{sub.profiles?.full_name}</span>
-                                    <span className="text-[10px] text-slate-500">{sub.profiles?.email}</span>
+                                    <span className="text-[10px] text-white/60">{sub.profiles?.email}</span>
                                   </div>
                                 </div>
                               </TableCell>
                               <TableCell className="text-white/80 font-medium text-sm">
-                                {sub.subjects?.name} <span className="text-[10px] text-slate-500 ml-1.5">({sub.subjects?.level})</span>
+                                {sub.subjects?.name} <span className="text-[10px] text-white/60 ml-1.5">({sub.subjects?.level})</span>
                               </TableCell>
-                              <TableCell className="text-slate-300 text-sm max-w-[200px] truncate">{sub.module_items?.title}</TableCell>
+                              <TableCell className="text-white/90 text-sm max-w-[200px] truncate">{sub.module_items?.title}</TableCell>
                               <TableCell>
-                                <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20">Assignment {sub.assignment_number}</Badge>
+                                <Badge className="bg-royal/10 text-royal border-royal/20">Assignment {sub.assignment_number}</Badge>
                               </TableCell>
-                              <TableCell className="text-slate-400 text-xs">
+                              <TableCell className="text-white/60 text-xs">
                                 {sub.marked_at ? new Date(sub.marked_at).toLocaleDateString() : 'N/A'}
                               </TableCell>
                               <TableCell className="text-right">

@@ -206,14 +206,14 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button className="bg-[#A7C957] hover:bg-[#6A994E] text-[#0A1A12] font-bold rounded-xl transition-all hover:scale-105">
+                    <Button className="bg-royal hover:bg-royal text-[#0A1A12] font-bold rounded-xl transition-all hover:scale-105">
                         <CalendarPlus className="mr-2 h-4 w-4" />
                         Schedule New Class
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] bg-[#0A1A12] border-white/10 text-white overflow-hidden p-0 gap-0">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#A7C957] via-[#6A994E] to-[#A7C957] animate-gradient" />
+            <DialogContent className="sm:max-w-[500px] bg-obsidian border-white/10 text-white overflow-hidden p-0 gap-0">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-royal via-[#6A994E] to-[#A7C957] animate-gradient" />
                 
                 <DialogHeader className="p-8 pb-4 text-left">
                     <DialogTitle className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
@@ -242,12 +242,12 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
                             <SelectTrigger className="bg-white/5 border-white/10 rounded-xl h-12 text-sm focus:ring-[#A7C957]/20">
                                 <SelectValue placeholder="Select Subject" />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#0A1A12] border-white/10 text-white rounded-xl">
+                            <SelectContent className="bg-obsidian border-white/10 text-white rounded-xl">
                                 {subjects.length === 0 ? (
                                     <SelectItem value="none" disabled>No subjects assigned</SelectItem>
                                 ) : (
                                     subjects.map(s => (
-                                        <SelectItem key={s.id} value={s.id} className="focus:bg-[#A7C957] focus:text-[#0A1A12]">
+                                        <SelectItem key={s.id} value={s.id} className="focus:bg-royal focus:text-[#0A1A12]">
                                             {s.name} ({s.level})
                                         </SelectItem>
                                     ))
@@ -262,11 +262,11 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button variant="outline" className="bg-white/5 border-white/10 rounded-xl h-12 text-left justify-start text-white hover:bg-white/10">
-                                        <CalendarIcon className="mr-2 h-4 w-4 text-[#A7C957]" />
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-royal" />
                                         {date ? format(date, "MMM d, yyyy") : <span>Pick a date</span>}
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 bg-[#0A1A12] border-white/10 text-white rounded-xl" align="start">
+                                <PopoverContent className="w-auto p-0 bg-obsidian border-white/10 text-white rounded-xl" align="start">
                                     <Calendar
                                         mode="single"
                                         selected={date}
@@ -280,7 +280,7 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
                         <div className="flex flex-col gap-2">
                             <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-white/20">Start Time</Label>
                             <div className="relative">
-                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#A7C957] pointer-events-none" />
+                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-royal pointer-events-none" />
                                 <Input 
                                     type="time" 
                                     value={time}
@@ -297,10 +297,10 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
                             <SelectTrigger className="bg-white/5 border-white/10 rounded-xl h-12 text-sm focus:ring-[#A7C957]/20">
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#0A1A12] border-white/10 text-white rounded-xl">
-                                <SelectItem value="upcoming" className="focus:bg-[#A7C957] focus:text-[#0A1A12]">Upcoming Session</SelectItem>
-                                <SelectItem value="ongoing" className="focus:bg-[#A7C957] focus:text-[#0A1A12]">Live Now</SelectItem>
-                                <SelectItem value="completed" className="focus:bg-[#A7C957] focus:text-[#0A1A12]">Past Session</SelectItem>
+                            <SelectContent className="bg-obsidian border-white/10 text-white rounded-xl">
+                                <SelectItem value="upcoming" className="focus:bg-royal focus:text-[#0A1A12]">Upcoming Session</SelectItem>
+                                <SelectItem value="ongoing" className="focus:bg-royal focus:text-[#0A1A12]">Live Now</SelectItem>
+                                <SelectItem value="completed" className="focus:bg-royal focus:text-[#0A1A12]">Past Session</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -310,7 +310,7 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
                     <Button 
                         onClick={handleSchedule} 
                         disabled={loading || !title || !date || !subjectId || uploading} 
-                        className="w-full h-14 bg-gradient-to-r from-[#A7C957] to-[#6A994E] hover:from-[#B5E48C] hover:to-[#A7C957] text-[#0A1A12] font-bold rounded-2xl text-base transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#A7C957]/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:scale-100"
+                        className="w-full h-14 bg-gradient-to-r from-royal to-royal hover:from-royal hover:to-royal text-[#0A1A12] font-bold rounded-2xl text-base transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-royal/20 flex items-center justify-center gap-3 disabled:opacity-50 disabled:scale-100"
                     >
                         {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Video className="h-5 w-5" />}
                         {loading ? 'Finalizing Class...' : 'Create & Schedule Class'}

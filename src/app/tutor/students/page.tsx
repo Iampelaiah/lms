@@ -629,7 +629,7 @@ export default function TutorStudentsPage() {
                           </div>
                           <div className="bg-background/30 border border-white/5 p-3 rounded-lg">
                             <span className="text-xs text-muted-foreground block">Completed Tasks</span>
-                            <span className="text-2xl font-bold text-green-500 mt-1 block">9 / 11</span>
+                            <span className="text-2xl font-bold text-royal mt-1 block">9 / 11</span>
                           </div>
                         </CardContent>
                       </Card>
@@ -655,7 +655,7 @@ export default function TutorStudentsPage() {
                   <TabsContent value="messages" className="flex-grow flex flex-col min-h-0 focus-visible:outline-none">
                     
                     {useChatFallback && (
-                      <div className="mx-6 mt-4 p-3 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-lg text-xs flex items-center gap-2">
+                      <div className="mx-6 mt-4 p-3 bg-royal/10 border border-royal/20 text-royal rounded-lg text-xs flex items-center gap-2">
                         <AlertCircle className="w-4 h-4 flex-shrink-0" />
                         <span>Supabase database message tables are not setup. Chatting is running in <b>Local Mode</b> (saved locally in your browser).</span>
                       </div>
@@ -703,7 +703,7 @@ export default function TutorStudentsPage() {
                             onChange={e => setNewMessage(e.target.value)}
                             className="bg-background/60 border-white/10 text-white/95"
                           />
-                          <Button type="submit" size="icon" className="bg-royal hover:bg-royal/80 text-black">
+                          <Button type="submit" size="icon" className="bg-royal hover:bg-royal/80 text-obsidian">
                             <Send className="w-4 h-4" />
                           </Button>
                         </form>
@@ -715,7 +715,7 @@ export default function TutorStudentsPage() {
                   <TabsContent value="deadlines" className="flex-grow flex flex-col min-h-0 focus-visible:outline-none p-6 space-y-4">
                     
                     {useDeadlineFallback && (
-                      <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-lg text-xs flex items-center gap-2">
+                      <div className="p-3 bg-royal/10 border border-royal/20 text-royal rounded-lg text-xs flex items-center gap-2">
                         <AlertCircle className="w-4 h-4 flex-shrink-0" />
                         <span>Supabase database deadline tables are not setup. Task manager is running in <b>Local Mode</b> (saved locally).</span>
                       </div>
@@ -730,7 +730,7 @@ export default function TutorStudentsPage() {
                       {/* Set Deadline Dialog */}
                       <Dialog open={isDeadlineDialogOpen} onOpenChange={setIsDeadlineDialogOpen}>
                         <DialogTrigger asChild>
-                          <Button size="sm" className="bg-royal hover:bg-royal/80 text-black font-bold">
+                          <Button size="sm" className="bg-royal hover:bg-royal/80 text-obsidian font-bold">
                             <Plus className="w-4 h-4 mr-1" />
                             Set Deadline
                           </Button>
@@ -784,7 +784,7 @@ export default function TutorStudentsPage() {
                             </div>
                             <DialogFooter>
                               <Button type="button" variant="outline" onClick={resetDeadlineForm}>Cancel</Button>
-                              <Button type="submit" disabled={submittingDeadline} className="bg-royal hover:bg-royal/80 text-black font-bold">
+                              <Button type="submit" disabled={submittingDeadline} className="bg-royal hover:bg-royal/80 text-obsidian font-bold">
                                 {submittingDeadline && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                 Assign Task
                               </Button>
@@ -814,7 +814,7 @@ export default function TutorStudentsPage() {
                                 key={deadline.id} 
                                 className={`p-4 rounded-xl flex items-start gap-4 border transition-all ${
                                   completed 
-                                    ? 'bg-green-500/5 border-green-500/10 opacity-70' 
+                                    ? 'bg-royal/5 border-royal/10 opacity-70' 
                                     : isOverdue
                                     ? 'bg-burgundy/5 border-burgundy/10'
                                     : 'bg-background/30 border-white/5 hover:border-white/10'
@@ -824,7 +824,7 @@ export default function TutorStudentsPage() {
                                   onClick={() => handleToggleDeadline(deadline)}
                                   className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-colors ${
                                     completed 
-                                      ? 'bg-green-500 border-green-500 text-white' 
+                                      ? 'bg-royal border-royal text-white' 
                                       : 'border-white/20 hover:border-white/40 bg-background/50'
                                   }`}
                                 >
@@ -841,10 +841,10 @@ export default function TutorStudentsPage() {
                                     </Badge>
                                     <Badge className={`text-[10px] ${
                                       completed 
-                                        ? 'bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300' 
+                                        ? 'bg-royal text-royal dark:bg-royal/40 dark:text-royal' 
                                         : isOverdue 
-                                        ? 'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 animate-pulse'
-                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/40 dark:text-yellow-300'
+                                        ? 'bg-burgundy text-burgundy dark:bg-burgundy/40 dark:text-burgundy animate-pulse'
+                                        : 'bg-royal text-royal dark:bg-royal/40 dark:text-royal'
                                     }`}>
                                       {completed ? 'Completed' : isOverdue ? 'Overdue' : 'Pending'}
                                     </Badge>
@@ -895,13 +895,13 @@ export default function TutorStudentsPage() {
 
       {/* Pending Assignments Modal */}
       <Dialog open={isPendingAssignmentsOpen} onOpenChange={setIsPendingAssignmentsOpen}>
-        <DialogContent className="sm:max-w-[550px] max-h-[80vh] flex flex-col border-white/10 bg-slate-900/95 backdrop-blur-md">
+        <DialogContent className="sm:max-w-[550px] max-h-[80vh] flex flex-col border-white/10 bg-obsidian/95 backdrop-blur-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white text-xl">
               <FileText className="w-5 h-5 text-royal" />
               <span>Pending Assignments - {pendingAssignmentsSubject?.name}</span>
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-white/60">
               View assignments not yet submitted by {selectedGroup?.student.full_name}. Set a deadline as a reminder.
             </DialogDescription>
           </DialogHeader>
@@ -915,7 +915,7 @@ export default function TutorStudentsPage() {
               <div className="text-center py-12 border border-dashed border-white/10 rounded-xl bg-white/5">
                 <CheckCircle2 className="w-12 h-12 text-royal mx-auto mb-3" />
                 <h4 className="font-semibold text-white">All Completed!</h4>
-                <p className="text-sm text-slate-400 mt-1">This student has submitted all assignments for this subject.</p>
+                <p className="text-sm text-white/60 mt-1">This student has submitted all assignments for this subject.</p>
               </div>
             ) : (
               pendingAssignmentsList.map((item, idx) => (
@@ -925,7 +925,7 @@ export default function TutorStudentsPage() {
                 >
                   <div className="min-w-0">
                     <h4 className="font-semibold text-sm text-white/90">Assignment {item.assignmentNum}</h4>
-                    <p className="text-xs text-slate-400 truncate mt-0.5">Topic: {item.topicTitle}</p>
+                    <p className="text-xs text-white/60 truncate mt-0.5">Topic: {item.topicTitle}</p>
                   </div>
                   <Button 
                     size="sm" 

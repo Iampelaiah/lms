@@ -127,7 +127,7 @@ export default function StudentSubmissionPreviewPage() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-obsidian">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-royal" />
       </div>
     );
   }
@@ -139,14 +139,14 @@ export default function StudentSubmissionPreviewPage() {
   return (
     <div className="flex flex-col h-screen w-full bg-obsidian text-white overflow-hidden">
       {/* Header */}
-      <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 shrink-0 bg-zinc-900/50 backdrop-blur-md">
+      <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 shrink-0 bg-obsidian/50 backdrop-blur-md">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-slate-400 hover:text-white rounded-full">
+          <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-white/60 hover:text-white rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex flex-col">
             <h1 className="font-bold text-sm tracking-wide">Assignment Feedback</h1>
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider">{submission?.profiles?.full_name}</span>
+            <span className="text-[10px] text-white/60 uppercase tracking-wider">{submission?.profiles?.full_name}</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -182,7 +182,7 @@ export default function StudentSubmissionPreviewPage() {
         <div className="w-[380px] bg-obsidian border-l border-white/10 flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.5)] z-10 shrink-0">
           <div className="p-5 border-b border-white/10 bg-white/5">
             <h2 className="text-sm font-bold text-white uppercase tracking-wider mb-1">Tutor Feedback</h2>
-            <p className="text-xs text-slate-400">Click highlighted text in the document to see specific feedback.</p>
+            <p className="text-xs text-white/60">Click highlighted text in the document to see specific feedback.</p>
           </div>
 
           <Tabs defaultValue="comments" className="flex flex-col flex-1 min-h-0">
@@ -203,7 +203,7 @@ export default function StudentSubmissionPreviewPage() {
             <ScrollArea className="flex-1 bg-obsidian">
               <div className="p-5">
                 <TabsContent value="comments" className="m-0 space-y-3 outline-none">
-                  {comments.length === 0 && <p className="text-xs text-slate-500 text-center py-4">No comments.</p>}
+                  {comments.length === 0 && <p className="text-xs text-white/60 text-center py-4">No comments.</p>}
                   {comments.map((comment) => (
                     <div 
                       key={comment.id} 
@@ -212,7 +212,7 @@ export default function StudentSubmissionPreviewPage() {
                     >
                       <div className="flex items-center justify-center w-5 h-5 rounded bg-royal/20 text-royal font-bold text-[10px] flex-shrink-0 mt-0.5">{comment.marker_number || 1}</div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] text-slate-400 font-semibold bg-white/5 px-1.5 py-0.5 rounded truncate max-w-[200px]">"{comment.selected_text}"</span>
+                        <span className="text-[10px] text-white/60 font-semibold bg-white/5 px-1.5 py-0.5 rounded truncate max-w-[200px]">"{comment.selected_text}"</span>
                         <p className="text-sm text-white/90 leading-snug">{comment.content}</p>
                       </div>
                     </div>
@@ -220,7 +220,7 @@ export default function StudentSubmissionPreviewPage() {
                 </TabsContent>
                 
                 <TabsContent value="corrections" className="m-0 space-y-3 outline-none">
-                  {corrections.length === 0 && <p className="text-xs text-slate-500 text-center py-4">No corrections.</p>}
+                  {corrections.length === 0 && <p className="text-xs text-white/60 text-center py-4">No corrections.</p>}
                   {corrections.map((corr) => (
                     <div 
                       key={corr.id} 
@@ -229,7 +229,7 @@ export default function StudentSubmissionPreviewPage() {
                     >
                       <div className="flex items-center justify-center w-5 h-5 rounded bg-royal/20 text-royal font-bold text-[10px] flex-shrink-0 mt-0.5">{corr.marker_number || 1}</div>
                       <div className="flex flex-col gap-1 w-full">
-                        <span className="text-[10px] text-slate-400 font-semibold line-through bg-white/5 px-1.5 py-0.5 rounded truncate max-w-[200px]">"{corr.selected_text}"</span>
+                        <span className="text-[10px] text-white/60 font-semibold line-through bg-white/5 px-1.5 py-0.5 rounded truncate max-w-[200px]">"{corr.selected_text}"</span>
                         <div className="flex items-start gap-1.5 text-sm text-white/90 font-medium">
                           <span className="text-royal mt-0.5">↳</span> {corr.content}
                         </div>
@@ -239,7 +239,7 @@ export default function StudentSubmissionPreviewPage() {
                 </TabsContent>
 
                 <TabsContent value="resources" className="m-0 space-y-3 outline-none">
-                  {resources.length === 0 && <p className="text-xs text-slate-500 text-center py-4">No resources.</p>}
+                  {resources.length === 0 && <p className="text-xs text-white/60 text-center py-4">No resources.</p>}
                   {resources.map((res) => (
                     <div 
                       key={res.id} 
@@ -248,7 +248,7 @@ export default function StudentSubmissionPreviewPage() {
                     >
                       <div className="flex items-center justify-center w-5 h-5 rounded bg-royal/20 text-royal font-bold text-[10px] flex-shrink-0 mt-0.5">{res.marker_number || 1}</div>
                       <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] text-slate-400 font-semibold bg-white/5 px-1.5 py-0.5 rounded truncate max-w-[200px]">"{res.selected_text}"</span>
+                        <span className="text-[10px] text-white/60 font-semibold bg-white/5 px-1.5 py-0.5 rounded truncate max-w-[200px]">"{res.selected_text}"</span>
                         <a href={res.content} target="_blank" rel="noopener noreferrer" className="text-sm text-royal hover:text-white font-medium leading-snug flex items-center gap-1 hover:underline">
                           <BookOpen className="w-3.5 h-3.5" /> View Resource
                         </a>
@@ -262,7 +262,7 @@ export default function StudentSubmissionPreviewPage() {
 
           {submission?.overall_feedback && (
             <div className="p-5 border-t border-white/10 bg-white/5">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h3 className="text-[10px] font-bold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-royal" />
                 Overall Feedback
               </h3>

@@ -181,7 +181,7 @@ export function ProfileSettings() {
                                 <AvatarFallback className="text-lg">{initials}</AvatarFallback>
                             </Avatar>
                             {uploadingAvatar && (
-                                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                                <div className="absolute inset-0 rounded-full bg-obsidian/50 flex items-center justify-center">
                                     <Loader2 className="h-6 w-6 text-white animate-spin" />
                                 </div>
                             )}
@@ -284,8 +284,8 @@ export function ProfileSettings() {
                         </Button>
                     </form>
 
-                    <div className="mt-6 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
-                        <p className="text-amber-500 text-xs leading-relaxed">
+                    <div className="mt-6 bg-royal/10 border border-royal/20 rounded-xl p-4">
+                        <p className="text-royal text-xs leading-relaxed">
                             <strong>Note:</strong> If you signed up with Google, setting a password allows you to log in using your email directly in the future.
                         </p>
                     </div>

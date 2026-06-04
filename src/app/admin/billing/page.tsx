@@ -60,7 +60,7 @@ function CurrentPlanCard() {
                         <div>
                             <div className="flex items-center gap-4">
                                 <h3 className="text-xl font-bold">{currentPlan.name} Plan</h3>
-                                <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">Active</Badge>
+                                <Badge variant="default" className="bg-royal text-royal border-royal">Active</Badge>
                             </div>
                             <div className="mt-4 flex items-center gap-4">
                                 <Button>Update Payment Method</Button>
@@ -94,7 +94,7 @@ function AvailablePlans() {
                            <ul className="space-y-3">
                                 {plan.features.map(feature => (
                                     <li key={feature} className="flex items-start">
-                                        <Check className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                                        <Check className="h-5 w-5 text-royal mr-2 shrink-0 mt-0.5" />
                                         <span className="text-sm text-muted-foreground">{feature}</span>
                                     </li>
                                 ))}

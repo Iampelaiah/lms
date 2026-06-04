@@ -87,7 +87,7 @@ export default function StudentLiveClassesPage() {
                 <p className="text-muted-foreground mb-6">
                     Your account is currently pending administrator approval. Once approved, you will be able to view and join live classes.
                 </p>
-                <Button className="bg-[#D4AF37] hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl" asChild>
+                <Button className="bg-royal hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl" asChild>
                     <Link href="/student">Back to Dashboard</Link>
                 </Button>
             </div>
@@ -117,7 +117,7 @@ export default function StudentLiveClassesPage() {
                                 >
                                     {liveClass.status}
                                 </Badge>
-                                <div className="relative aspect-[3/2] w-full bg-black/20">
+                                <div className="relative aspect-[3/2] w-full bg-obsidian/20">
                                     {liveClass.imageUrl ? (
                                         <Image
                                             src={liveClass.imageUrl}
@@ -148,7 +148,7 @@ export default function StudentLiveClassesPage() {
                             </CardContent>
                             <CardFooter className="p-6 pt-0">
                                 {liveClass.status === 'ongoing' ? (
-                                    <Button className="w-full bg-[#D4AF37] hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl py-6" asChild>
+                                    <Button className="w-full bg-royal hover:bg-[#800000] text-[#0B0C10] font-bold rounded-xl py-6" asChild>
                                         <Link href={`/classroom/${liveClass.agora_channel_name || liveClass.id}?role=participant&name=${profile?.full_name || 'Guest'}`}>
                                             <Video className="mr-2 h-5 w-5" />
                                             Join Now

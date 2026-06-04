@@ -163,7 +163,7 @@ function LoginForm() {
   const displayRole = roleDisplayNames[role] || capitalizeFirstLetter(role);
 
   return (
-    <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-black overflow-hidden">
+    <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-obsidian overflow-hidden">
       {/* Left Column */}
       <div className="hidden lg:flex relative bg-obsidian p-10 flex-col justify-between overflow-hidden">
         {/* Background Video Placeholder */}
@@ -185,7 +185,7 @@ function LoginForm() {
             <h1 className="text-4xl font-bold text-white leading-tight tracking-tight">
               Welcome <br /> Back
             </h1>
-            <p className="text-gray-400 text-sm">
+            <p className="text-white/60 text-sm">
               The future of personalized learning, powered by AI. Select your role to access your workspace.
             </p>
           </div>
@@ -214,13 +214,13 @@ function LoginForm() {
                 />
                 {/* Overlay to ensure text readability or active state tint */}
                 <div className={`absolute inset-0 transition-opacity duration-200 ${
-                  role === r.id ? 'bg-royal/10' : 'bg-black/40'
+                  role === r.id ? 'bg-royal/10' : 'bg-obsidian/40'
                 }`} />
               </div>
 
               <div className="relative z-10 flex flex-col h-full justify-between">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-lg ${
-                  role === r.id ? 'bg-royal text-black' : 'bg-white/20 text-white'
+                  role === r.id ? 'bg-royal text-obsidian' : 'bg-white/20 text-white'
                 }`}>
                   <r.icon className="w-4 h-4" />
                 </div>
@@ -238,11 +238,11 @@ function LoginForm() {
       </div>
 
       {/* Right Column - Login Form */}
-      <div className="flex items-center justify-center p-6 lg:p-10 bg-black overflow-y-auto">
+      <div className="flex items-center justify-center p-6 lg:p-10 bg-obsidian overflow-y-auto">
         <div className="w-full max-w-md space-y-4">
           <div className="text-center space-y-1">
             <h2 className="text-2xl font-bold text-white">Login as {displayRole}</h2>
-            <p className="text-gray-500 text-xs">Enter your credentials to access your account.</p>
+            <p className="text-white/60 text-xs">Enter your credentials to access your account.</p>
           </div>
 
           {errorMessage && (
@@ -259,7 +259,7 @@ function LoginForm() {
             <div className="grid grid-cols-2 gap-4">
               <Button 
                 variant="outline" 
-                className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
+                className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
                 onClick={handleGoogleLogin}
                 disabled={!mounted}
               >
@@ -268,7 +268,7 @@ function LoginForm() {
               </Button>
               <Button 
                 variant="outline" 
-                className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
+                className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
                 onClick={() => window.open('https://wa.me/yournumber', '_blank')}
               >
                 <WhatsAppIcon className="w-5 h-5 text-[#25D366]" />
@@ -278,10 +278,10 @@ function LoginForm() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-[#2A2A2A]" />
+                <span className="w-full border-t border-white/10" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-black px-2 text-gray-500">Or</span>
+                <span className="bg-obsidian px-2 text-white/60">Or</span>
               </div>
             </div>
 
@@ -292,7 +292,7 @@ function LoginForm() {
                   id="email"
                   type="email"
                   placeholder="eg. m@example.com"
-                  className="bg-[#1A1A1A] border-none text-white h-10 rounded-xl placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-white/20"
+                  className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -309,10 +309,10 @@ function LoginForm() {
                     id="password"
                     type="password"
                     placeholder="Enter your password"
-                    className="bg-[#1A1A1A] border-none text-white h-10 rounded-xl placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-white/20 pr-10"
+                    className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20 pr-10"
                     required
                   />
-                  <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
+                  <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -323,7 +323,7 @@ function LoginForm() {
 
               <Button 
                 type="submit" 
-                className="w-full bg-white text-black hover:bg-white/90 h-10 rounded-full font-bold text-sm mt-4"
+                className="w-full bg-white text-obsidian hover:bg-white/90 h-10 rounded-full font-bold text-sm mt-4"
                 disabled={isLoading}
               >
                 {isLoading ? 'Logging in...' : 'Login'}
@@ -332,19 +332,19 @@ function LoginForm() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-[#2A2A2A]" />
+                <span className="w-full border-t border-white/10" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-black px-2 text-gray-500">Or</span>
+                <span className="bg-obsidian px-2 text-white/60">Or</span>
               </div>
             </div>
 
-            <Button variant="outline" className="w-full bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl font-medium" asChild>
+            <Button variant="outline" className="w-full bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl font-medium" asChild>
               <Link href="/signup">Create New Account</Link>
             </Button>
 
             <div className="text-center text-xs pt-4">
-              <Link href="/" className="text-gray-500 hover:text-white flex items-center justify-center gap-2 transition-colors">
+              <Link href="/" className="text-white/60 hover:text-white flex items-center justify-center gap-2 transition-colors">
                 <ArrowLeft className="w-3 h-3" />
                 Back to landing page
               </Link>
@@ -358,7 +358,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="h-screen bg-black flex items-center justify-center text-white">Loading login form...</div>}>
+    <Suspense fallback={<div className="h-screen bg-obsidian flex items-center justify-center text-white">Loading login form...</div>}>
       <LoginForm />
     </Suspense>
   );

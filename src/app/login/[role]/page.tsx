@@ -179,7 +179,7 @@ export default function RoleLoginPage() {
   const displayRole = roleDisplayNames[role] || capitalizeFirstLetter(role);
 
   return (
-    <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-black overflow-hidden">
+    <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-obsidian overflow-hidden">
       {/* Left Column */}
       <div className="hidden lg:flex relative bg-obsidian p-10 flex-col justify-between overflow-hidden">
         {/* Background Video Placeholder */}
@@ -198,7 +198,7 @@ export default function RoleLoginPage() {
             <h1 className="text-5xl font-bold text-white leading-tight tracking-tight">
               Welcome <br /> Back
             </h1>
-            <p className="text-gray-400 text-base">
+            <p className="text-white/60 text-base">
               Access your personalized {displayRole.toLowerCase()} dashboard and tools.
             </p>
           </div>
@@ -218,7 +218,7 @@ export default function RoleLoginPage() {
             >
               <div className="flex flex-col h-full justify-between">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                  role === r.id ? 'bg-royal text-black' : 'bg-white/20 text-white'
+                  role === r.id ? 'bg-royal text-obsidian' : 'bg-white/20 text-white'
                 }`}>
                   <r.icon className="w-4 h-4" />
                 </div>
@@ -236,17 +236,17 @@ export default function RoleLoginPage() {
       </div>
 
       {/* Right Column - Form */}
-      <div className="flex items-center justify-center p-6 lg:p-10 bg-black overflow-y-auto">
+      <div className="flex items-center justify-center p-6 lg:p-10 bg-obsidian overflow-y-auto">
         <div className="w-full max-w-md space-y-4">
           <div className="text-center space-y-1">
             <h2 className="text-2xl font-bold text-white">Login as {displayRole}</h2>
-            <p className="text-gray-500 text-xs">Enter your credentials to access your account.</p>
+            <p className="text-white/60 text-xs">Enter your credentials to access your account.</p>
           </div>
 
           <div className="space-y-3">
             {/* Passkey Login - Primary Method */}
             <Button 
-              className="w-full bg-royal text-black hover:bg-royal/90 h-12 rounded-xl flex gap-3 font-bold text-base shadow-[0_0_20px_rgba(0,255,204,0.3)] transition-all hover:scale-[1.02]"
+              className="w-full bg-royal text-obsidian hover:bg-royal/90 h-12 rounded-xl flex gap-3 font-bold text-base shadow-[0_0_20px_rgba(0,255,204,0.3)] transition-all hover:scale-[1.02]"
               onClick={handlePasskeyLogin}
               disabled={isLoading}
             >
@@ -256,10 +256,10 @@ export default function RoleLoginPage() {
 
             <div className="relative pt-2">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-[#2A2A2A]" />
+                <span className="w-full border-t border-white/10" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-black px-2 text-gray-500">Or use email</span>
+                <span className="bg-obsidian px-2 text-white/60">Or use email</span>
               </div>
             </div>
 
@@ -271,7 +271,7 @@ export default function RoleLoginPage() {
                   name="email"
                   type="email"
                   placeholder="eg. m@example.com"
-                  className="bg-[#1A1A1A] border-none text-white h-10 rounded-xl placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-white/20"
+                  className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -289,7 +289,7 @@ export default function RoleLoginPage() {
                     name="password"
                     type="password"
                     placeholder="Enter your password"
-                    className="bg-[#1A1A1A] border-none text-white h-10 rounded-xl placeholder:text-gray-600 focus-visible:ring-1 focus-visible:ring-white/20 pr-10"
+                    className="bg-white/5 border-none text-white h-10 rounded-xl placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20 pr-10"
                     required
                   />
                 </div>
@@ -297,7 +297,7 @@ export default function RoleLoginPage() {
 
               <Button 
                 type="submit" 
-                className="w-full bg-white text-black hover:bg-white/90 h-10 rounded-full font-bold text-sm mt-4"
+                className="w-full bg-white text-obsidian hover:bg-white/90 h-10 rounded-full font-bold text-sm mt-4"
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Login'}
@@ -306,10 +306,10 @@ export default function RoleLoginPage() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-[#2A2A2A]" />
+                <span className="w-full border-t border-white/10" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-black px-2 text-gray-500">Other methods</span>
+                <span className="bg-obsidian px-2 text-white/60">Other methods</span>
               </div>
             </div>
 
@@ -317,7 +317,7 @@ export default function RoleLoginPage() {
             <div className="grid grid-cols-2 gap-4">
               <Button 
                 variant="outline" 
-                className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
+                className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
               >
@@ -326,7 +326,7 @@ export default function RoleLoginPage() {
               </Button>
               <Button 
                 variant="outline" 
-                className="bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
+                className="bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl flex gap-3 font-medium"
                 onClick={handleWhatsAppLogin}
                 disabled={isLoading}
               >
@@ -335,12 +335,12 @@ export default function RoleLoginPage() {
               </Button>
             </div>
 
-            <Button variant="outline" className="w-full bg-transparent border-[#2A2A2A] hover:bg-white/5 text-white h-10 rounded-xl font-medium" asChild>
+            <Button variant="outline" className="w-full bg-transparent border-white/10 hover:bg-white/5 text-white h-10 rounded-xl font-medium" asChild>
               <Link href="/signup">Create New Account</Link>
             </Button>
 
             <div className="text-center text-xs pt-4">
-              <Link href="/login" className="text-gray-500 hover:text-white flex items-center justify-center gap-2 transition-colors">
+              <Link href="/login" className="text-white/60 hover:text-white flex items-center justify-center gap-2 transition-colors">
                 <ArrowLeft className="w-3 h-3" />
                 Back to role selection
               </Link>

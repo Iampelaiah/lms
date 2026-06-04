@@ -262,7 +262,7 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                   <div className="flex flex-col items-end min-w-[150px] space-y-2">
                     <div className="flex items-center justify-between w-full text-xs font-medium">
                       <span className="text-muted-foreground">Progress</span>
-                      <span className={isCompleted ? "text-green-500" : "text-primary"}>
+                      <span className={isCompleted ? "text-royal" : "text-primary"}>
                         {progressPercent}%
                       </span>
                     </div>
@@ -298,7 +298,7 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                         {/* Status / Timeline Column */}
                         <div className="flex flex-col items-center gap-2 md:min-w-[120px]">
                           {isItemDone ? (
-                            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-500">
+                            <div className="w-10 h-10 rounded-full bg-royal/20 flex items-center justify-center text-royal">
                               <CheckCircle className="w-5 h-5" />
                             </div>
                           ) : (
@@ -319,7 +319,7 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                           
                           {completion?.score_achieved !== undefined && completion.score_achieved !== null && (
                             <div className="mt-2 text-center">
-                              <Badge variant="secondary" className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
+                              <Badge variant="secondary" className="bg-royal/10 text-royal hover:bg-royal/20">
                                 Score: {completion.score_achieved}
                               </Badge>
                             </div>
@@ -380,7 +380,7 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                           {/* Interactive Assignments Section */}
                           {item.item_type === 'topic' && (
                             <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
-                              <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                              <h5 className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-1.5">
                                 <FileText className="w-3.5 h-3.5 text-primary" />
                                 Interactive Assignments
                               </h5>
@@ -396,10 +396,10 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                                       key={num} 
                                       className={`p-3 rounded-lg border transition-all ${
                                         status === 'completed'
-                                          ? 'bg-amber-500/5 border-amber-500/25 hover:bg-amber-500/10 hover:border-amber-500/40 text-amber-300'
+                                          ? 'bg-royal/5 border-royal/25 hover:bg-royal/10 hover:border-royal/40 text-royal'
                                           : status === 'unmarked'
-                                          ? 'bg-blue-500/5 border-blue-500/20 text-blue-300'
-                                          : 'bg-background/40 border-white/5 text-slate-300 hover:border-white/10'
+                                          ? 'bg-royal/5 border-royal/20 text-royal'
+                                          : 'bg-background/40 border-white/5 text-white/90 hover:border-white/10'
                                       }`}
                                     >
                                       <div className="flex items-center justify-between gap-2">
@@ -426,7 +426,7 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                                         )}
 
                                         {status === 'unmarked' && (
-                                          <Badge className="bg-blue-950/40 text-blue-300 border-blue-500/30 text-[10px] font-semibold">
+                                          <Badge className="bg-royal/40 text-royal border-royal/30 text-[10px] font-semibold">
                                             Submitted
                                           </Badge>
                                         )}
@@ -435,7 +435,7 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                                           <Button 
                                             size="sm" 
                                             variant="ghost" 
-                                            className="h-7 px-2.5 text-xs text-amber-300 hover:bg-amber-500/20 hover:text-amber-200 gap-1 font-bold border border-amber-500/20 bg-amber-500/10"
+                                            className="h-7 px-2.5 text-xs text-royal hover:bg-royal/20 hover:text-royal gap-1 font-bold border border-royal/20 bg-royal/10"
                                             onClick={() => openPreviewDialog(item.id, item.title, num, assignment)}
                                           >
                                             Feedback
@@ -465,12 +465,12 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
 
       {/* Student Submission Dialog */}
       <Dialog open={isSubmitOpen} onOpenChange={(open) => { setIsSubmitOpen(open); if (!open) setIsEditorExpanded(false); }}>
-        <DialogContent className={`transition-all duration-300 bg-white border-slate-200 shadow-2xl rounded-2xl ${
+        <DialogContent className={`transition-all duration-300 bg-white border-white/10 shadow-2xl rounded-2xl ${
           isEditorExpanded ? 'sm:max-w-[92vw] h-[90vh] flex flex-col' : 'sm:max-w-5xl'
         }`}>
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-slate-900 text-lg flex items-center gap-2 font-bold">
+              <DialogTitle className="text-white text-lg flex items-center gap-2 font-bold">
                 <FileText className="w-5 h-5 text-primary" />
                 <span>Submit Assignment {selectedAssignment?.assignmentNum}</span>
               </DialogTitle>
@@ -478,7 +478,7 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                 type="button"
                 onClick={() => setIsEditorExpanded(prev => !prev)}
                 title={isEditorExpanded ? 'Collapse editor' : 'Expand editor'}
-                className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors flex-shrink-0"
+                className="p-1.5 rounded-md text-white/60 hover:text-white/60 hover:bg-white/5 transition-colors flex-shrink-0"
               >
                 {isEditorExpanded
                   ? <Minimize2 className="w-4 h-4" />
@@ -491,16 +491,16 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
           }`}>
             {/* Left Column: Form Info / Actions */}
             <div className="flex flex-col space-y-6">
-              <div className="bg-slate-50 border border-slate-100 rounded-lg p-4 text-slate-600 text-sm">
+              <div className="bg-slate-50 border border-white/10 rounded-lg p-4 text-white/60 text-sm">
                 <p>Submit your work for topic:</p>
-                <p className="font-semibold text-slate-900 mt-1">"{selectedAssignment?.topicTitle}"</p>
-                <p className="mt-3 text-slate-500 text-xs">Your tutor will review this document and provide evaluation feedback.</p>
+                <p className="font-semibold text-white mt-1">"{selectedAssignment?.topicTitle}"</p>
+                <p className="mt-3 text-white/60 text-xs">Your tutor will review this document and provide evaluation feedback.</p>
               </div>
 
               <div className="flex-1" />
 
               <DialogFooter className="flex-col sm:flex-row gap-2 mt-auto">
-                <Button type="button" variant="outline" onClick={() => setIsSubmitOpen(false)} className="border-slate-200 text-slate-600 hover:bg-slate-50 w-full sm:w-auto">
+                <Button type="button" variant="outline" onClick={() => setIsSubmitOpen(false)} className="border-white/10 text-white/60 hover:bg-slate-50 w-full sm:w-auto">
                   Cancel
                 </Button>
                 <Button type="submit" disabled={submitting} className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-5 py-2.5 rounded-lg w-full sm:w-auto">
@@ -526,36 +526,36 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
 
       {/* Tutor Feedback Preview Dialog (Gold theme) */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="sm:max-w-[600px] border-amber-500/30 bg-slate-900/95 backdrop-blur-md">
+        <DialogContent className="sm:max-w-[600px] border-royal/30 bg-obsidian/95 backdrop-blur-md">
           <DialogHeader>
-            <DialogTitle className="text-amber-300 text-lg flex items-center gap-2 font-bold">
-              <Award className="w-5 h-5 text-amber-300" />
+            <DialogTitle className="text-royal text-lg flex items-center gap-2 font-bold">
+              <Award className="w-5 h-5 text-royal" />
               <span>Assignment {selectedAssignment?.assignmentNum} - Evaluation Feedback</span>
             </DialogTitle>
-            <DialogDescription className="text-amber-100/60">
+            <DialogDescription className="text-royal/60">
               Review tutor's grade, corrections, and comments on your submitted work.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-amber-200/80 uppercase tracking-wider block">Your Submission:</span>
+              <span className="text-xs font-bold text-royal/80 uppercase tracking-wider block">Your Submission:</span>
               <div 
-                className="bg-black/50 border border-white/5 rounded-lg p-4 max-h-[200px] overflow-y-auto text-sm text-slate-300 prose prose-invert prose-sm max-w-none"
+                className="bg-obsidian/50 border border-white/5 rounded-lg p-4 max-h-[200px] overflow-y-auto text-sm text-white/90 prose prose-invert prose-sm max-w-none"
                 dangerouslySetInnerHTML={{ __html: selectedAssignment?.submission || '' }}
               />
             </div>
 
-            <div className="space-y-1.5 p-4 rounded-lg bg-amber-500/5 border border-amber-500/25">
-              <span className="text-xs font-bold text-amber-300 uppercase tracking-wider block mb-1">Tutor Feedback & Corrections:</span>
-              <div className="text-sm text-amber-100/90 leading-relaxed font-sans whitespace-pre-wrap">
+            <div className="space-y-1.5 p-4 rounded-lg bg-royal/5 border border-royal/25">
+              <span className="text-xs font-bold text-royal uppercase tracking-wider block mb-1">Tutor Feedback & Corrections:</span>
+              <div className="text-sm text-royal/90 leading-relaxed font-sans whitespace-pre-wrap">
                 {selectedAssignment?.feedback || "No feedback comments provided."}
               </div>
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setIsPreviewOpen(false)} className="border-amber-500/20 text-amber-300 hover:bg-amber-500/10 bg-amber-500/5">
+            <Button variant="secondary" onClick={() => setIsPreviewOpen(false)} className="border-royal/20 text-royal hover:bg-royal/10 bg-royal/5">
               Close Preview
             </Button>
           </DialogFooter>

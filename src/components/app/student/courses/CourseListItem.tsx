@@ -37,7 +37,7 @@ export function CourseListItem({ course }: CourseListItemProps) {
                     <div className="mt-4 flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-1">
                             {Array.from({ length: 5 }).map((_, i) => (
-                                <Star key={i} className={`w-4 h-4 ${i < Math.floor(course.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
+                                <Star key={i} className={`w-4 h-4 ${i < Math.floor(course.rating) ? 'text-royal fill-royal' : 'text-white/90'}`} />
                             ))}
                             <span className="text-muted-foreground ml-1">({course.reviewCount})</span>
                         </div>

@@ -29,19 +29,19 @@ export default function GradingHeader({ studentName, submissionTitle, onClose, o
         </div>
         <div className="flex flex-col">
           <h1 className="text-sm font-bold text-white leading-tight">Cambridge Tutor Editor</h1>
-          <span className="text-xs text-slate-400 font-medium">IGCSE English – Paper 2</span>
+          <span className="text-xs text-white/60 font-medium">IGCSE English – Paper 2</span>
         </div>
       </div>
 
       {/* Selectors */}
       <div className="flex items-center gap-6 hidden md:flex">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-slate-400">Student:</span>
+          <span className="text-xs font-medium text-white/60">Student:</span>
           <Select defaultValue="aisha">
             <SelectTrigger className="w-[160px] h-8 text-sm font-semibold border-none shadow-none focus:ring-0 px-0 text-white">
               <SelectValue placeholder="Select student" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-white/10 text-white">
+            <SelectContent className="bg-obsidian border-white/10 text-white">
               <SelectItem value="aisha">{studentName || "Aisha Khan"}</SelectItem>
               <SelectItem value="pelaiah">Pelaiah Tapera</SelectItem>
             </SelectContent>
@@ -51,12 +51,12 @@ export default function GradingHeader({ studentName, submissionTitle, onClose, o
         <div className="w-px h-6 bg-white/10" />
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-slate-400">Submission:</span>
+          <span className="text-xs font-medium text-white/60">Submission:</span>
           <Select defaultValue="essay1">
             <SelectTrigger className="w-[200px] h-8 text-sm font-semibold border-none shadow-none focus:ring-0 px-0 text-white">
               <SelectValue placeholder="Select submission" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-white/10 text-white">
+            <SelectContent className="bg-obsidian border-white/10 text-white">
               <SelectItem value="essay1">{submissionTitle || "Essay – 21 May 2024"}</SelectItem>
               <SelectItem value="essay2">Essay – 14 May 2024</SelectItem>
             </SelectContent>

@@ -53,8 +53,8 @@ export function RecentActivity({ tutorId }: { tutorId?: string }) {
                         target: '',
                         time: new Date(s.created_at),
                         icon: UserPlus,
-                        iconColor: 'text-green-500',
-                        iconBg: 'bg-green-500/10'
+                        iconColor: 'text-royal',
+                        iconBg: 'bg-royal/10'
                     }));
                 }
 
@@ -66,8 +66,8 @@ export function RecentActivity({ tutorId }: { tutorId?: string }) {
                         target: e.course?.title || 'your course',
                         time: new Date(e.created_at),
                         icon: CheckCircle2,
-                        iconColor: 'text-blue-500',
-                        iconBg: 'bg-blue-500/10'
+                        iconColor: 'text-royal',
+                        iconBg: 'bg-royal/10'
                     }));
                 }
 

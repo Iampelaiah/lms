@@ -126,14 +126,14 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
       `}</style>
       
       {editor && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100, placement: 'top' }} className="flex flex-col bg-zinc-900 shadow-xl border border-white/10 rounded-xl overflow-hidden min-w-[200px] text-white">
+        <BubbleMenu editor={editor} tippyOptions={{ duration: 100, placement: 'top' }} className="flex flex-col bg-obsidian shadow-xl border border-white/10 rounded-xl overflow-hidden min-w-[200px] text-white">
           {bubbleMode === 'menu' ? (
             <div className="flex items-center p-1 divide-x divide-white/10">
-              <Button variant="ghost" size="sm" onClick={() => setBubbleMode('comment')} className="h-9 px-3 gap-1.5 text-slate-300 hover:bg-white/10 hover:text-royal rounded-lg">
+              <Button variant="ghost" size="sm" onClick={() => setBubbleMode('comment')} className="h-9 px-3 gap-1.5 text-white/90 hover:bg-white/10 hover:text-royal rounded-lg">
                 <MessageSquare className="w-4 h-4" />
                 <span className="text-xs font-medium">Comment</span>
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setBubbleMode('replace')} className="h-9 px-3 gap-1.5 text-slate-300 hover:bg-white/10 hover:text-green-400 rounded-lg">
+              <Button variant="ghost" size="sm" onClick={() => setBubbleMode('replace')} className="h-9 px-3 gap-1.5 text-white/90 hover:bg-white/10 hover:text-royal rounded-lg">
                 <RefreshCw className="w-4 h-4" />
                 <span className="text-xs font-medium">Correct</span>
               </Button>
@@ -143,7 +143,7 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
                  const id = crypto.randomUUID();
                  editor.chain().focus().setTutorAnnotation({ id, type: 'highlight' }).run();
                  if (onAddAnnotation) onAddAnnotation({ type: 'highlight', selected_text: selectedText, content: 'Highlight' });
-              }} className="h-9 px-3 gap-1.5 text-slate-300 hover:bg-white/10 hover:text-amber-400 rounded-lg">
+              }} className="h-9 px-3 gap-1.5 text-white/90 hover:bg-white/10 hover:text-royal rounded-lg">
                 <Highlighter className="w-4 h-4" />
                 <span className="text-xs font-medium">Highlight</span>
               </Button>
@@ -151,8 +151,8 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
           ) : (
             <div className="w-[300px] p-3 flex flex-col gap-2 relative">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-400 uppercase">{bubbleMode === 'comment' ? 'Add Comment' : 'Add Correction'}</span>
-                <button onClick={() => setBubbleMode('menu')} className="text-slate-400 hover:text-white">
+                <span className="text-xs font-bold text-white/60 uppercase">{bubbleMode === 'comment' ? 'Add Comment' : 'Add Correction'}</span>
+                <button onClick={() => setBubbleMode('menu')} className="text-white/60 hover:text-white">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -161,13 +161,13 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
                 placeholder={bubbleMode === 'comment' ? "Type your comment or type @ for resources..." : "Type the correct word/phrase..."}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                className="min-h-[80px] text-sm resize-none focus-visible:ring-royal bg-white/5 border-white/10 text-white placeholder:text-slate-500"
+                className="min-h-[80px] text-sm resize-none focus-visible:ring-royal bg-white/5 border-white/10 text-white placeholder:text-white/60"
               />
               
               {/* Resource Suggestions */}
               {inputValue.includes('@') && (
-                <div className="absolute top-full left-0 w-full bg-zinc-900 border border-white/10 rounded-lg shadow-lg mt-1 overflow-hidden z-50">
-                  <div className="bg-white/5 px-3 py-1 border-b border-white/10 text-[10px] font-bold text-slate-400 uppercase">Suggested Resources</div>
+                <div className="absolute top-full left-0 w-full bg-obsidian border border-white/10 rounded-lg shadow-lg mt-1 overflow-hidden z-50">
+                  <div className="bg-white/5 px-3 py-1 border-b border-white/10 text-[10px] font-bold text-white/60 uppercase">Suggested Resources</div>
                   <div className="max-h-[150px] overflow-y-auto">
                     {mockResources.map(res => (
                       <button 
@@ -198,13 +198,13 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
         <div className="max-w-[800px] mx-auto pt-8">
           <div className="bg-white/5 border border-white/10 rounded-xl p-5 mx-16 mb-8 text-white/90 shadow-sm">
             <h3 className="font-bold text-white mb-2">Task</h3>
-            <p className="text-sm text-slate-300">Write an article for your school magazine arguing whether exams are the best way to measure a student's ability.</p>
+            <p className="text-sm text-white/90">Write an article for your school magazine arguing whether exams are the best way to measure a student's ability.</p>
           </div>
           <EditorContent editor={editor} />
         </div>
       </div>
 
-      <div className="absolute bottom-4 left-6 text-xs font-semibold text-slate-500">
+      <div className="absolute bottom-4 left-6 text-xs font-semibold text-white/60">
         Word count: {wordCount}
       </div>
     </div>

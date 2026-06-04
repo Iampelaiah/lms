@@ -57,7 +57,7 @@ export function RoleSelection() {
       {roles.map((role) => (
         <Card
           key={role.name}
-          className="bg-[#1A1A1A] border-[#2A2A2A] hover:border-white/20 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col rounded-3xl overflow-hidden group"
+          className="bg-white/5 border-white/10 hover:border-white/20 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col rounded-3xl overflow-hidden group"
         >
           <Link href={role.loginHref} className="block flex-grow p-6">
             <div className="flex items-center gap-4 mb-4">
@@ -66,14 +66,14 @@ export function RoleSelection() {
               </div>
               <h3 className="text-xl font-bold text-white">{role.name}</h3>
             </div>
-            <p className="text-gray-500 text-sm leading-relaxed">
+            <p className="text-white/60 text-sm leading-relaxed">
               {role.description}
             </p>
           </Link>
           <div className="px-6 pb-4 mt-auto flex justify-end">
             <Link 
               href={role.previewHref} 
-              className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors"
             >
               <Eye className="h-3 w-3" />
               <span>Preview Portal</span>

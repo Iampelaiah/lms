@@ -74,7 +74,7 @@ export function UpcomingClasses({ tutorId }: { tutorId?: string }) {
                                         <Video className="w-4 h-4" />
                                         <span className="text-sm">Live Session</span>
                                     </div>
-                                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${cls.status === 'ongoing' ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-green-100 text-green-700'}`}>
+                                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${cls.status === 'ongoing' ? 'bg-burgundy text-burgundy animate-pulse' : 'bg-royal text-royal'}`}>
                                         {cls.status}
                                     </span>
                                 </div>

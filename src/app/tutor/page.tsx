@@ -61,7 +61,7 @@ function StatCard({ title, value, icon: Icon, change, changeType }: StatCardProp
             <CardContent>
                 <div className="text-2xl font-bold">{value}</div>
                 {change && (
-                    <p className={`text-xs ${changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-xs ${changeType === 'increase' ? 'text-royal' : 'text-burgundy'}`}>
                         {change} from last week
                     </p>
                 )}
@@ -210,11 +210,11 @@ function SecurityAlert() {
     if (!isVisible) return null;
 
     return (
-        <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
+        <Card className="border-royal bg-amber-50/50 dark:bg-royal/20">
             <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-full">
-                        <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                    <div className="p-2 bg-royal dark:bg-royal/40 rounded-full">
+                        <Shield className="w-5 h-5 text-royal dark:text-royal" />
                     </div>
                     <div>
                         <p className="font-semibold text-sm">Secure Your Account</p>

@@ -110,7 +110,7 @@ function FinalizeClassDialog({
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-[#0B0C10] border-white/10 text-white rounded-3xl">
+      <DialogContent className="sm:max-w-[425px] bg-obsidian border-white/10 text-white rounded-3xl">
         <form onSubmit={handleSave}>
           <DialogHeader>
             <DialogTitle>Finalize Class</DialogTitle>
@@ -155,7 +155,7 @@ function FinalizeClassDialog({
             <Button
               type="submit"
               disabled={saving}
-              className="bg-royal hover:bg-royal/80 text-black font-bold rounded-xl"
+              className="bg-royal hover:bg-royal/80 text-obsidian font-bold rounded-xl"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Finalize & Send Resources'}
             </Button>
@@ -299,7 +299,7 @@ export default function TutorLiveClassesPage() {
                     tutorId={profile?.id || ''} 
                     onClassScheduled={fetchClasses}
                     trigger={
-                        <Button className="bg-royal hover:bg-royal/80 text-black font-bold h-12 px-6">
+                        <Button className="bg-royal hover:bg-royal/80 text-obsidian font-bold h-12 px-6">
                             <CalendarPlus className="mr-2 h-5 w-5" />
                             Schedule New Class
                         </Button>

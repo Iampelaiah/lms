@@ -159,7 +159,7 @@ export default function StudyPanelPage() {
                 </div>
 
                 <div className="lg:col-span-1">
-                    <Card className="rounded-[1.5rem] border-neutral-200/60 shadow-sm bg-neutral-50/50 dark:bg-neutral-900/30">
+                    <Card className="rounded-[1.5rem] border-white/10/60 shadow-sm bg-neutral-50/50 dark:bg-obsidian/30">
                         <CardContent className="p-6">
                             <h3 className="font-bold text-lg mb-1">Quick Review</h3>
                             <p className="text-sm text-muted-foreground mb-6">Sharpen your knowledge in 2 minutes!</p>
@@ -168,26 +168,26 @@ export default function StudyPanelPage() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input 
                                 placeholder="Choose a topic to review..." 
-                                className="pl-9 h-11 bg-white dark:bg-neutral-900 border-none rounded-xl shadow-sm text-sm"
+                                className="pl-9 h-11 bg-white dark:bg-obsidian border-none rounded-xl shadow-sm text-sm"
                             />
                             </div>
                             
                             <p className="text-[10px] text-muted-foreground mb-6 font-medium">Recent: Data Visualization in Python</p>
                             
                             <div className="flex items-center justify-between mb-8 px-2">
-                            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center border border-white shadow-sm"><BrainCircuit className="w-4 h-4" /></div>
-                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full bg-royal text-royal flex items-center justify-center border border-white shadow-sm"><BrainCircuit className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full bg-royal text-royal flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
                             <div className="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Database className="w-4 h-4" /></div>
                             <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Layout className="w-4 h-4" /></div>
-                            <div className="w-8 h-8 rounded-full bg-neutral-100 text-neutral-600 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center ml-auto text-muted-foreground hover:bg-neutral-200 transition-colors cursor-pointer"><ChevronRight className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full bg-white/5 text-white/60 flex items-center justify-center border border-white shadow-sm -ml-2"><Code className="w-4 h-4" /></div>
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center ml-auto text-muted-foreground hover:bg-white/5 transition-colors cursor-pointer"><ChevronRight className="w-4 h-4" /></div>
                             </div>
 
                             <div className="flex items-center gap-3">
-                            <Button variant="outline" className="flex-1 rounded-xl h-11 font-semibold border-neutral-200 shadow-sm">
+                            <Button variant="outline" className="flex-1 rounded-xl h-11 font-semibold border-white/10 shadow-sm">
                                 Practice
                             </Button>
-                            <Button className="flex-1 rounded-xl h-11 font-semibold bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200">
+                            <Button className="flex-1 rounded-xl h-11 font-semibold bg-obsidian text-white hover:bg-obsidian dark:bg-white dark:text-white dark:hover:bg-white/5">
                                 Start Quiz →
                             </Button>
                             </div>

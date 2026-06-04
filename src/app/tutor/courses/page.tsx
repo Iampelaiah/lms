@@ -19,10 +19,10 @@ import {
 } from "@/components/ui/accordion";
 
 const statusColorMap: Record<string, string> = {
-    "approved": "bg-emerald-500 hover:bg-emerald-600 text-white",
-    "pending_admin_review": "bg-yellow-500 text-yellow-950 hover:bg-yellow-600",
+    "approved": "bg-royal hover:bg-royal text-white",
+    "pending_admin_review": "bg-royal text-royal hover:bg-royal",
     "draft": "bg-muted text-muted-foreground",
-    "rejected": "bg-burgundy text-white hover:bg-red-600",
+    "rejected": "bg-burgundy text-white hover:bg-burgundy",
 };
 
 const statusLabelMap: Record<string, string> = {
@@ -217,7 +217,7 @@ function CourseList({ tutorId }: { tutorId: string }) {
                                                             </div>
                                                             
                                                             {mod.approval_status === 'rejected' && mod.admin_feedback && (
-                                                                <div className="bg-burgundy/10 border border-burgundy/20 p-2 rounded text-xs text-red-700 flex items-start gap-1.5">
+                                                                <div className="bg-burgundy/10 border border-burgundy/20 p-2 rounded text-xs text-burgundy flex items-start gap-1.5">
                                                                     <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                                                                     <p>{mod.admin_feedback}</p>
                                                                 </div>

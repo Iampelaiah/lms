@@ -63,7 +63,7 @@ function ClassroomContent() {
           <p className="text-white/60 mb-6">{error}</p>
           <button 
             onClick={() => router.push('/')}
-            className="px-6 py-2 bg-white text-black rounded-full font-bold hover:bg-white/90 transition-colors"
+            className="px-6 py-2 bg-white text-obsidian rounded-full font-bold hover:bg-white/90 transition-colors"
           >
             Go Back
           </button>

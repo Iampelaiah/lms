@@ -43,7 +43,7 @@ export function ActionButtons({ enrollmentId, subjectId }: { enrollmentId: strin
           <Button
             variant="outline"
             disabled={isPending}
-            className="h-8 px-3 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-colors"
+            className="h-8 px-3 bg-royal/10 text-royal border-royal/20 hover:bg-royal hover:text-white transition-colors"
           >
             {isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
             Approve & Assign
