@@ -175,15 +175,14 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
         if (onClassScheduled) onClassScheduled();
 
         supabase
-            .from('live_classes')
+            .from('classes')
             .insert({
                 title: insertTitle,
-                start_time: fullDate.toISOString(),
+                schedule: fullDate.toISOString(),
                 status: insertStatus,
                 tutor_id: tutorId,
                 subject_id: insertSubjectId,
-                image_url: imageUrl,
-                approval_status: 'approved' // Setting approved for immediate visibility for now
+                image_url: imageUrl
             })
             .then(({ error }) => {
                 if (error) {

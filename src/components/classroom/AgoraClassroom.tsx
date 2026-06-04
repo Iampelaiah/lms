@@ -473,9 +473,12 @@ function ClassroomInner({
           subject_id: subjectId || null,
           live_class_id: channelName,
           source: 'tutor_upload',
-          uploaded_by: profile?.id
+          uploaded_by: profile?.id,
+          tutor_id: profile?.id
         });
-        if (notesError) console.error('[Finalize] Notes insert error:', notesError);
+        if (notesError) {
+          console.error('[Finalize] Notes insert error details:', JSON.stringify(notesError, null, 2));
+        }
       }
 
       // 3. Export Uploaded Documents
@@ -484,15 +487,18 @@ function ClassroomInner({
           title: res.title,
           format: res.format,
           file_url: res.file_url,
-          size_mb: res.size_mb,
           subject_id: subjectId || null,
           live_class_id: channelName,
           source: 'tutor_upload',
-          uploaded_by: profile?.id
+          uploaded_by: profile?.id,
+          tutor_id: profile?.id
         }));
         const { error: docsError } = await supabase.from('resources').insert(resourcesToInsert);
-        if (docsError) console.error('[Finalize] Docs insert error:', docsError);
-        else console.log('[Finalize] Inserted', resourcesToInsert.length, 'resources.');
+        if (docsError) {
+          console.error('[Finalize] Docs insert error details:', JSON.stringify(docsError, null, 2));
+        } else {
+          console.log('[Finalize] Inserted', resourcesToInsert.length, 'resources.');
+        }
       } else {
         console.log('[Finalize] No uploaded documents to save.');
       }

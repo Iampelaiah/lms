@@ -92,7 +92,7 @@ export function UpcomingClasses({ tutorId }: { tutorId?: string }) {
                                     )}
                                 </div>
                                 <Button className="w-full mt-4 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg" asChild>
-                                    <Link href={`/classroom/${cls.id}`}>
+                                    <Link href={`/classroom/${cls.agora_channel_name || cls.id}?role=host&subjectId=${cls.subject_id}`}>
                                         {cls.status === 'ongoing' ? 'Join Classroom' : 'Start Classroom'}
                                     </Link>
                                 </Button>

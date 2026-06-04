@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarPlus, Users, Video, Loader2, FileText } from "lucide-react";
+import { CalendarPlus, Users, Video, Loader2, FileText, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import Link from "next/link";
 import { SchoolHeader } from "@/components/app/school-header";
 import { createClient } from "@/utils/supabase/client";
 import { useUser } from "@/components/providers/user-context";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ScheduleClassDialog } from "@/components/app/tutor/schedule-class-dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -199,7 +199,7 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                         <h3 className="text-lg font-bold truncate">{liveClass.title}</h3>
                         <p className="text-sm text-muted-foreground flex items-center gap-2">
                             <CalendarPlus className="w-4 h-4" />
-                            {liveClass.start_time ? new Date(liveClass.start_time).toLocaleString() : 'TBD'}
+                            {liveClass.schedule ? new Date(liveClass.schedule).toLocaleString() : 'TBD'}
                         </p>
                     </CardContent>
                      <CardFooter className="p-4 pt-0 flex-col gap-2">
@@ -234,7 +234,7 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                          ) : (
                              <div className="flex gap-2 w-full">
                                 <Button className="flex-1 rounded-xl py-6" asChild variant={liveClass.status === "ongoing" ? "destructive" : "default"}>
-                                    <Link href={`/classroom/${liveClass.meeting_link || liveClass.id}?role=host&subjectId=${liveClass.subject_id}`}>
+                                    <Link href={`/classroom/${liveClass.agora_channel_name || liveClass.id}?role=host&subjectId=${liveClass.subject_id}`}>
                                         <Video className="mr-2 h-4 w-4" />
                                         {liveClass.status === "ongoing" ? "Join Now" : "Start Class"}
                                     </Link>
@@ -248,6 +248,9 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                                         </Button>
                                     }
                                 />
+                                <Button className="rounded-xl py-6 px-4 hover:bg-destructive/10" variant="ghost" onClick={() => deleteClass(liveClass.id)}>
+                                    <Trash2 className="w-5 h-5 text-destructive" />
+                                </Button>
                              </div>
                          )}
                     </CardFooter>
@@ -262,16 +265,32 @@ export default function TutorLiveClassesPage() {
     const [loading, setLoading] = useState(true);
     const { profile } = useUser();
     const supabase = createClient();
+    const { toast } = useToast();
 
-    const fetchClasses = async () => {
+    const deleteClass = async (classId: string) => {
+        if (!confirm('Are you sure you want to delete this class?')) return;
+        const { error } = await supabase.from('classes').delete().eq('id', classId);
+        if (error) {
+            console.error('Delete error', error);
+            toast({ title: 'Error', description: 'Failed to delete class', variant: 'destructive' });
+        } else {
+            toast({ title: 'Success', description: 'Class deleted successfully' });
+            fetchClasses();
+        }
+    };
+
+    const fetchClasses = useCallback(async () => {
         if (!profile?.id) return;
         setLoading(true);
         try {
             const { data, error } = await supabase
-                .from('live_classes')
-                .select('*')
+                .from('classes')
+                .select(`
+                    *,
+                    tutor:profiles!classes_tutor_id_fkey (*)
+                `)
                 .eq('tutor_id', profile.id)
-                .order('start_time', { ascending: true });
+                .order('schedule', { ascending: true });
 
             if (data && !error) {
                 setClasses(data);
@@ -281,7 +300,7 @@ export default function TutorLiveClassesPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [profile?.id, supabase]);
 
     useEffect(() => {
         fetchClasses();
