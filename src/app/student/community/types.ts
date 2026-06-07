@@ -19,6 +19,8 @@ export interface Post {
   content: string;
   tag: string;
   image_url?: string | null;
+  is_research?: boolean;
+  resource_url?: string | null;
   votes: number;
   created_at: string;
   author_name?: string;

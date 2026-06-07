@@ -14,6 +14,8 @@ export function CreateThreadModal({ onClose, onSubmit }: CreateThreadModalProps)
   const [newThreadContent, setNewThreadContent] = useState('');
   const [newThreadTag, setNewThreadTag] = useState('Discussion');
   const [newThreadCommunity, setNewThreadCommunity] = useState('');
+  const [isResearch, setIsResearch] = useState(false);
+  const [resourceUrl, setResourceUrl] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -56,6 +58,8 @@ export function CreateThreadModal({ onClose, onSubmit }: CreateThreadModalProps)
       author_name: 'You',
       community_name: selectedCommunity?.name || 'Unknown',
       image_url: imagePreview,
+      is_research: isResearch,
+      resource_url: resourceUrl || null,
     };
 
     onSubmit(newPost);
@@ -114,6 +118,35 @@ export function CreateThreadModal({ onClose, onSubmit }: CreateThreadModalProps)
               </select>
             </div>
           </div>
+
+          {/* Research Hub Toggle */}
+          <div className="flex items-center gap-3 p-3 border border-border rounded-lg bg-muted/20">
+            <input 
+              type="checkbox" 
+              id="is_research" 
+              checked={isResearch}
+              onChange={(e) => setIsResearch(e.target.checked)}
+              className="w-4 h-4 rounded text-gold focus:ring-gold bg-background border-border cursor-pointer"
+            />
+            <label htmlFor="is_research" className="flex flex-col cursor-pointer">
+              <span className="text-sm font-bold text-foreground">Post to Research Hub</span>
+              <span className="text-xs text-muted-foreground">Mark this post as a research discussion or finding.</span>
+            </label>
+          </div>
+
+          {/* Resource URL (Only if Research) */}
+          {isResearch && (
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-foreground/ uppercase tracking-wider">Resource URL (Optional)</label>
+              <input 
+                type="url" 
+                placeholder="https://example.com/research-paper.pdf"
+                value={resourceUrl}
+                onChange={(e) => setResourceUrl(e.target.value)}
+                className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground/ focus:outline-none focus:border-gold focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+          )}
 
           {/* Title */}
           <div className="space-y-1">

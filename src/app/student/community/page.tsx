@@ -13,6 +13,7 @@ export default function StudentForum() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [savedPostIds, setSavedPostIds] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'general' | 'research'>('general');
   
   // Load saved posts from localStorage
   React.useEffect(() => {
@@ -43,11 +44,33 @@ export default function StudentForum() {
     );
   };
 
+  const displayedPosts = posts.filter(p => {
+    if (activeTab === 'research') return p.is_research;
+    return !p.is_research;
+  });
+
   return (
     <div className="min-h-screen bg-background text-foreground/ pb-12">
       {/* Top Banner Area */}
       <div className="bg-background border-b border-border py-4 px-6 mb-6">
-        <h1 className="text-2xl font-bold text-foreground/">Student Community</h1>
+        <div className="container mx-auto max-w-7xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold text-foreground/">Community</h1>
+          
+          <div className="flex bg-muted/30 p-1 rounded-lg border border-border">
+            <button
+              onClick={() => setActiveTab('general')}
+              className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'general' ? 'bg-gold text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+            >
+              General Forum
+            </button>
+            <button
+              onClick={() => setActiveTab('research')}
+              className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'research' ? 'bg-gold text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+            >
+              Research Hub
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="container mx-auto max-w-7xl px-4 grid grid-cols-1 lg:grid-cols-[20%_55%_25%] gap-6">
@@ -57,7 +80,7 @@ export default function StudentForum() {
 
         {/* --- MAIN FEED --- */}
         <ForumFeed 
-          posts={posts} 
+          posts={displayedPosts} 
           savedPostIds={savedPostIds}
           isAdmin={false}
           onVote={broadcastVoteUpdate} 

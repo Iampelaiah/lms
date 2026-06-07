@@ -13,6 +13,7 @@ export default function TutorForum() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [savedPostIds, setSavedPostIds] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'general' | 'research'>('general');
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -40,20 +41,42 @@ export default function TutorForum() {
     );
   };
 
+  const displayedPosts = posts.filter(p => {
+    if (activeTab === 'research') return p.is_research;
+    return !p.is_research;
+  });
+
   return (
     <div className="min-h-screen bg-background text-foreground/ pb-12">
-      <div className="bg-background border-b border-border py-4 px-6 mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground/">Community Forums</h1>
-        <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border border-gold/30 bg-gold/10 text-gold">
-          Tutor — Can Moderate
-        </span>
+      <div className="bg-background border-b border-border py-4 px-6 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-foreground/">Community Forums</h1>
+          <span className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border border-gold/30 bg-gold/10 text-gold">
+            Tutor — Can Moderate
+          </span>
+        </div>
+
+        <div className="flex bg-muted/30 p-1 rounded-lg border border-border">
+          <button
+            onClick={() => setActiveTab('general')}
+            className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'general' ? 'bg-gold text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+          >
+            General Forum
+          </button>
+          <button
+            onClick={() => setActiveTab('research')}
+            className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${activeTab === 'research' ? 'bg-gold text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+          >
+            Research Hub
+          </button>
+        </div>
       </div>
 
       <div className="container mx-auto max-w-7xl px-4 grid grid-cols-1 lg:grid-cols-[20%_55%_25%] gap-6">
         <LeftFilterSidebar savedPosts={savedPosts} />
 
         <ForumFeed
-          posts={posts}
+          posts={displayedPosts}
           savedPostIds={savedPostIds}
           isAdmin={true}
           onVote={broadcastVoteUpdate}

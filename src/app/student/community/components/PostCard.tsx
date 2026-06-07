@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Post } from '../types';
-import { ArrowBigUp, ArrowBigDown, MessageSquare, Bookmark, Flag, Send, Trash2 } from 'lucide-react';
+import { ArrowBigUp, ArrowBigDown, MessageSquare, Bookmark, Flag, Send, Trash2, FileText, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
@@ -55,6 +55,12 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col bg-background border border-border rounded-lg overflow-hidden hover:border-border transition-colors"
     >
+      {post.is_research && (
+        <div className="bg-gold/20 text-gold text-xs font-bold px-4 py-1 flex items-center gap-2 border-b border-gold/30">
+          <FileText className="w-3 h-3" />
+          Research Hub Discussion
+        </div>
+      )}
       <div className="flex">
         {/* Vote Sidebar */}
         <div className="w-12 bg-background/50 flex flex-col items-center py-2 gap-1 border-r border-border">
@@ -89,16 +95,29 @@ export const PostCard = ({ post, isSaved, isAdmin, onVote, onComment, onToggleSa
 
             {/* Title & Tag */}
             <div>
-              <span className="inline-block px-2 py-0.5 rounded-full bg-gold/10 text-gold text-[10px] font-bold uppercase tracking-wider mb-2 border border-gold/20">
+              <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 border ${post.is_research ? 'bg-gold/20 text-gold border-gold/40' : 'bg-gold/10 text-gold border-gold/20'}`}>
                 {post.tag}
               </span>
-              <h2 className="text-lg font-semibold text-foreground/">{post.title}</h2>
+              <h2 className={`text-lg font-semibold ${post.is_research ? 'text-gold' : 'text-foreground/'}`}>{post.title}</h2>
             </div>
 
             {/* Snippet */}
             <p className="text-sm text-foreground/ line-clamp-3">
               {post.content}
             </p>
+
+            {/* Resource Link */}
+            {post.resource_url && (
+              <a 
+                href={post.resource_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-gold bg-gold/10 px-3 py-1.5 rounded-md hover:bg-gold/20 transition-colors border border-gold/20 w-max mt-2"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                View Attached Resource
+              </a>
+            )}
 
             {/* Action Buttons */}
             <div className="flex items-center gap-1 pt-2 flex-wrap">
