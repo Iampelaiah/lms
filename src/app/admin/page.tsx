@@ -66,6 +66,7 @@ export default function AdminDashboardPage() {
     const [userName, setUserName] = React.useState('Admin');
     const [stats, setStats] = React.useState({ totalUsers: 0, pendingUsers: 0, activeCourses: 0 });
     const [pendingProfiles, setPendingProfiles] = React.useState<any[]>([]);
+    const [pendingResources, setPendingResources] = React.useState<any[]>([]);
     
     // Real-time Chart State
     const [activityData, setActivityData] = React.useState([
@@ -114,7 +115,8 @@ export default function AdminDashboardPage() {
             tutorsCount,
             adminsCount,
             parentsCount,
-            recentActivity
+            recentActivity,
+            resourcesResult
         ] = await Promise.all([
             supabase.from('profiles').select('*', { count: 'exact', head: true }),
             supabase.from('profiles').select('id, full_name, role, updated_at, is_approved').eq('is_approved', false),
@@ -123,7 +125,8 @@ export default function AdminDashboardPage() {
             supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'tutor'),
             supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'admin'),
             supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'parent'),
-            supabase.from('profiles').select('role, updated_at').gte('updated_at', sevenDaysAgo)
+            supabase.from('profiles').select('role, updated_at').gte('updated_at', sevenDaysAgo),
+            supabase.from('resources').select(`id, title, created_at, type, tutor:profiles!tutor_id (full_name)`).eq('approval_status', 'pending_admin_review')
         ]);
 
         setStats({
@@ -134,6 +137,9 @@ export default function AdminDashboardPage() {
 
         if (pendingResult.data) {
             setPendingProfiles(pendingResult.data);
+        }
+        if (resourcesResult.data) {
+            setPendingResources(resourcesResult.data);
         }
 
         // Update Role Distribution Chart
@@ -218,6 +224,28 @@ export default function AdminDashboardPage() {
 
     const handleApproveCourse = () => {
         toast({ title: "Feature In Progress", description: "We need to add an 'is_approved' column to your courses table first!" });
+    };
+    
+    const handleApproveResource = async (resourceId: string, approve: boolean) => {
+        const newStatus = approve ? 'approved' : 'rejected';
+        setPendingResources(prev => prev.filter(r => r.id !== resourceId));
+        
+        const { error } = await supabase
+            .from('resources')
+            .update({ approval_status: newStatus })
+            .eq('id', resourceId);
+
+        if (error) {
+            toast({ title: `Error processing resource`, description: error.message, variant: 'destructive' });
+            fetchDashboardData(); // Revert on error
+        } else {
+            toast({
+                title: approve ? 'Resource Approved' : 'Resource Rejected',
+                description: approve
+                    ? 'The resource is now available to students.'
+                    : 'The resource has been rejected.',
+            });
+        }
     };
 
     const pendingCourses: any[] = [];
@@ -347,12 +375,13 @@ export default function AdminDashboardPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Pending Administrative Actions</CardTitle>
-                    <CardDescription>Review and approve new users or course publications.</CardDescription>
+                    <CardDescription>Review and approve new users, resources, or course publications.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Tabs defaultValue="users" className="w-full">
                         <TabsList className="mb-4">
                             <TabsTrigger value="users">User Approvals ({pendingProfiles.length})</TabsTrigger>
+                            <TabsTrigger value="resources">Resource Approvals ({pendingResources.length})</TabsTrigger>
                             <TabsTrigger value="courses">Course Approvals ({pendingCourses.length})</TabsTrigger>
                         </TabsList>
                         
@@ -383,6 +412,42 @@ export default function AdminDashboardPage() {
                                                     <div className="flex justify-end gap-2">
                                                         <Button size="sm" variant="outline" className="text-gold border-gold/20 hover:bg-gold/10" onClick={() => handleApproveUser(profile.id, true)}><CheckCircle className="mr-1 h-3 w-3"/> Approve</Button>
                                                         <Button size="sm" variant="outline" className="text-burgundy border-burgundy/20 hover:bg-burgundy/10" onClick={() => handleApproveUser(profile.id, false)}><XCircle className="mr-1 h-3 w-3"/> Reject</Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TabsContent>
+                        
+                        <TabsContent value="resources">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Severity</TableHead>
+                                        <TableHead>Resource Title</TableHead>
+                                        <TableHead>Tutor Name</TableHead>
+                                        <TableHead>Submission Date</TableHead>
+                                        <TableHead className="text-right">Action</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {pendingResources.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">No resources waiting for approval.</TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        pendingResources.map((resource) => (
+                                            <TableRow key={resource.id}>
+                                                <TableCell><Badge variant="outline" className="text-gold border-gold/20 bg-gold/10">Review</Badge></TableCell>
+                                                <TableCell className="font-medium">{resource.title}</TableCell>
+                                                <TableCell>{resource.tutor?.full_name}</TableCell>
+                                                <TableCell>{new Date(resource.created_at).toLocaleDateString()}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button size="sm" variant="outline" className="text-gold border-gold/20 hover:bg-gold/10" onClick={() => handleApproveResource(resource.id, true)}><CheckCircle className="mr-1 h-3 w-3"/> Approve</Button>
+                                                        <Button size="sm" variant="outline" className="text-burgundy border-burgundy/20 hover:bg-burgundy/10" onClick={() => handleApproveResource(resource.id, false)}><XCircle className="mr-1 h-3 w-3"/> Reject</Button>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

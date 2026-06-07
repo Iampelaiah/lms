@@ -382,23 +382,204 @@ function AssignmentsPendingReview() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// RESOURCES PENDING REVIEW
+// ─────────────────────────────────────────────────────────────
+
+function ResourcesPendingReview() {
+    const [resources, setResources] = React.useState<any[]>([]);
+    const [loading, setLoading] = React.useState(true);
+    const [actionId, setActionId] = React.useState<string | null>(null);
+
+    const supabase = React.useMemo(() => createClient(), []);
+    const { toast } = useToast();
+
+    const fetchResources = React.useCallback(async () => {
+        const { data, error } = await supabase
+            .from('resources')
+            .select(`
+                id, title, created_at, type, format, file_url,
+                tutor:profiles!tutor_id (full_name),
+                subject:subjects!subject_id (name)
+            `)
+            .eq('approval_status', 'pending_admin_review')
+            .order('created_at', { ascending: false });
+
+        if (!error) setResources(data || []);
+        setLoading(false);
+    }, [supabase]);
+
+    React.useEffect(() => {
+        fetchResources();
+
+        const channel = supabase
+            .channel('admin-resources-validation')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'resources',
+            }, (payload) => {
+                fetchResources();
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, [fetchResources, supabase]);
+
+    const handleAction = async (resourceId: string, approve: boolean) => {
+        setActionId(resourceId);
+        const newStatus = approve ? 'approved' : 'rejected';
+
+        const { error } = await supabase
+            .from('resources')
+            .update({ approval_status: newStatus })
+            .eq('id', resourceId);
+
+        if (error) {
+            toast({ title: `Error processing resource`, description: error.message, variant: 'destructive' });
+        } else {
+            setResources(prev => prev.filter(r => r.id !== resourceId));
+            toast({
+                title: approve ? 'Resource Approved' : 'Resource Rejected',
+                description: approve
+                    ? 'The resource is now available to students.'
+                    : 'The resource has been rejected.',
+            });
+        }
+        setActionId(null);
+    };
+
+    if (loading) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Resources Pending Review</CardTitle>
+                    <CardDescription>Validate these resources to make them available to students.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-3">
+                        {[1, 2].map(i => (
+                            <div key={i} className="flex items-center gap-4 py-3">
+                                <Skeleton className="h-5 flex-1" />
+                                <Skeleton className="h-5 w-32" />
+                                <Skeleton className="h-5 w-24" />
+                                <Skeleton className="h-8 w-20 rounded-md" />
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Resources Pending Review</CardTitle>
+                <CardDescription>Validate these resources to make them available to students.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {resources.length === 0 ? (
+                    <div className="py-16 text-center border border-dashed rounded-xl">
+                        <CheckCircle2 className="h-10 w-10 mx-auto text-gold/40 mb-3" />
+                        <p className="font-medium text-muted-foreground">No resources pending review!</p>
+                        <p className="text-sm text-muted-foreground/70 mt-1">New resources uploaded by tutors will appear here automatically.</p>
+                    </div>
+                ) : (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Resource</TableHead>
+                                <TableHead>Tutor</TableHead>
+                                <TableHead>Subject</TableHead>
+                                <TableHead>Submitted</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {resources.map((resource) => (
+                                <TableRow key={resource.id}>
+                                    <TableCell className="font-medium">
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-2">
+                                                <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                <a href={resource.file_url} target="_blank" rel="noreferrer" className="hover:underline">{resource.title}</a>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{resource.type} • {resource.format}</div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{resource.tutor?.full_name || 'Unknown Tutor'}</TableCell>
+                                    <TableCell>{resource.subject?.name || '—'}</TableCell>
+                                    <TableCell>
+                                        {resource.created_at
+                                            ? new Date(resource.created_at).toLocaleDateString()
+                                            : '—'}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant="secondary" className="bg-gold/10 text-gold border-gold">
+                                            <Clock className="mr-1 h-3 w-3" />
+                                            Pending
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="text-gold hover:bg-green-50 hover:text-gold border-gold hover:border-gold h-8 w-8"
+                                                onClick={() => handleAction(resource.id, true)}
+                                                disabled={actionId === resource.id}
+                                                title="Approve Resource"
+                                            >
+                                                {actionId === resource.id
+                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                                    : <Check className="h-4 w-4" />}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="text-burgundy hover:bg-red-50 hover:text-burgundy border-burgundy hover:border-burgundy h-8 w-8"
+                                                onClick={() => handleAction(resource.id, false)}
+                                                disabled={actionId === resource.id}
+                                                title="Reject Resource"
+                                            >
+                                                {actionId === resource.id
+                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                                                    : <X className="h-4 w-4" />}
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────
 // PAGE
 // ─────────────────────────────────────────────────────────────
 
 export default function ValidationsPage() {
     const [pendingCourseCount, setPendingCourseCount] = React.useState<number | null>(null);
     const [pendingAssignmentCount, setPendingAssignmentCount] = React.useState<number | null>(null);
+    const [pendingResourceCount, setPendingResourceCount] = React.useState<number | null>(null);
     const supabase = React.useMemo(() => createClient(), []);
 
     // Live tab counts
     React.useEffect(() => {
         const fetchCounts = async () => {
-            const [courseRes, assignmentRes] = await Promise.all([
+            const [courseRes, assignmentRes, resourceRes] = await Promise.all([
                 supabase.from('courses').select('id', { count: 'exact', head: true }).eq('status', 'Pending Review'),
                 supabase.from('assignments').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+                supabase.from('resources').select('id', { count: 'exact', head: true }).eq('approval_status', 'pending_admin_review'),
             ]);
             setPendingCourseCount(courseRes.count ?? 0);
             setPendingAssignmentCount(assignmentRes.count ?? 0);
+            setPendingResourceCount(resourceRes.count ?? 0);
         };
 
         fetchCounts();
@@ -407,6 +588,7 @@ export default function ValidationsPage() {
             .channel('validation-counts')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, fetchCounts)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments' }, fetchCounts)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'resources' }, fetchCounts)
             .subscribe();
 
         return () => { supabase.removeChannel(channel); };
@@ -416,7 +598,7 @@ export default function ValidationsPage() {
         <div className="p-4 sm:p-6 space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Content Validation</h1>
-                <p className="text-muted-foreground">Review and approve courses and assignments submitted by tutors.</p>
+                <p className="text-muted-foreground">Review and approve courses, assignments, and resources submitted by tutors.</p>
             </div>
 
             <Tabs defaultValue="courses">
@@ -433,12 +615,21 @@ export default function ValidationsPage() {
                             {pendingAssignmentCount ?? '…'}
                         </Badge>
                     </TabsTrigger>
+                    <TabsTrigger value="resources">
+                        Resources{' '}
+                        <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
+                            {pendingResourceCount ?? '…'}
+                        </Badge>
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="courses" className="mt-6">
                     <CoursesPendingReview />
                 </TabsContent>
                 <TabsContent value="assignments" className="mt-6">
                     <AssignmentsPendingReview />
+                </TabsContent>
+                <TabsContent value="resources" className="mt-6">
+                    <ResourcesPendingReview />
                 </TabsContent>
             </Tabs>
         </div>

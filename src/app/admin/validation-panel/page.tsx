@@ -18,21 +18,36 @@ export default function AdminValidationPanel() {
     
     // State for pending modules and their nested data
     const [pendingModules, setPendingModules] = useState<any[]>([]);
+    const [pendingResources, setPendingResources] = useState<any[]>([]);
     
     // Expanded states for UI
     const [expandedModule, setExpandedModule] = useState<string | null>(null);
     const [rejectingModule, setRejectingModule] = useState<string | null>(null);
+    const [rejectingResource, setRejectingResource] = useState<string | null>(null);
     const [adminFeedback, setAdminFeedback] = useState("");
 
     useEffect(() => {
         fetchPendingValidations();
-    }, []);
+
+        const channel = supabase
+            .channel('validation-panel-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'curriculum_modules' }, () => {
+                fetchPendingValidations();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'resources' }, () => {
+                fetchPendingValidations();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [supabase]);
 
     const fetchPendingValidations = async () => {
         setLoading(true);
         try {
             // Fetch modules with status pending_admin_review
-            // Include tutor profile and nested curriculum items
             const { data: modulesData, error } = await supabase
                 .from('curriculum_modules')
                 .select(`
@@ -48,6 +63,20 @@ export default function AdminValidationPanel() {
 
             if (error) throw error;
             setPendingModules(modulesData || []);
+
+            // Fetch pending resources
+            const { data: resourcesData, error: resourcesError } = await supabase
+                .from('resources')
+                .select(`
+                    id, title, format, type, file_url, created_at, source,
+                    tutor:profiles!tutor_id(id, full_name),
+                    subject:subjects!subject_id(name)
+                `)
+                .eq('approval_status', 'pending_admin_review');
+
+            if (resourcesError) console.error("Error fetching resources:", resourcesError);
+            else setPendingResources(resourcesData || []);
+
         } catch (error: any) {
             console.error("Error fetching validations:", error);
             toast({
@@ -121,6 +150,67 @@ export default function AdminValidationPanel() {
         }
     };
 
+    const handleApproveResource = async (resourceId: string) => {
+        try {
+            const { error } = await supabase
+                .from('resources')
+                .update({ approval_status: 'approved', admin_feedback: null })
+                .eq('id', resourceId);
+
+            if (error) throw error;
+
+            toast({
+                title: "Resource Approved",
+                description: "The resource is now live in the student library.",
+            });
+            
+            // Remove from local state
+            setPendingResources(prev => prev.filter(r => r.id !== resourceId));
+        } catch (error: any) {
+            toast({
+                title: "Approval Failed",
+                description: error.message,
+                variant: "destructive"
+            });
+        }
+    };
+
+    const handleRejectResource = async (resourceId: string) => {
+        if (!adminFeedback.trim()) {
+            toast({
+                title: "Feedback Required",
+                description: "Please provide feedback explaining why the resource is being rejected.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('resources')
+                .update({ approval_status: 'rejected', admin_feedback: adminFeedback })
+                .eq('id', resourceId);
+
+            if (error) throw error;
+
+            toast({
+                title: "Resource Rejected",
+                description: "The resource was rejected.",
+            });
+            
+            setRejectingResource(null);
+            setAdminFeedback("");
+            // Remove from local state
+            setPendingResources(prev => prev.filter(r => r.id !== resourceId));
+        } catch (error: any) {
+            toast({
+                title: "Rejection Failed",
+                description: error.message,
+                variant: "destructive"
+            });
+        }
+    };
+
     // Calculate all pending assignments from the pending modules
     const pendingAssignments = pendingModules.flatMap(module => 
         module.items?.flatMap((item: any) => 
@@ -159,6 +249,11 @@ export default function AdminValidationPanel() {
                         <FileText className="h-4 w-4" />
                         Assignments & Tests
                         <Badge variant="secondary" className="ml-1 bg-gold/10 text-gold">{pendingAssignments.length}</Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="resources" className="flex gap-2">
+                        <FileText className="h-4 w-4" />
+                        Resources
+                        <Badge variant="secondary" className="ml-1 bg-blue-500/10 text-blue-500">{pendingResources.length}</Badge>
                     </TabsTrigger>
                 </TabsList>
 
@@ -367,6 +462,87 @@ export default function AdminValidationPanel() {
                                             </Button>
                                         </div>
                                     </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                </TabsContent>
+                {/* RESOURCES TAB */}
+                <TabsContent value="resources" className="space-y-4">
+                    {loading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        </div>
+                    ) : pendingResources.length === 0 ? (
+                        <Card className="border-dashed">
+                            <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+                                <CheckCircle className="h-12 w-12 text-blue-500/50 mb-4" />
+                                <p className="text-lg font-medium text-foreground">No Pending Resources</p>
+                                <p>Resources uploaded by tutors will appear here for review.</p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {pendingResources.map((resource) => (
+                                <Card key={resource.id} className="flex flex-col hover:border-primary/50 transition-colors">
+                                    <CardHeader className="pb-3 border-b bg-muted/10">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <Badge variant="outline" className="bg-blue-500/5 text-blue-500 border-blue-500/20 uppercase text-[10px] tracking-wider">
+                                                {resource.type}
+                                            </Badge>
+                                        </div>
+                                        <CardTitle className="text-base line-clamp-1" title={resource.title}>{resource.title}</CardTitle>
+                                        <CardDescription className="text-xs">
+                                            Submitted by {resource.tutor?.full_name} for {resource.subject?.name}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    
+                                    {/* Reject Feedback Area */}
+                                    {rejectingResource === resource.id && (
+                                        <div className="p-4 bg-burgundy/5 border-b border-burgundy/10 space-y-3 flex-1">
+                                            <p className="text-sm font-medium text-burgundy">Provide Revision Feedback</p>
+                                            <Textarea 
+                                                placeholder="Explain what needs to be changed..."
+                                                value={adminFeedback}
+                                                onChange={(e) => setAdminFeedback(e.target.value)}
+                                                className="bg-background focus-visible:ring-red-500"
+                                            />
+                                            <div className="flex justify-end gap-2">
+                                                <Button variant="ghost" size="sm" onClick={() => setRejectingResource(null)}>Cancel</Button>
+                                                <Button variant="destructive" size="sm" onClick={() => handleRejectResource(resource.id)}>Confirm Rejection</Button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {rejectingResource !== resource.id && (
+                                        <CardContent className="pt-3 flex-1 flex flex-col justify-between">
+                                            <div className="space-y-3">
+                                                <div className="flex gap-2">
+                                                    <a href={resource.file_url} target="_blank" rel="noreferrer" className="w-full">
+                                                        <Button variant="secondary" className="w-full text-xs">
+                                                            View Resource File
+                                                        </Button>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="mt-4 pt-4 border-t w-full flex gap-2">
+                                                <Button 
+                                                    variant="outline" 
+                                                    className="w-full text-xs text-burgundy hover:bg-burgundy/10 hover:text-burgundy" 
+                                                    onClick={() => setRejectingResource(resource.id)}
+                                                >
+                                                    <XCircle className="h-4 w-4 mr-1" /> Reject
+                                                </Button>
+                                                <Button 
+                                                    className="w-full text-xs bg-gold hover:bg-gold/90 text-foreground" 
+                                                    onClick={() => handleApproveResource(resource.id)}
+                                                >
+                                                    <CheckCircle className="h-4 w-4 mr-1" /> Approve
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    )}
                                 </Card>
                             ))}
                         </div>

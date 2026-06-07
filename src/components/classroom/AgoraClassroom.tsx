@@ -159,6 +159,48 @@ function ClassroomInner({
   const [isVoiceOnly, setIsVoiceOnly] = useState(voiceOnly);
   const [raisedHands, setRaisedHands] = useState<{ uid: number; name: string }[]>([]);
 
+  // Keep a ref of notes for stale-closure-free saves when class ends abruptly
+  const notesRef = useRef(notes);
+  useEffect(() => {
+    notesRef.current = notes;
+  }, [notes]);
+
+  // Autosave notes to local storage
+  useEffect(() => {
+    if (!iAmTutor && channelName && profile?.id && notes) {
+      localStorage.setItem(`notes_${channelName}_${profile.id}`, notes);
+    }
+  }, [notes, channelName, iAmTutor, profile?.id]);
+
+  // Load notes from local storage on mount
+  useEffect(() => {
+    if (!iAmTutor && channelName && profile?.id) {
+      const saved = localStorage.getItem(`notes_${channelName}_${profile.id}`);
+      if (saved) setNotes(saved);
+    }
+  }, [channelName, iAmTutor, profile?.id]);
+
+  const saveStudentNotes = async () => {
+    const currentNotes = notesRef.current;
+    if (!currentNotes.trim() || iAmTutor) return;
+    try {
+      await supabase.from('resources').insert({
+        title: `My Notes: ${classData?.title || channelName}`,
+        format: 'pdf',
+        type: 'pdf',
+        file_url: 'data:text/plain;base64,' + btoa(currentNotes), 
+        subject_id: subjectId || null,
+        live_class_id: channelName,
+        source: 'student_upload',
+        uploaded_by: profile?.id,
+        tutor_id: null
+      });
+      // Optionally clear after saving
+      localStorage.removeItem(`notes_${channelName}_${profile?.id}`);
+    } catch (err) {
+      console.error('[Student Notes] Error saving notes:', err);
+    }
+  };
   // Determine if the CURRENT user is the tutor/host using ALL available signals
   const iAmTutor = useMemo(() => {
     const fromProp = role === 'tutor';
@@ -199,7 +241,11 @@ function ClassroomInner({
 
   useEffect(() => {
     registerListeners({
-      onClassEnded: () => { if (!iAmTutor) onLeave?.(); },
+      onClassEnded: () => { 
+        if (!iAmTutor) {
+          saveStudentNotes().finally(() => onLeave?.());
+        }
+      },
       onSpotlight: (payload) => setSpotlightedUid(payload.uid),
       onScreenShare: (payload) => {
         if (payload.sharing) setRemoteScreenUid(Number(payload.uid));
@@ -354,6 +400,17 @@ function ClassroomInner({
       .then(({ data }) => { if (data) setClassData(data); });
   }, [channelName, supabase]);
 
+  // Update class status to ongoing when tutor joins
+  useEffect(() => {
+    if (isJoined && iAmTutor && channelName) {
+      supabase.from('classes').update({ status: 'ongoing' }).eq('id', channelName)
+        .then(({ error }) => {
+          if (error) console.error('[Classroom] Failed to set status to ongoing:', error);
+          else console.log('[Classroom] Class status set to ongoing');
+        });
+    }
+  }, [isJoined, iAmTutor, channelName, supabase]);
+
   // ─── SINGLE unified Supabase broadcast channel ─────────────────────────────
   // All real-time events (class end, spotlight, screen share, hand raise,
   // participant identity) go through one channel to minimise WS connections.
@@ -469,7 +526,7 @@ function ClassroomInner({
         const { error: notesError } = await supabase.from('resources').insert({
           title: `Class Notes: ${classData?.title || channelName}`,
           format: 'pdf',
-          type: 'document',
+          type: 'pdf',
           file_url: 'data:text/plain;base64,' + btoa(notes), 
           subject_id: subjectId || null,
           live_class_id: channelName,
@@ -522,8 +579,11 @@ function ClassroomInner({
   };
 
   const handleLeaveClick = () => {
-    if (iAmTutor) setShowFinalizeDialog(true);
-    else onLeave?.();
+    if (iAmTutor) {
+      setShowFinalizeDialog(true);
+    } else {
+      saveStudentNotes().finally(() => onLeave?.());
+    }
   };
 
   // During screen share, exclude camera from usePublish so it doesn't
@@ -626,9 +686,13 @@ function ClassroomInner({
     const t = track || screenTrack;
     if (t) {
       try {
-        if (client && isJoined) await client.unpublish(t);
+        if (client && client.connectionState === 'CONNECTED') {
+          await client.unpublish(t);
+        }
         t.close();
-      } catch (e) { console.error(e); }
+      } catch (e) { 
+        console.warn('[stopScreenShare] Failed to unpublish:', e); 
+      }
     }
     setScreenTrack(null);
     // Setting isScreenSharing=false restores camera to tracksToPublish,
@@ -680,7 +744,8 @@ function ClassroomInner({
         recovering={recovering}
         error={joinError}
         profile={profile}
-        classBanner={classData?.imageUrl}
+        classBanner={classData?.image_url}
+        classTitle={classData?.title}
       />
     );
   }
@@ -852,7 +917,12 @@ function ClassroomInner({
                 </div>
 
                 {/* MAIN CONTROLS */}
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-4 bg-background/60 backdrop-blur-xl rounded-[2rem] border border-border shadow-2xl transition-transform hover:scale-105 duration-300 z-20">
+                <div className={cn(
+                    "absolute left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-4 bg-background/60 backdrop-blur-xl rounded-[2rem] border border-border shadow-2xl transition-all duration-500 z-20 group/controls",
+                    (showWhiteboard || isScreenSharing || remoteScreenUid) 
+                        ? "bottom-4 scale-75 opacity-40 hover:opacity-100 hover:scale-100 hover:bottom-6" 
+                        : "bottom-10 scale-100 opacity-100 hover:scale-105"
+                )}>
                     <ControlButton
                       active={micOn}
                       isError={!!micError}
@@ -1037,7 +1107,7 @@ function ClassroomInner({
                     <TabsList className="bg-muted border-border rounded-xl w-full p-1 h-12">
                       <TabsTrigger value="chat" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-gold data-[state=active]:text-[#0B0C10]">Chat</TabsTrigger>
                       <TabsTrigger value="notes" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-gold data-[state=active]:text-[#0B0C10]">Notes</TabsTrigger>
-                      <TabsTrigger value="docs" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-gold data-[state=active]:text-[#0B0C10]">Docs</TabsTrigger>
+                      <TabsTrigger value="docs" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-gold data-[state=active]:text-[#0B0C10]">Submit</TabsTrigger>
                       <TabsTrigger value="assignments" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-gold data-[state=active]:text-[#0B0C10]">Tasks</TabsTrigger>
                       <TabsTrigger value="whiteboard" className="flex-1 rounded-lg text-[10px] uppercase tracking-widest font-bold data-[state=active]:bg-gold data-[state=active]:text-[#0B0C10]">Board</TabsTrigger>
                     </TabsList>
@@ -1126,7 +1196,7 @@ function ClassroomInner({
                              <Upload className="w-7 h-7 text-gold" />
                            </div>
                            <div className="text-center">
-                              <p className="text-sm font-bold text-foreground/">Upload Class Resource</p>
+                              <p className="text-sm font-bold text-foreground/">{iAmTutor ? 'Upload Class Resource' : 'Submit Document'}</p>
                               <p className="text-[10px] text-foreground/ uppercase tracking-widest mt-1">PDF, DOCX, PPT (Max 10MB)</p>
                            </div>
                            <input 
@@ -1370,6 +1440,7 @@ function LobbyScreen(props: {
   error?: string | null;
   profile?: UserProfile | null;
   classBanner?: string;
+  classTitle?: string;
 }) {
   const {
     userName,
@@ -1390,6 +1461,7 @@ function LobbyScreen(props: {
     error,
     profile,
     classBanner,
+    classTitle,
   } = props;
   return (
     <div className="flex h-screen bg-background text-foreground items-center justify-center relative overflow-hidden">
@@ -1425,18 +1497,30 @@ function LobbyScreen(props: {
                  </div>
                  <div className="flex flex-col">
                     <span className="text-[10px] font-bold text-gold uppercase tracking-widest">Live Class</span>
-                    <h2 className="text-lg font-bold text-foreground leading-none">Class Session</h2>
+                    <h2 className="text-lg font-bold text-foreground leading-none">{classTitle || 'Class Session'}</h2>
                  </div>
               </div>
             </>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#0B0C10] to-[#132E1B] flex flex-col items-center justify-center gap-4">
-               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#800000] flex items-center justify-center shadow-lg shadow-[#D4AF37]/20 transition-transform group-hover:scale-110 duration-500">
-                 <Sparkles className="w-8 h-8 text-[#0B0C10]" />
+            <div className="w-full h-full bg-gradient-to-br from-[#07120C] via-[#0a1a12] to-[#132E1B] flex flex-col items-center justify-center gap-6 relative overflow-hidden">
+               {/* Background futuristic accents */}
+               <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+               <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gold/5 rounded-full blur-[100px] pointer-events-none animate-pulse duration-[10000ms]" />
+               <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-[#800000]/10 rounded-full blur-[100px] pointer-events-none" />
+               
+               <div className="relative w-20 h-20 rounded-3xl bg-background/40 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-transform group-hover:scale-110 duration-500 group-hover:shadow-[0_0_50px_rgba(212,175,55,0.3)]">
+                 <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37] to-[#800000] opacity-20 rounded-3xl" />
+                 <Sparkles className="w-10 h-10 text-gold z-10" />
                </div>
-               <div className="flex flex-col items-center">
-                  <p className="text-xs font-bold text-foreground/ uppercase tracking-[0.2em]">Dr Max Online School</p>
-                  <div className="w-8 h-0.5 bg-gold/30 mt-2 rounded-full" />
+               
+               <div className="flex flex-col items-center z-10">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-2 drop-shadow-md">Dr Max Online School</p>
+                  {classTitle ? (
+                    <h2 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-white/60 text-center px-6 leading-tight drop-shadow-xl">{classTitle}</h2>
+                  ) : (
+                    <h2 className="text-2xl font-bold text-foreground text-center drop-shadow-xl">Live Session</h2>
+                  )}
+                  <div className="w-12 h-1 bg-gradient-to-r from-transparent via-gold/50 to-transparent mt-4 rounded-full" />
                </div>
             </div>
           )}

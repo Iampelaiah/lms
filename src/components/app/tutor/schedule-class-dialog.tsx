@@ -346,7 +346,6 @@ export function ScheduleClassDialog({ tutorId, onClassScheduled, trigger }: {
                             <SelectContent className="bg-background border-border text-foreground rounded-xl">
                                 <SelectItem value="upcoming" className="focus:bg-gold focus:text-[#0A1A12]">Upcoming Session</SelectItem>
                                 <SelectItem value="ongoing" className="focus:bg-gold focus:text-[#0A1A12]">Live Now</SelectItem>
-                                <SelectItem value="completed" className="focus:bg-gold focus:text-[#0A1A12]">Past Session</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

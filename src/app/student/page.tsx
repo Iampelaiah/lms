@@ -252,7 +252,12 @@ export default function StudentDashboardPage() {
                 id,
                 name,
                 modules (
-                  title
+                  id,
+                  title,
+                  student_module_progress (
+                    is_completed,
+                    score
+                  )
                 )
               )
             `)
@@ -277,17 +282,30 @@ export default function StudentDashboardPage() {
             .map(e => e.subject)
             .filter(Boolean)
             .map((subject: any) => {
-              // Fetch modules if available, otherwise use placeholders for the carousel
-              const fetchedTopics = subject.modules?.map((m: any) => ({ name: m.title, progress: 0 })) || [];
-              const defaultTopics = [
-                { name: "Introduction to " + subject.name, progress: 15 },
-                { name: "Core Concepts", progress: 0 }
-              ];
+              let overallProgress = 0;
+              let fetchedTopics: any[] = [];
+              
+              if (subject.modules && subject.modules.length > 0) {
+                 fetchedTopics = subject.modules.map((m: any) => {
+                    const progressRec = m.student_module_progress && m.student_module_progress.length > 0 
+                      ? m.student_module_progress[0] 
+                      : null;
+                    const progressValue = progressRec?.is_completed ? 100 : (progressRec?.score || 0);
+                    return { name: m.title, progress: progressValue };
+                 });
+                 overallProgress = Math.round(fetchedTopics.reduce((acc: number, curr: any) => acc + curr.progress, 0) / fetchedTopics.length);
+              } else {
+                 fetchedTopics = [
+                    { name: "Introduction to " + subject.name, progress: 15 },
+                    { name: "Core Concepts", progress: 0 }
+                 ];
+                 overallProgress = 0;
+              }
               
               return {
                 name: subject.name,
-                overallProgress: 0,
-                topics: fetchedTopics.length > 0 ? fetchedTopics : defaultTopics
+                overallProgress: overallProgress,
+                topics: fetchedTopics
               };
             });
           setCourses(formatted);

@@ -11,6 +11,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { useUser } from "@/components/providers/user-context";
 import { CreateCourseDialog } from "@/components/app/tutor/create-course-dialog";
+import { AddResourceDialog } from "@/components/app/tutor/add-resource-dialog";
 import {
     Accordion,
     AccordionContent,
@@ -138,7 +139,8 @@ function CourseList({ tutorId }: { tutorId: string }) {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-3">
+                <AddResourceDialog tutorId={tutorId} />
                 <CreateCourseDialog 
                     tutorId={tutorId} 
                     onCourseCreated={fetchCourses} 

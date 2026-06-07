@@ -37,6 +37,7 @@ import { useTheme } from "next-themes";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/components/providers/user-context';
 import { TutorNotifications } from '@/components/app/tutor/tutor-notifications';
+import { GlobalChatDrawer } from '@/components/chat/global-chat-drawer';
 
 export function TutorSidebar() {
   const pathname = usePathname();
@@ -126,7 +127,7 @@ export function TutorSidebar() {
              <SidebarMenu>
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
-                        <Link href="#"><Button variant="ghost" size="icon"><Puzzle /></Button></Link>
+                        <GlobalChatDrawer trigger={<Button variant="ghost" size="icon"><Puzzle /></Button>} />
                         <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
                             <Palette />
                         </Button>

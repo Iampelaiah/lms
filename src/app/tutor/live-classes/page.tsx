@@ -32,8 +32,6 @@ function FinalizeClassDialog({
   onSaved: () => void; 
   trigger: React.ReactNode; 
 }) {
-  const [recordingUrl, setRecordingUrl] = useState(liveClass.recording_url || '');
-  const [presentationUrl, setPresentationUrl] = useState(liveClass.presentation_url || '');
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const supabase = createClient();
@@ -43,60 +41,17 @@ function FinalizeClassDialog({
     e.preventDefault();
     setSaving(true);
     try {
-      const recUrl = recordingUrl.trim() || null;
-      const presUrl = presentationUrl.trim() || null;
-
-      // 1. Update the live class
+      // 1. Update the live class status
       const { error: classError } = await supabase
-        .from('live_classes')
+        .from('classes')
         .update({ 
-            recording_url: recUrl,
-            presentation_url: presUrl,
             status: 'completed'
         })
         .eq('id', liveClass.id);
 
       if (classError) throw classError;
-
-      // 2. Insert into resources table so enrolled students get it
-      const resourcesToInsert = [];
-      if (recUrl) {
-          resourcesToInsert.push({
-              title: `${liveClass.title} - Recording`,
-              format: 'video',
-              type: 'video',
-              source: 'live_class_automation',
-              file_url: recUrl,
-              live_class_id: liveClass.id,
-              subject_id: liveClass.subject_id,
-              uploaded_by: liveClass.tutor_id
-          });
-      }
-      if (presUrl) {
-          resourcesToInsert.push({
-              title: `${liveClass.title} - Presentation`,
-              format: 'ppt',
-              type: 'document',
-              source: 'live_class_automation',
-              file_url: presUrl,
-              live_class_id: liveClass.id,
-              subject_id: liveClass.subject_id,
-              uploaded_by: liveClass.tutor_id
-          });
-      }
-
-      if (resourcesToInsert.length > 0) {
-          // Delete old automated resources for this class to prevent duplicates
-          await supabase.from('resources').delete().eq('live_class_id', liveClass.id);
-          
-          const { error: resError } = await supabase
-            .from('resources')
-            .insert(resourcesToInsert);
-            
-          if (resError) throw resError;
-      }
       
-      toast({ title: "Class Finalized", description: "Resources have been sent to all enrolled students." });
+      toast({ title: "Class Finalized", description: "The session has been completed and resources categorized." });
       onSaved();
       setOpen(false);
     } catch (err: any) {
@@ -117,31 +72,14 @@ function FinalizeClassDialog({
           <DialogHeader>
             <DialogTitle>Finalize Class</DialogTitle>
             <DialogDescription className="text-foreground/">
-              Provide the recording and presentation links. These will be automatically distributed to all students enrolled in this subject.
+              Please confirm that this class belongs to the correct subject. Any automated recordings and notes will be categorized in the resource library for this subject.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="recording-url" className="text-foreground/">Recording URL (Optional)</Label>
-              <Input
-                id="recording-url"
-                type="url"
-                placeholder="https://example.com/recording.mp4"
-                value={recordingUrl}
-                onChange={(e) => setRecordingUrl(e.target.value)}
-                className="bg-muted border-border rounded-xl py-6 focus-visible:ring-1 focus-visible:ring-primary text-foreground"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="presentation-url" className="text-foreground/">Presentation URL (Optional)</Label>
-              <Input
-                id="presentation-url"
-                type="url"
-                placeholder="https://example.com/slides.pdf"
-                value={presentationUrl}
-                onChange={(e) => setPresentationUrl(e.target.value)}
-                className="bg-muted border-border rounded-xl py-6 focus-visible:ring-1 focus-visible:ring-primary text-foreground"
-              />
+            <div className="bg-muted p-4 rounded-xl border border-border">
+              <p className="text-sm text-muted-foreground mb-1">Subject</p>
+              <p className="font-medium">{liveClass.subject?.name || liveClass.subject_id}</p>
+              <p className="text-xs text-muted-foreground mt-3">By finalizing, you verify this mapping is correct.</p>
             </div>
           </div>
           <DialogFooter>
@@ -159,7 +97,7 @@ function FinalizeClassDialog({
               disabled={saving}
               className="bg-gold hover:bg-gold/80 text-obsidian font-bold rounded-xl"
             >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Finalize & Send Resources'}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm & Finalize'}
             </Button>
           </DialogFooter>
         </form>
@@ -168,7 +106,7 @@ function FinalizeClassDialog({
   );
 }
 
-function LiveClassList({ status, classes, onUpdate }: { status: string, classes: any[], onUpdate: () => void }) {
+function LiveClassList({ status, classes, onUpdate, onDelete }: { status: string, classes: any[], onUpdate: () => void, onDelete: (id: string) => void }) {
     const filteredClasses = classes.filter(c => c.status === status);
 
     if (filteredClasses.length === 0) {
@@ -227,11 +165,14 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                                      liveClass={liveClass}
                                      onSaved={onUpdate}
                                      trigger={
-                                         <Button className="flex-1 rounded-xl py-6 bg-muted hover:bg-muted text-foreground border-border">
+                                         <Button className="flex-1 rounded-xl py-6 bg-muted hover:bg-muted text-foreground border-border" variant="outline">
                                              Edit Resources
                                          </Button>
                                      }
                                  />
+                                 <Button className="rounded-xl py-6 px-4 hover:bg-destructive/10" variant="ghost" onClick={() => onDelete(liveClass.id)}>
+                                     <Trash2 className="w-5 h-5 text-destructive" />
+                                 </Button>
                              </div>
                          ) : (
                              <div className="flex gap-2 w-full">
@@ -250,7 +191,7 @@ function LiveClassList({ status, classes, onUpdate }: { status: string, classes:
                                         </Button>
                                     }
                                 />
-                                <Button className="rounded-xl py-6 px-4 hover:bg-destructive/10" variant="ghost" onClick={() => deleteClass(liveClass.id)}>
+                                <Button className="rounded-xl py-6 px-4 hover:bg-destructive/10" variant="ghost" onClick={() => onDelete(liveClass.id)}>
                                     <Trash2 className="w-5 h-5 text-destructive" />
                                 </Button>
                              </div>
@@ -294,6 +235,10 @@ export default function TutorLiveClassesPage() {
                 .eq('tutor_id', profile.id)
                 .order('schedule', { ascending: true });
 
+            if (error) {
+                console.error('Fetch classes error:', error);
+            }
+
             if (data && !error) {
                 setClasses(data);
             }
@@ -306,7 +251,29 @@ export default function TutorLiveClassesPage() {
 
     useEffect(() => {
         fetchClasses();
-    }, [profile?.id]);
+
+        if (!profile?.id) return;
+
+        const channel = supabase
+            .channel('realtime:tutor-classes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'classes',
+                    filter: `tutor_id=eq.${profile.id}`
+                },
+                () => {
+                    fetchClasses();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [fetchClasses, profile?.id, supabase]);
 
     return (
         <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto">
@@ -340,13 +307,13 @@ export default function TutorLiveClassesPage() {
                         <TabsTrigger value="completed">Completed</TabsTrigger>
                     </TabsList>
                     <TabsContent value="ongoing" className="mt-8">
-                        <LiveClassList status="ongoing" classes={classes} onUpdate={fetchClasses} />
+                        <LiveClassList status="ongoing" classes={classes} onUpdate={fetchClasses} onDelete={deleteClass} />
                     </TabsContent>
                     <TabsContent value="upcoming" className="mt-8">
-                        <LiveClassList status="upcoming" classes={classes} onUpdate={fetchClasses} />
+                        <LiveClassList status="upcoming" classes={classes} onUpdate={fetchClasses} onDelete={deleteClass} />
                     </TabsContent>
                     <TabsContent value="completed" className="mt-8">
-                        <LiveClassList status="completed" classes={classes} onUpdate={fetchClasses} />
+                        <LiveClassList status="completed" classes={classes} onUpdate={fetchClasses} onDelete={deleteClass} />
                     </TabsContent>
                 </Tabs>
             )}

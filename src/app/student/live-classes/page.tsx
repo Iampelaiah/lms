@@ -157,7 +157,7 @@ export default function StudentLiveClassesPage() {
                                 ) : (
                                     <Button className="w-full bg-muted hover:bg-muted text-foreground/ border-border rounded-xl py-6" asChild>
                                         <Link href={liveClass.status === 'upcoming' ? `/student/live-classes/${liveClass.id}` : `/student/resources?liveClassId=${liveClass.id}`}>
-                                            {liveClass.status === 'upcoming' ? 'View Details' : 'View Recording'}
+                                            {liveClass.status === 'upcoming' ? 'View Details' : 'View Resources'}
                                         </Link>
                                     </Button>
                                 )}

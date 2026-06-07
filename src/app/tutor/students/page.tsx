@@ -6,8 +6,6 @@ import { createClient } from '@/utils/supabase/client';
 import { SchoolHeader } from '@/components/app/school-header';
 import { 
   getTutorStudents, 
-  getChatMessages, 
-  sendChatMessage, 
   getStudentDeadlines, 
   createStudentDeadline, 
   toggleDeadlineStatus, 
@@ -15,6 +13,7 @@ import {
   getStudentProgress,
   getAllStudentsProgress
 } from '@/app/actions/student-tutor';
+import { getGlobalChatMessages, sendGlobalChatMessage } from '@/app/actions/chat';
 import { getSubjectAssignments, getSubjectTopics } from '@/app/actions/student-assignments';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -185,13 +184,13 @@ export default function TutorStudentsPage() {
     return students.find(s => s.student.id === selectedStudentId) || null;
   }, [students, selectedStudentId]);
 
-  // 2. Fetch Chat History when student changes or Messages tab opens
+  // 2. Fetch Chat History and setup Realtime subscription when student changes or Messages tab opens
   useEffect(() => {
     if (!selectedStudentId || !tutorId || activeTab !== 'messages') return;
 
     async function loadChat() {
       setChatLoading(true);
-      const res = await getChatMessages(tutorId, selectedStudentId!);
+      const res = await getGlobalChatMessages(tutorId, selectedStudentId!);
       
       if (res.error) {
         // Fallback to localStorage if tables are not found
@@ -215,7 +214,33 @@ export default function TutorStudentsPage() {
     }
 
     loadChat();
-  }, [selectedStudentId, tutorId, activeTab]);
+
+    // Subscribe to new real-time messages
+    const channel = supabase
+      .channel(`chat_${tutorId}_${selectedStudentId}`)
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'global_messages'
+      }, (payload) => {
+        const newMsg = payload.new as Message;
+        if (
+          (newMsg.sender_id === tutorId && newMsg.receiver_id === selectedStudentId) ||
+          (newMsg.sender_id === selectedStudentId && newMsg.receiver_id === tutorId)
+        ) {
+          setMessages(prev => {
+            // Prevent duplicate messages if sent by the current user and optimistically added
+            if (prev.find(m => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedStudentId, tutorId, activeTab, supabase]);
 
   // Fetch progress whenever a student is selected or deadlines change
   useEffect(() => {
@@ -309,7 +334,7 @@ export default function TutorStudentsPage() {
       localStorage.setItem(`drmax_chat_${tutorId}_${selectedStudentId}`, JSON.stringify(updated));
     } else {
       // Supabase
-      const res = await sendChatMessage(tutorId, selectedStudentId, msgText);
+      const res = await sendGlobalChatMessage(tutorId, selectedStudentId, msgText);
       if (res.error) {
         toast({
           title: 'Failed to send message',

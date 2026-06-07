@@ -136,7 +136,8 @@ export default function ResourcesPage() {
                 name
               )
             `)
-            .in('subject_id', subjectIds),
+            .in('subject_id', subjectIds)
+            .eq('approval_status', 'approved'),
           supabase
             .from('student_offline_resources')
             .select('resource_id')
@@ -148,8 +149,6 @@ export default function ResourcesPage() {
           const liveClassId = urlParams.get('liveClassId');
           if (liveClassId) {
               setResources(resourcesData.filter(r => r.live_class_id === liveClassId));
-              // Also auto-select the video filter if we're jumping to a recording
-              setActiveFilter('video');
           } else {
               setResources(resourcesData);
           }

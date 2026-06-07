@@ -9,6 +9,7 @@ import React from 'react';
 import { useTheme } from "next-themes"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import { GlobalChatDrawer } from '@/components/chat/global-chat-drawer';
 
 function ParentSidebar() {
     const [userName, setUserName] = React.useState('Parent');
@@ -90,7 +91,7 @@ function ParentSidebar() {
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
                         <Link href="#"><Button variant="ghost" size="icon"><HelpCircle /></Button></Link>
-                        <Link href="#"><Button variant="ghost" size="icon"><Puzzle /></Button></Link>
+                        <GlobalChatDrawer trigger={<Button variant="ghost" size="icon"><Puzzle /></Button>} />
                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">

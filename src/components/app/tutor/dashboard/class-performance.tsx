@@ -41,22 +41,39 @@ export function ClassPerformance({ tutorId }: { tutorId?: string }) {
       }
 
       try {
-        // Fetch courses for this tutor
-        const { data: courses, error } = await supabase
-          .from('courses')
+        // Fetch subjects assigned to this tutor by the admin
+        const { data: tutorSubjects, error } = await supabase
+          .from('tutor_subjects')
           .select(`
-            id,
-            title,
-            enrollments (id)
+            subject:subjects (
+              id,
+              name,
+              level,
+              enrollments (id)
+            )
           `)
           .eq('tutor_id', tutorId);
 
-        if (courses && !error) {
-          const formatted = courses.map(c => ({
-            class: c.title,
-            students: c.enrollments?.length || 0
-          }));
+        if (tutorSubjects && !error) {
+          const formatted = tutorSubjects
+            .map(ts => Array.isArray(ts.subject) ? ts.subject[0] : ts.subject)
+            .filter(Boolean)
+            .map((subj: any) => ({
+              level: subj.level || 'Unknown',
+              subjectName: subj.name || 'Unknown',
+              class: `${subj.level || 'Unknown'} - ${subj.name || 'Unknown'}`,
+              students: subj.enrollments?.length || 0
+            }))
+            .sort((a, b) => {
+              if (a.level === b.level) {
+                return a.subjectName.localeCompare(b.subjectName);
+              }
+              return a.level.localeCompare(b.level);
+            });
+
           setPerformanceData(formatted);
+        } else if (error) {
+          console.error('Error fetching tutor subjects:', error);
         }
       } catch (err) {
         console.error('Error fetching performance data:', err);
@@ -72,7 +89,7 @@ export function ClassPerformance({ tutorId }: { tutorId?: string }) {
 
     const channel = supabase
       .channel(`class-performance-${tutorId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses', filter: `tutor_id=eq.${tutorId}` }, () => fetchPerformance())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tutor_subjects', filter: `tutor_id=eq.${tutorId}` }, () => fetchPerformance())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'enrollments' }, () => fetchPerformance())
       .subscribe();
 
@@ -130,8 +147,8 @@ export function ClassPerformance({ tutorId }: { tutorId?: string }) {
         ) : (
           <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground bg-muted/5 rounded-xl border border-dashed">
             <BarChart3 className="w-10 h-10 mb-2 opacity-20" />
-            <p className="text-sm">No courses or enrollments yet.</p>
-            <p className="text-xs mt-1 italic">Once you create courses and students enroll, their distribution will appear here.</p>
+            <p className="text-sm">No subjects or enrollments yet.</p>
+            <p className="text-xs mt-1 italic">Once the admin assigns you subjects and students enroll, their distribution will appear here.</p>
           </div>
         )}
       </CardContent>

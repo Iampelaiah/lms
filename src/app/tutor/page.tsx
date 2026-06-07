@@ -90,12 +90,16 @@ function TutorStats() {
         }
 
         try {
-            // Run both Supabase queries in parallel — cuts wait time roughly in half.
-            const [{ count: studentCount }, { data: upcomingClass }, { count: unmarkedCount }, { data: coursesData }] = await Promise.all([
-                supabase
-                    .from('profiles')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('role', 'student'),
+            // 1. Fetch tutor's assigned subjects to get the correct student scope
+            const { data: assignedSubjects } = await supabase
+                .from('tutor_subjects')
+                .select('subject_id')
+                .eq('tutor_id', profile.id);
+            
+            const subjectIds = assignedSubjects?.map(s => s.subject_id) || [];
+
+            // 2. Run other queries in parallel
+            const [{ data: upcomingClass }, { count: unmarkedCount }, { data: tutorEnrollments }] = await Promise.all([
                 supabase
                     .from('classes')
                     .select('schedule, title')
@@ -109,31 +113,33 @@ function TutorStats() {
                     .select('*', { count: 'exact', head: true })
                     .eq('tutor_id', profile.id)
                     .eq('status', 'unmarked'),
-                supabase
-                    .from('courses')
-                    .select('id, enrollments(status, created_at)')
-                    .eq('tutor_id', profile.id)
+                subjectIds.length > 0 
+                    ? supabase
+                        .from('enrollments')
+                        .select('student_id, status, created_at')
+                        .in('subject_id', subjectIds)
+                    : Promise.resolve({ data: [] })
             ]);
 
             let totalE = 0;
             let activeE = 0;
             let recentActiveE = 0;
+            let uniqueStudentCount = 0;
 
-            if (coursesData) {
+            if (tutorEnrollments && tutorEnrollments.length > 0) {
+                totalE = tutorEnrollments.length;
+                const uniqueStudents = new Set(tutorEnrollments.map((e: any) => e.student_id));
+                uniqueStudentCount = uniqueStudents.size;
+
                 const oneWeekAgo = new Date();
                 oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-                coursesData.forEach((c: any) => {
-                    if (c.enrollments) {
-                        c.enrollments.forEach((e: any) => {
-                            totalE++;
-                            if (e.status === 'approved' || e.status === 'active') {
-                                activeE++;
-                                if (new Date(e.created_at) > oneWeekAgo) {
-                                    recentActiveE++;
-                                }
-                            }
-                        });
+                tutorEnrollments.forEach((e: any) => {
+                    if (e.status === 'approved' || e.status === 'active') {
+                        activeE++;
+                        if (new Date(e.created_at) > oneWeekAgo) {
+                            recentActiveE++;
+                        }
                     }
                 });
             }
@@ -142,7 +148,7 @@ function TutorStats() {
             const changeNum = totalE > 0 ? Math.round((recentActiveE / totalE) * 100) : 0;
 
             setStats({
-                totalStudents: studentCount?.toString() || "0",
+                totalStudents: uniqueStudentCount.toString() || "0",
                 engagementRate: `${calculatedRate}%`,
                 engagementChange: changeNum > 0 ? `+${changeNum}% from last week` : "0% from last week",
                 engagementChangeType: changeNum > 0 ? "increase" : "neutral",
