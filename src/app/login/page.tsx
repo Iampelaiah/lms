@@ -152,7 +152,7 @@ function LoginForm() {
     <main className="h-screen grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] bg-background overflow-hidden">
       {/* Left Column */}
       <div className="hidden lg:flex relative bg-background p-10 flex-col justify-between overflow-hidden">
-        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-20 mix-blend-screen pointer-events-none">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-20 pointer-events-none">
           <source src="/make_it_a_male_voice___the_ui.mp4" type="video/mp4" />
         </video>
         <div className="absolute top-1/4 -left-20 w-96 h-96 bg-gold/10 rounded-full blur-[80px] z-0 pointer-events-none" />

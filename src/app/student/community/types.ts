@@ -9,11 +9,16 @@ export interface CommentType {
   id: string;
   text: string;
   author: string;
+  user_id?: string;
+  votes?: number;
+  parent_id?: string | null;
+  created_at?: string;
+  avatar_url?: string;
 }
 
 export interface Post {
   id: string;
-  community_id: string;
+  subject_id: string;
   user_id: string;
   title: string;
   content: string;

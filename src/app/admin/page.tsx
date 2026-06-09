@@ -67,6 +67,7 @@ export default function AdminDashboardPage() {
     const [stats, setStats] = React.useState({ totalUsers: 0, pendingUsers: 0, activeCourses: 0 });
     const [pendingProfiles, setPendingProfiles] = React.useState<any[]>([]);
     const [pendingResources, setPendingResources] = React.useState<any[]>([]);
+    const [storageUsed, setStorageUsed] = React.useState({ bytes: 0, formatted: "0 B", percentage: 0 });
     
     // Real-time Chart State
     const [activityData, setActivityData] = React.useState([
@@ -116,7 +117,8 @@ export default function AdminDashboardPage() {
             adminsCount,
             parentsCount,
             recentActivity,
-            resourcesResult
+            resourcesResult,
+            storageUsageResult
         ] = await Promise.all([
             supabase.from('profiles').select('*', { count: 'exact', head: true }),
             supabase.from('profiles').select('id, full_name, role, updated_at, is_approved').eq('is_approved', false),
@@ -126,7 +128,8 @@ export default function AdminDashboardPage() {
             supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'admin'),
             supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'parent'),
             supabase.from('profiles').select('role, updated_at').gte('updated_at', sevenDaysAgo),
-            supabase.from('resources').select(`id, title, created_at, type, tutor:profiles!tutor_id (full_name)`).eq('approval_status', 'pending_admin_review')
+            supabase.from('resources').select(`id, title, created_at, type, tutor:profiles!tutor_id (full_name)`).eq('approval_status', 'pending_admin_review'),
+            supabase.rpc('get_storage_usage')
         ]);
 
         setStats({
@@ -141,6 +144,29 @@ export default function AdminDashboardPage() {
         if (resourcesResult.data) {
             setPendingResources(resourcesResult.data);
         }
+
+        let totalBytes = 0;
+
+        if (storageUsageResult && !storageUsageResult.error && storageUsageResult.data !== null) {
+            totalBytes = Number(storageUsageResult.data) || 0;
+        }
+
+        const maxBytes = 1 * 1024 * 1024 * 1024; // 1 GB
+        let percentage = (totalBytes / maxBytes) * 100;
+        if (percentage > 100) percentage = 100;
+        
+        let formatted = "0 B";
+        if (totalBytes >= 1024 * 1024 * 1024) {
+            formatted = (totalBytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+        } else if (totalBytes >= 1024 * 1024) {
+            formatted = (totalBytes / (1024 * 1024)).toFixed(2) + " MB";
+        } else if (totalBytes >= 1024) {
+            formatted = (totalBytes / 1024).toFixed(2) + " KB";
+        } else if (totalBytes > 0) {
+            formatted = totalBytes + " B";
+        }
+        
+        setStorageUsed({ bytes: totalBytes, formatted, percentage });
 
         // Update Role Distribution Chart
         setRoleDistribution([
@@ -294,8 +320,8 @@ export default function AdminDashboardPage() {
                         <Database className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent className="flex-grow space-y-2">
-                        <div className="text-2xl font-bold">450 GB <span className="text-sm font-normal text-muted-foreground">/ 1 TB</span></div>
-                        <Progress value={45} className="h-2" />
+                        <div className="text-2xl font-bold">{storageUsed.formatted} <span className="text-sm font-normal text-muted-foreground">/ 1 GB</span></div>
+                        <Progress value={storageUsed.percentage} className="h-2" />
                         <p className="text-xs text-muted-foreground">Platform media & resources</p>
                     </CardContent>
                 </Card>

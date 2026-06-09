@@ -183,7 +183,7 @@ export default function RoleLoginPage() {
       {/* Left Column */}
       <div className="hidden lg:flex relative bg-background p-10 flex-col justify-between overflow-hidden">
         {/* Background Video Placeholder */}
-        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-20 mix-blend-screen pointer-events-none">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover z-0 opacity-20 pointer-events-none">
           <source src="/make_it_a_male_voice___the_ui.mp4" type="video/mp4" />
         </video>
 
