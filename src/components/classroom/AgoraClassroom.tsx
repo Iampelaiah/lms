@@ -159,6 +159,14 @@ function ClassroomInner({
   const [isVoiceOnly, setIsVoiceOnly] = useState(voiceOnly);
   const [raisedHands, setRaisedHands] = useState<{ uid: number; name: string }[]>([]);
 
+  // Determine if the CURRENT user is the tutor/host using ALL available signals
+  const iAmTutor = useMemo(() => {
+    const fromProp = role === 'tutor';
+    const fromProfile = profile?.role === 'tutor';
+    const fromUid = uid >= 1000 && uid <= 2000;
+    return fromProp || fromProfile || fromUid;
+  }, [role, profile?.role, uid]);
+
   // Keep a ref of notes for stale-closure-free saves when class ends abruptly
   const notesRef = useRef(notes);
   useEffect(() => {
@@ -201,13 +209,6 @@ function ClassroomInner({
       console.error('[Student Notes] Error saving notes:', err);
     }
   };
-  // Determine if the CURRENT user is the tutor/host using ALL available signals
-  const iAmTutor = useMemo(() => {
-    const fromProp = role === 'tutor';
-    const fromProfile = profile?.role === 'tutor';
-    const fromUid = uid >= 1000 && uid <= 2000;
-    return fromProp || fromProfile || fromUid;
-  }, [role, profile?.role, uid]);
 
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
