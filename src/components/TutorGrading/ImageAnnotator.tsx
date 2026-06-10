@@ -1,17 +1,18 @@
 'use client';
 
-import React, { useState, useRef, MouseEvent, useEffect } from 'react';
+import React, { useState, useRef, MouseEvent } from 'react';
 import { Button } from '@/components/ui/button';
-import { Highlighter, Strikethrough, MessageSquare, Undo, X, Send, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Send, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
+import TextToolSelector from './TextToolSelector';
 
 // Configure PDF worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-export type AnnotationType = 'highlight' | 'strikethrough' | 'comment';
+export type AnnotationType = 'highlight' | 'strikethrough' | 'comment' | 'resource';
 
 export interface ImageAnnotation {
   id: string;
@@ -21,6 +22,7 @@ export interface ImageAnnotation {
   width?: number;
   height?: number;
   content?: string;
+  selected_text?: string;
   marker_number?: number;
   page?: number;
 }
@@ -42,11 +44,16 @@ export default function ImageAnnotator({
   onAddAnnotation,
   onRemoveAnnotation
 }: ImageAnnotatorProps) {
-  const [tool, setTool] = useState<AnnotationType | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentDraw, setCurrentDraw] = useState<{ x: number, y: number, width: number, height: number } | null>(null);
-  const [draftComment, setDraftComment] = useState<{ x: number, y: number } | null>(null);
+  const [pendingDraw, setPendingDraw] = useState<{ x: number, y: number, width: number, height: number } | null>(null);
+  
+  const [showSelector, setShowSelector] = useState(false);
+  const [selectorCoords, setSelectorCoords] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+
+  const [draftComment, setDraftComment] = useState<{ x: number, y: number, actionType?: string } | null>(null);
   const [commentText, setCommentText] = useState('');
+  const [originalText, setOriginalText] = useState('');
   
   // PDF state
   const [numPages, setNumPages] = useState<number>();
@@ -72,20 +79,20 @@ export default function ImageAnnotator({
   };
 
   const handlePointerDown = (e: MouseEvent<SVGElement>) => {
-    if (!tool) return;
-    const { x, y } = getCoordinates(e);
+    // If clicking on an existing annotation, ignore
+    if ((e.target as Element).tagName !== 'svg') return;
+    
+    // Close existing popups
+    setShowSelector(false);
+    setDraftComment(null);
 
-    if (tool === 'comment') {
-      setDraftComment({ x, y });
-      setTool(null);
-    } else {
-      setIsDrawing(true);
-      setCurrentDraw({ x, y, width: 0, height: 0 });
-    }
+    const { x, y } = getCoordinates(e);
+    setIsDrawing(true);
+    setCurrentDraw({ x, y, width: 0, height: 0 });
   };
 
   const handlePointerMove = (e: MouseEvent<SVGElement>) => {
-    if (!isDrawing || !currentDraw || !tool) return;
+    if (!isDrawing || !currentDraw) return;
     const { x, y } = getCoordinates(e);
     
     setCurrentDraw({
@@ -96,8 +103,8 @@ export default function ImageAnnotator({
     });
   };
 
-  const handlePointerUp = () => {
-    if (!isDrawing || !currentDraw || !tool) return;
+  const handlePointerUp = (e: MouseEvent<SVGElement>) => {
+    if (!isDrawing || !currentDraw) return;
     setIsDrawing(false);
 
     let finalX = currentDraw.x;
@@ -114,79 +121,76 @@ export default function ImageAnnotator({
       finalHeight = Math.abs(finalHeight);
     }
 
-    if (finalWidth < 1 && finalHeight < 1) {
-      setCurrentDraw(null);
-      return;
-    }
-
-    const id = crypto.randomUUID();
-    onAddAnnotation({
-      id,
-      type: tool,
-      x: finalX,
-      y: finalY,
-      width: finalWidth,
-      height: finalHeight,
-      content: tool === 'highlight' ? 'Highlight' : 'Correction',
-      page: isPdf ? pageNumber : 1
-    });
-
+    setPendingDraw({ x: finalX, y: finalY, width: finalWidth, height: finalHeight });
+    setSelectorCoords({ x: e.clientX, y: e.clientY });
+    setShowSelector(true);
     setCurrentDraw(null);
-    setTool(null);
+  };
+
+  const handleToolAction = (actionType: string) => {
+    if (!pendingDraw) return;
+    
+    if (actionType === 'comment' || actionType === 'highlight' || actionType === 'strikethrough' || actionType === 'resource') {
+      setDraftComment({ x: pendingDraw.x, y: pendingDraw.y, actionType });
+    }
+    
+    setShowSelector(false);
   };
 
   const submitComment = () => {
-    if (!draftComment || !commentText.trim()) return;
+    if (!draftComment || !pendingDraw) return;
+    if (draftComment.actionType === 'strikethrough' && !originalText.trim()) return;
+    if (draftComment.actionType === 'resource' && !originalText.trim()) return; // Needs title
+    if (!commentText.trim()) return;
+
     const id = crypto.randomUUID();
+    
+    let type: AnnotationType = 'comment';
+    if (draftComment.actionType === 'highlight') type = 'highlight';
+    else if (draftComment.actionType === 'strikethrough') type = 'strikethrough';
+    else if (draftComment.actionType === 'resource') type = 'resource';
+
     onAddAnnotation({
       id,
-      type: 'comment',
-      x: draftComment.x,
-      y: draftComment.y,
+      type,
+      x: pendingDraw.x,
+      y: pendingDraw.y,
+      width: pendingDraw.width,
+      height: pendingDraw.height,
       content: commentText,
+      selected_text: (type === 'strikethrough' || type === 'resource') ? originalText : undefined,
       page: isPdf ? pageNumber : 1
     });
+
     setDraftComment(null);
     setCommentText('');
+    setOriginalText('');
+    setPendingDraw(null);
   };
 
   return (
     <div className="flex flex-col h-full bg-muted/20 relative">
-      <div className="flex items-center justify-between p-2 bg-background border-b z-10 shadow-sm">
-        <div className="flex gap-2">
-          <Button 
-            variant={tool === 'highlight' ? 'default' : 'outline'} 
-            size="sm" 
-            onClick={() => setTool(tool === 'highlight' ? null : 'highlight')}
-            className={tool === 'highlight' ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-500' : ''}
-          >
-            <Highlighter className="w-4 h-4 mr-2" /> Highlight
-          </Button>
-          <Button 
-            variant={tool === 'strikethrough' ? 'default' : 'outline'} 
-            size="sm" 
-            onClick={() => setTool(tool === 'strikethrough' ? null : 'strikethrough')}
-            className={tool === 'strikethrough' ? 'bg-red-500 hover:bg-red-600 text-white border-red-500' : ''}
-          >
-            <Strikethrough className="w-4 h-4 mr-2" /> Strikethrough
-          </Button>
-          <Button 
-            variant={tool === 'comment' ? 'default' : 'outline'} 
-            size="sm" 
-            onClick={() => setTool(tool === 'comment' ? null : 'comment')}
-            className={tool === 'comment' ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' : ''}
-          >
-            <MessageSquare className="w-4 h-4 mr-2" /> Comment
-          </Button>
+      <TextToolSelector 
+        manualMode={true} 
+        isVisible={showSelector} 
+        coords={selectorCoords} 
+        onAction={handleToolAction}
+      />
+
+      <div className="flex items-center justify-between p-2 bg-background border-b z-10 shadow-sm min-h-[48px]">
+        <div className="text-sm font-medium text-muted-foreground px-2">
+          Draw on the document to add annotations
         </div>
         
-        {isPdf && numPages && numPages > 1 && (
+        {isPdf && (
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber <= 1}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="text-sm font-medium">Page {pageNumber} of {numPages}</span>
-            <Button variant="outline" size="sm" onClick={() => setPageNumber(p => Math.min(numPages, p + 1))} disabled={pageNumber >= numPages}>
+            <span className="text-sm font-medium">
+              Page {pageNumber} {numPages ? `of ${numPages}` : ''}
+            </span>
+            <Button variant="outline" size="sm" onClick={() => setPageNumber(p => Math.min(numPages || 1, p + 1))} disabled={!numPages || pageNumber >= numPages}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -195,9 +199,8 @@ export default function ImageAnnotator({
 
       <div className="flex-1 overflow-auto p-8 flex justify-center items-start">
         <div 
-          className="relative inline-block shadow-lg border border-border bg-white"
+          className="relative inline-block shadow-lg border border-border bg-white cursor-crosshair"
           ref={containerRef}
-          style={{ cursor: tool ? 'crosshair' : 'default' }}
         >
           {isPdf ? (
             <div className="select-none pointer-events-none">
@@ -221,7 +224,7 @@ export default function ImageAnnotator({
 
           {/* Drawing Overlay */}
           <svg 
-            className={`absolute inset-0 w-full h-full z-10 ${tool ? 'touch-none' : 'pointer-events-none'}`}
+            className="absolute inset-0 w-full h-full z-10 touch-none"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -258,16 +261,17 @@ export default function ImageAnnotator({
                   />
                 );
               }
-              if (ann.type === 'comment') {
+              if (ann.type === 'comment' || ann.type === 'resource') {
+                const color = isActive ? '#D4AF37' : ann.type === 'resource' ? '#a855f7' : '#3b82f6';
                 return (
                   <g 
                     key={ann.id} 
                     className="cursor-pointer transition-transform hover:scale-110 pointer-events-auto"
                     onClick={(e) => { e.stopPropagation(); onAnnotationClick(ann.id); }}
                   >
-                    <circle cx={`${ann.x}%`} cy={`${ann.y}%`} r="12" fill={isActive ? '#D4AF37' : '#3b82f6'} className="shadow-sm" />
+                    <circle cx={`${ann.x}%`} cy={`${ann.y}%`} r="12" fill={color} className="shadow-sm" />
                     <text x={`${ann.x}%`} y={`${ann.y}%`} fill="white" fontSize="10" fontWeight="bold" textAnchor="middle" dominantBaseline="central">
-                      {ann.marker_number || '!'}
+                      {ann.marker_number || (ann.type === 'resource' ? 'R' : '!')}
                     </text>
                   </g>
                 );
@@ -275,23 +279,16 @@ export default function ImageAnnotator({
               return null;
             })}
 
-            {isDrawing && currentDraw && tool === 'highlight' && (
+            {isDrawing && currentDraw && (
               <rect 
                 x={`${currentDraw.width < 0 ? currentDraw.x + currentDraw.width : currentDraw.x}%`} 
                 y={`${currentDraw.height < 0 ? currentDraw.y + currentDraw.height : currentDraw.y}%`} 
                 width={`${Math.abs(currentDraw.width)}%`} 
                 height={`${Math.abs(currentDraw.height)}%`}
-                fill="rgba(245, 158, 11, 0.4)"
-              />
-            )}
-            {isDrawing && currentDraw && tool === 'strikethrough' && (
-              <line 
-                x1={`${currentDraw.x}%`} 
-                y1={`${currentDraw.y + currentDraw.height/2}%`} 
-                x2={`${currentDraw.x + currentDraw.width}%`} 
-                y2={`${currentDraw.y + currentDraw.height/2}%`}
-                stroke="rgba(239, 68, 68, 0.8)"
-                strokeWidth="3"
+                fill="rgba(59, 130, 246, 0.2)"
+                stroke="#3b82f6"
+                strokeWidth="1"
+                strokeDasharray="4 2"
               />
             )}
           </svg>
@@ -303,20 +300,33 @@ export default function ImageAnnotator({
               style={{ left: `calc(${draftComment.x}% + 10px)`, top: `calc(${draftComment.y}% + 10px)` }}
             >
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-bold uppercase text-muted-foreground">Add Comment</span>
-                <button onClick={() => setDraftComment(null)} className="text-muted-foreground hover:text-foreground">
+                <span className="text-xs font-bold uppercase text-muted-foreground">
+                  {draftComment.actionType === 'strikethrough' ? 'Add Correction' : draftComment.actionType === 'highlight' ? 'Add Highlight' : draftComment.actionType === 'resource' ? 'Cite Resource' : 'Add Comment'}
+                </span>
+                <button onClick={() => { setDraftComment(null); setPendingDraw(null); }} className="text-muted-foreground hover:text-foreground">
                   <X className="w-4 h-4" />
                 </button>
               </div>
+              
+              {(draftComment.actionType === 'strikethrough' || draftComment.actionType === 'resource') && (
+                <input 
+                  type="text"
+                  placeholder={draftComment.actionType === 'strikethrough' ? "Original word (crossed out)" : "Resource Title"}
+                  value={originalText}
+                  onChange={(e) => setOriginalText(e.target.value)}
+                  className="w-full text-sm p-2 mb-2 bg-muted border border-border rounded focus-visible:ring-gold focus:outline-none"
+                />
+              )}
+
               <Textarea 
                 autoFocus
-                placeholder="Type your comment..."
+                placeholder={draftComment.actionType === 'strikethrough' ? "Correction text..." : draftComment.actionType === 'resource' ? "Resource URL..." : "Type your comment..."}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                className="min-h-[80px] text-sm resize-none focus-visible:ring-gold bg-muted"
+                className="min-h-[80px] text-sm resize-none focus-visible:ring-gold bg-muted border-border"
               />
               <div className="flex justify-end mt-2">
-                <Button size="sm" onClick={submitComment} disabled={!commentText.trim()} className="bg-gold hover:bg-gold/90 text-obsidian h-8 gap-1">
+                <Button size="sm" onClick={submitComment} disabled={!commentText.trim() || ((draftComment.actionType === 'strikethrough' || draftComment.actionType === 'resource') && !originalText.trim())} className="bg-gold hover:bg-gold/90 text-obsidian h-8 gap-1">
                   <Send className="w-3.5 h-3.5" /> Save
                 </Button>
               </div>

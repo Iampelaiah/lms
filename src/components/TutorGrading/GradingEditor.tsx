@@ -1,24 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import { TutorAnnotation } from '../Editor/extensions/TutorAnnotation';
 import { Button } from '@/components/ui/button';
-import { Highlighter, MessageSquare, Strikethrough, Type, RefreshCw, Undo, Redo, Search, Send, X } from 'lucide-react';
+import { Send, X, Highlighter, MessageSquare, Strikethrough, Undo, Redo } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import TextToolSelector from './TextToolSelector';
 
 interface GradingEditorProps {
   initialContent: string;
   activeAnnotationId: string | null;
+  annotations?: any[];
   onAnnotationClick: (id: string) => void;
   onAddAnnotation?: (annotation: any) => void;
 }
 
-export default function GradingEditor({ initialContent, activeAnnotationId, onAnnotationClick, onAddAnnotation }: GradingEditorProps) {
+export default function GradingEditor({ initialContent, activeAnnotationId, annotations, onAnnotationClick, onAddAnnotation }: GradingEditorProps) {
   const [wordCount, setWordCount] = useState(0);
-  const [bubbleMode, setBubbleMode] = useState<'menu' | 'comment' | 'replace' | 'resource'>('menu');
+  const [bubbleMode, setBubbleMode] = useState<'menu' | 'comment' | 'replace' | 'highlight' | 'resource'>('menu');
   const [inputValue, setInputValue] = useState('');
+  const [markPositions, setMarkPositions] = useState<{ id: string, top: number, num: number, type: string }[]>([]);
 
   const mockResources = [
     { id: 'res1', type: 'PDF', title: 'Cambridge IGCSE English 0500 - Paper 2 Guide', url: 'https://example.com/res1' },
@@ -37,7 +40,6 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
       setWordCount(editor.getText().trim().split(/\s+/).filter(Boolean).length);
     },
     onSelectionUpdate: () => {
-      // Reset bubble menu state when selection changes
       setBubbleMode('menu');
       setInputValue('');
     },
@@ -65,28 +67,75 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
     }
   }, [editor, onAnnotationClick]);
 
+  useEffect(() => {
+    if (!editor || !annotations) return;
+    
+    const updatePositions = () => {
+      const marks = editor.view.dom.querySelectorAll('mark[data-annotation-id]');
+      const positions: { id: string, top: number, num: number, type: string }[] = [];
+      
+      marks.forEach((mark) => {
+        const id = mark.getAttribute('data-annotation-id');
+        const ann = annotations.find(a => a.id === id);
+        if (ann && (ann.type === 'comment' || ann.type === 'highlight')) {
+          positions.push({
+            id: ann.id,
+            top: (mark as HTMLElement).offsetTop,
+            num: ann.marker_number || 1,
+            type: ann.type
+          });
+        }
+      });
+      setMarkPositions(positions);
+    };
+
+    setTimeout(updatePositions, 100);
+
+    const observer = new MutationObserver(updatePositions);
+    observer.observe(editor.view.dom, { childList: true, subtree: true, characterData: true, attributes: true });
+    window.addEventListener('resize', updatePositions);
+    
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updatePositions);
+    };
+  }, [editor, annotations]);
+
   if (!editor) return null;
+
+  const handleTextToolAction = (actionType: string) => {
+    const { from, to } = editor.state.selection;
+    if (from === to) return;
+
+    if (actionType === 'highlight') {
+      setBubbleMode('highlight');
+    } else if (actionType === 'strikethrough') {
+      setBubbleMode('replace');
+    } else if (actionType === 'comment') {
+      setBubbleMode('comment');
+    } else if (actionType === 'resource') {
+      setBubbleMode('resource');
+    }
+  };
 
   const handleAddAnnotationSubmit = () => {
     const { from, to } = editor.state.selection;
     const selectedText = editor.state.doc.textBetween(from, to, ' ');
     const id = crypto.randomUUID();
     
-    // Determine type
     let annotationType = 'comment';
     if (bubbleMode === 'replace') annotationType = 'replace';
+    else if (bubbleMode === 'highlight') annotationType = 'highlight';
     else if (bubbleMode === 'resource') annotationType = 'resource';
 
-    // Apply TipTap Mark
     editor.chain().focus().setTutorAnnotation({ id, type: annotationType }).run();
 
-    // Call prop
     if (onAddAnnotation) {
       onAddAnnotation({
         type: annotationType,
         selected_text: selectedText,
         content: inputValue,
-        marker_number: 1, // Parent can recalculate this
+        marker_number: (annotations?.length || 0) + 1,
       });
     }
 
@@ -116,7 +165,7 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
   return (
     <div className="flex-1 flex flex-col bg-background overflow-hidden relative">
       <style>{`
-        .ProseMirror { outline: none; padding: 2rem 4rem; color: #f1f5f9; font-size: 1rem; line-height: 2; font-family: system-ui, -apple-system, sans-serif; min-height: 100%; }
+        .ProseMirror { outline: none; padding: 2rem 4rem; color: #f1f5f9; font-size: 1rem; line-height: 2; font-family: system-ui, -apple-system, sans-serif; min-height: 100%; position: relative; }
         .ProseMirror p { margin-bottom: 1.5rem; }
         mark[data-annotation-type="comment"] { background-color: rgba(59, 130, 246, 0.4); padding: 2px 4px; border-radius: 4px; cursor: pointer; transition: all 0.2s; color: white; }
         mark[data-annotation-type="highlight"] { background-color: rgba(245, 158, 11, 0.4); padding: 2px 4px; border-radius: 4px; cursor: pointer; transition: all 0.2s; color: white; }
@@ -125,46 +174,27 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
         mark[data-annotation-id="${activeAnnotationId}"] { box-shadow: 0 0 0 2px #D4AF37; outline: 2px solid #D4AF37; outline-offset: 1px; }
       `}</style>
       
-      {editor && (
+      <TextToolSelector onAction={handleTextToolAction} />
+
+      {editor && bubbleMode !== 'menu' && (
         <BubbleMenu editor={editor} tippyOptions={{ duration: 100, placement: 'top' }} className="flex flex-col bg-background shadow-xl border border-border rounded-xl overflow-hidden min-w-[200px] text-foreground">
-          {bubbleMode === 'menu' ? (
-            <div className="flex items-center p-1 divide-x divide-white/10">
-              <Button variant="ghost" size="sm" onClick={() => setBubbleMode('comment')} className="h-9 px-3 gap-1.5 text-foreground/ hover:bg-muted hover:text-gold rounded-lg">
-                <MessageSquare className="w-4 h-4" />
-                <span className="text-xs font-medium">Comment</span>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setBubbleMode('replace')} className="h-9 px-3 gap-1.5 text-foreground/ hover:bg-muted hover:text-gold rounded-lg">
-                <RefreshCw className="w-4 h-4" />
-                <span className="text-xs font-medium">Correct</span>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => {
-                 const { from, to } = editor.state.selection;
-                 const selectedText = editor.state.doc.textBetween(from, to, ' ');
-                 const id = crypto.randomUUID();
-                 editor.chain().focus().setTutorAnnotation({ id, type: 'highlight' }).run();
-                 if (onAddAnnotation) onAddAnnotation({ type: 'highlight', selected_text: selectedText, content: 'Highlight' });
-              }} className="h-9 px-3 gap-1.5 text-foreground/ hover:bg-muted hover:text-gold rounded-lg">
-                <Highlighter className="w-4 h-4" />
-                <span className="text-xs font-medium">Highlight</span>
-              </Button>
-            </div>
-          ) : (
             <div className="w-[300px] p-3 flex flex-col gap-2 relative">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-foreground/ uppercase">{bubbleMode === 'comment' ? 'Add Comment' : 'Add Correction'}</span>
+                <span className="text-xs font-bold text-foreground/ uppercase">
+                  {bubbleMode === 'comment' ? 'Add Comment' : bubbleMode === 'highlight' ? 'Add Highlight' : bubbleMode === 'resource' ? 'Cite Resource' : 'Add Correction'}
+                </span>
                 <button onClick={() => setBubbleMode('menu')} className="text-foreground/ hover:text-foreground">
                   <X className="w-4 h-4" />
                 </button>
               </div>
               <Textarea 
                 autoFocus
-                placeholder={bubbleMode === 'comment' ? "Type your comment or type @ for resources..." : "Type the correct word/phrase..."}
+                placeholder={bubbleMode === 'replace' ? "Type the correct word/phrase..." : bubbleMode === 'resource' ? "Type @ to search for a resource to attach..." : "Type your comment or type @ for resources..."}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 className="min-h-[80px] text-sm resize-none focus-visible:ring-gold bg-muted border-border text-foreground placeholder:text-foreground/"
               />
               
-              {/* Resource Suggestions */}
               {inputValue.includes('@') && (
                 <div className="absolute top-full left-0 w-full bg-background border border-border rounded-lg shadow-lg mt-1 overflow-hidden z-50">
                   <div className="bg-muted px-3 py-1 border-b border-border text-[10px] font-bold text-foreground/ uppercase">Suggested Resources</div>
@@ -190,7 +220,6 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
                 </Button>
               </div>
             </div>
-          )}
         </BubbleMenu>
       )}
 
@@ -200,7 +229,51 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
             <h3 className="font-bold text-foreground mb-2">Task</h3>
             <p className="text-sm text-foreground/">Write an article for your school magazine arguing whether exams are the best way to measure a student's ability.</p>
           </div>
-          <EditorContent editor={editor} />
+          
+          <div className="relative">
+            <EditorContent editor={editor} />
+            
+            <div className="absolute top-0 right-0 w-12 h-full pointer-events-none">
+              {markPositions.map(pos => (
+                <div 
+                  key={pos.id} 
+                  className={`absolute right-4 w-5 h-5 flex items-center justify-center rounded text-[10px] font-bold text-white pointer-events-auto cursor-pointer shadow-sm transition-all
+                   ${pos.type === 'highlight' ? 'bg-amber-500' : 'bg-blue-500'}
+                   ${activeAnnotationId === pos.id ? 'ring-2 ring-gold ring-offset-2 ring-offset-background scale-110' : 'hover:scale-105'}
+                  `}
+                  style={{ top: pos.top + 6 }}
+                  onClick={() => onAnnotationClick(pos.id)}
+                >
+                  {pos.num}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Standard Bottom Toolbar */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-muted/80 backdrop-blur-md border border-border rounded-full px-4 py-2 flex items-center gap-2 shadow-lg">
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground/ hover:text-foreground" onClick={() => handleTextToolAction('highlight')}>
+          <Highlighter className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground/ hover:text-foreground" onClick={() => handleTextToolAction('comment')}>
+          <MessageSquare className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground/ hover:text-foreground" onClick={() => handleTextToolAction('strikethrough')}>
+          <Strikethrough className="w-4 h-4" />
+        </Button>
+        <div className="w-px h-4 bg-border mx-1" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground/ hover:text-foreground" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}>
+          <Undo className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground/ hover:text-foreground" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()}>
+          <Redo className="w-4 h-4" />
+        </Button>
+        <div className="w-px h-4 bg-border mx-1" />
+        <div className="flex items-center gap-2 px-2">
+          <span className="text-[10px] font-bold text-foreground/ uppercase">Zoom</span>
+          <input type="range" min="50" max="150" defaultValue="100" className="w-20 accent-gold" />
         </div>
       </div>
 
@@ -210,5 +283,3 @@ export default function GradingEditor({ initialContent, activeAnnotationId, onAn
     </div>
   );
 }
-
-

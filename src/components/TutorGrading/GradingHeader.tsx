@@ -14,12 +14,14 @@ import { Loader2 } from 'lucide-react';
 interface GradingHeaderProps {
   studentName?: string;
   submissionTitle?: string;
+  assignmentTopic?: string;
+  subjectName?: string;
   onClose: () => void;
   onSubmit: (e: any) => void;
   isLoading: boolean;
 }
 
-export default function GradingHeader({ studentName, submissionTitle, onClose, onSubmit, isLoading }: GradingHeaderProps) {
+export default function GradingHeader({ studentName, submissionTitle, assignmentTopic, subjectName, onClose, onSubmit, isLoading }: GradingHeaderProps) {
   return (
     <header className="flex items-center justify-between px-6 py-3 border-b border-border bg-background">
       {/* Brand & Context */}
@@ -28,8 +30,12 @@ export default function GradingHeader({ studentName, submissionTitle, onClose, o
           <BookOpenText className="h-6 w-6" />
         </div>
         <div className="flex flex-col">
-          <h1 className="text-sm font-bold text-foreground leading-tight">Cambridge Tutor Editor</h1>
-          <span className="text-xs text-foreground/ font-medium">IGCSE English – Paper 2</span>
+          <h1 className="text-sm font-bold text-foreground leading-tight max-w-[300px] truncate" title={assignmentTopic || 'Cambridge Tutor Editor'}>
+            {assignmentTopic || 'Cambridge Tutor Editor'}
+          </h1>
+          <span className="text-xs text-foreground/ font-medium max-w-[300px] truncate" title={subjectName || 'IGCSE English – Paper 2'}>
+            {subjectName || 'IGCSE English – Paper 2'}
+          </span>
         </div>
       </div>
 
@@ -65,8 +71,11 @@ export default function GradingHeader({ studentName, submissionTitle, onClose, o
       </div>
 
       <div className="flex items-center gap-3">
-        <Button variant="outline" className="h-9 px-4 text-sm font-semibold text-foreground bg-muted hover:bg-muted border-border" onClick={onClose}>
+        <Button variant="ghost" className="h-9 px-4 text-sm font-semibold text-foreground/ hover:text-foreground" onClick={onClose}>
           Cancel
+        </Button>
+        <Button variant="outline" className="h-9 px-4 text-sm font-semibold text-foreground bg-muted hover:bg-muted border-border">
+          Save Draft
         </Button>
         <Button className="h-9 px-5 text-sm font-bold bg-gold hover:bg-gold/90 text-obsidian" onClick={onSubmit} disabled={isLoading}>
           {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin text-obsidian" />}

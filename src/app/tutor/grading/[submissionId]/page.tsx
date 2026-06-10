@@ -6,10 +6,12 @@ import { createClient } from '@/utils/supabase/client';
 import GradingHeader from '@/components/TutorGrading/GradingHeader';
 import LeftPanel, { MarkingData } from '@/components/TutorGrading/LeftPanel';
 import RightPanel from '@/components/TutorGrading/RightPanel';
-import ImageAnnotator from '@/components/TutorGrading/ImageAnnotator';
-import GradingEditor from '@/components/TutorGrading/GradingEditor';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const ImageAnnotator = dynamic(() => import('@/components/TutorGrading/ImageAnnotator'), { ssr: false });
+const GradingEditor = dynamic(() => import('@/components/TutorGrading/GradingEditor'), { ssr: false });
 
 export default function GradingPage() {
   const params = useParams();
@@ -84,6 +86,54 @@ export default function GradingPage() {
         }
       }
 
+      let topicTitle = '';
+      let subjectNameStr = '';
+
+      if (subData?.assignment_id) {
+        // Fetch assignment details separately
+        const { data: assignData } = await supabase
+          .from('curriculum_assignments')
+          .select('assignment_number, module_item_id')
+          .eq('id', subData.assignment_id)
+          .single();
+          
+        if (assignData?.module_item_id) {
+           const { data: itemData } = await supabase
+             .from('curriculum_items')
+             .select('title, module_id')
+             .eq('id', assignData.module_item_id)
+             .single();
+             
+           if (itemData) {
+             topicTitle = itemData.title;
+             
+             if (itemData.module_id) {
+               const { data: modData } = await supabase
+                 .from('curriculum_modules')
+                 .select('subject_id')
+                 .eq('id', itemData.module_id)
+                 .single();
+                 
+               if (modData?.subject_id) {
+                 const { data: sub } = await supabase
+                   .from('subjects')
+                   .select('name, level')
+                   .eq('id', modData.subject_id)
+                   .single();
+                   
+                 if (sub) {
+                   subjectNameStr = `${sub.name} ${sub.level ? `(${sub.level})` : ''} – Assignment ${assignData.assignment_number}`;
+                 }
+               }
+             }
+           }
+        }
+        subData.topicTitle = topicTitle;
+        subData.subjectNameStr = subjectNameStr;
+        subData.assignmentNumber = assignData?.assignment_number;
+      }
+
+      setSubmission(subData);
       setLoading(false);
     };
 
@@ -105,6 +155,10 @@ export default function GradingPage() {
 
   const handleRemoveAnnotation = (id: string) => {
     setAnnotations(prev => prev.filter(a => a.id !== id));
+  };
+
+  const handleEditAnnotation = (id: string, newContent: string) => {
+    setAnnotations(prev => prev.map(a => a.id === id ? { ...a, content: newContent } : a));
   };
 
   const handlePublishGrades = async () => {
@@ -205,7 +259,9 @@ export default function GradingPage() {
     <div className="flex flex-col h-screen w-full overflow-hidden bg-background">
       <GradingHeader 
         studentName={submission?.profiles?.full_name || 'Student'}
-        submissionTitle={`Assignment`}
+        submissionTitle={submission?.assignmentNumber ? `Assignment ${submission.assignmentNumber}` : 'Assignment'}
+        assignmentTopic={submission?.topicTitle}
+        subjectName={submission?.subjectNameStr}
         onClose={() => router.push('/tutor/assignments')}
         onSubmit={handlePublishGrades}
         isLoading={false}
@@ -229,6 +285,7 @@ export default function GradingPage() {
           <GradingEditor 
             initialContent={submission?.raw_text || ''} 
             activeAnnotationId={activeAnnotationId}
+            annotations={annotations}
             onAnnotationClick={(id) => setActiveAnnotationId(id)}
             onAddAnnotation={handleAddAnnotation}
           />
@@ -240,6 +297,7 @@ export default function GradingPage() {
           overallFeedback={overallFeedback}
           onFeedbackChange={setOverallFeedback}
           annotations={annotations}
+          onEditAnnotation={handleEditAnnotation}
         />
       </div>
     </div>

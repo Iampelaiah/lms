@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, MoreVertical, ExternalLink } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
@@ -17,12 +17,23 @@ interface RightPanelProps {
   overallFeedback?: string;
   onFeedbackChange?: (feedback: string) => void;
   annotations?: Annotation[];
+  onEditAnnotation?: (id: string, newContent: string) => void;
 }
 
-export default function RightPanel({ activeAnnotationId, onCommentClick, overallFeedback = '', onFeedbackChange, annotations = [] }: RightPanelProps) {
+export default function RightPanel({ activeAnnotationId, onCommentClick, overallFeedback = '', onFeedbackChange, annotations = [], onEditAnnotation }: RightPanelProps) {
   const comments = annotations.filter(a => a.type === 'comment' || a.type === 'highlight');
-  const corrections = annotations.filter(a => a.type === 'replace' || a.type === 'strikeout' || a.type === 'insert');
+  const corrections = annotations.filter(a => a.type === 'replace' || a.type === 'strikeout' || a.type === 'insert' || a.type === 'strikethrough');
   const resources = annotations.filter(a => a.type === 'resource');
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+
+  const handleSaveEdit = (id: string) => {
+    if (onEditAnnotation && editContent.trim() !== '') {
+      onEditAnnotation(id, editContent);
+    }
+    setEditingId(null);
+  };
 
   return (
     <div className="w-[280px] bg-background border-l border-border h-full flex flex-col flex-shrink-0">
@@ -57,7 +68,33 @@ export default function RightPanel({ activeAnnotationId, onCommentClick, overall
                   <div className={`flex items-center justify-center w-5 h-5 rounded ${comment.type === 'highlight' ? 'bg-gold' : 'bg-gold text-obsidian'} text-foreground font-bold text-xs flex-shrink-0 mt-0.5`}>
                     {comment.marker_number || '*'}
                   </div>
-                  <p className="text-sm text-foreground/ flex-1 leading-snug">{comment.content}</p>
+                  {editingId === comment.id.toString() ? (
+                    <Textarea 
+                      autoFocus
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      onBlur={() => handleSaveEdit(comment.id.toString())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSaveEdit(comment.id.toString());
+                        }
+                      }}
+                      className="text-sm flex-1 min-h-[60px] p-2 bg-background focus-visible:ring-gold border-none"
+                    />
+                  ) : (
+                    <p 
+                      className="text-sm text-foreground/ flex-1 leading-snug cursor-text hover:text-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingId(comment.id.toString());
+                        setEditContent(comment.content || '');
+                        onCommentClick(comment.id.toString());
+                      }}
+                    >
+                      {comment.content}
+                    </p>
+                  )}
                   <button className="text-foreground/ hover:text-foreground">
                     <MoreVertical className="w-4 h-4" />
                   </button>
@@ -103,7 +140,10 @@ export default function RightPanel({ activeAnnotationId, onCommentClick, overall
 
       {/* Overall Feedback */}
       <div className="p-5 border-t border-border bg-muted">
-        <h3 className="text-[10px] font-bold text-foreground/ uppercase tracking-wider mb-3">Overall Feedback</h3>
+        <div className="flex items-center gap-2 mb-3">
+          <CheckCircle2 className="w-4 h-4 text-green-500" />
+          <h3 className="text-[10px] font-bold text-foreground/ uppercase tracking-wider">Overall Feedback</h3>
+        </div>
         <Textarea 
           placeholder="Write your overall feedback for the student here..."
           value={overallFeedback}
