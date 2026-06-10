@@ -278,20 +278,8 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
               <AccordionContent className="p-0 bg-muted/20">
                 <div className="divide-y">
                   {mod.items && mod.items.length > 0 ? mod.items.map((item: any, idx: number) => {
-                    const metadata = item.metadata || {};
                     const completion = getItemCompletion(item.id);
                     const isItemDone = completion?.is_done;
-                    
-                    // Paper 1/2 fields
-                    const examAllocation = metadata.exam_allocation_2026;
-                    const keyQuestions = metadata.key_questions;
-                    // Paper 3 fields
-                    const coreFocus = metadata.core_focus;
-                    // Paper 4 fields
-                    const depthStudy = metadata.depth_study;
-                    const themes = metadata.themes;
-
-                    const title = depthStudy || item.title;
 
                     return (
                       <div key={item.id} className="p-5 hover:bg-muted/40 transition-colors flex flex-col md:flex-row gap-6 relative">
@@ -329,125 +317,11 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
                         {/* Content Column */}
                         <div className="flex-1 space-y-3">
                           <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              {examAllocation && (
-                                <Badge variant="secondary" className="text-[10px] uppercase font-bold text-primary">
-                                  {examAllocation}
-                                </Badge>
-                              )}
-                            </div>
-                            <h4 className="text-base font-bold">{title}</h4>
+                            <h4 className="text-base font-bold">{item.title}</h4>
+                            {item.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                            )}
                           </div>
-
-                          {/* Paper 1/2 Key Questions */}
-                          {keyQuestions && Array.isArray(keyQuestions) && (
-                            <div className="space-y-1.5">
-                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Key Questions:</p>
-                              <ul className="space-y-1">
-                                {keyQuestions.map((q: string, i: number) => (
-                                  <li key={i} className="text-sm text-muted-foreground flex gap-2">
-                                    <span className="text-primary">•</span>
-                                    <span>{q}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {/* Paper 3 Core Focus */}
-                          {coreFocus && (
-                            <div className="bg-primary/5 border border-primary/10 rounded-lg p-3">
-                              <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Core Focus:</p>
-                              <p className="text-sm text-foreground/80">{coreFocus}</p>
-                            </div>
-                          )}
-
-                          {/* Paper 4 Themes */}
-                          {themes && Array.isArray(themes) && (
-                            <div className="space-y-1.5">
-                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Themes:</p>
-                              <ul className="space-y-2">
-                                {themes.map((t: string, i: number) => (
-                                  <li key={i} className="text-sm text-muted-foreground flex gap-2 bg-background/50 border p-2 rounded">
-                                    <span className="font-bold text-primary shrink-0">{i + 1}.</span>
-                                    <span>{t}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {/* Interactive Assignments Section */}
-                          {item.item_type === 'topic' && (
-                            <div className="mt-4 pt-4 border-t border-border space-y-3">
-                              <h5 className="text-xs font-bold text-foreground/ uppercase tracking-wider flex items-center gap-1.5">
-                                <FileText className="w-3.5 h-3.5 text-primary" />
-                                Interactive Assignments
-                              </h5>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {[1, 2, 3, 4].map(num => {
-                                  const assignment = assignments.find(
-                                    a => a.module_item_id === item.id && a.assignment_number === num
-                                  );
-                                  const status = assignment?.status || 'not_started';
-                                  
-                                  return (
-                                    <div 
-                                      key={num} 
-                                      className={`p-3 rounded-lg border transition-all ${
-                                        status === 'completed'
-                                          ? 'bg-gold/5 border-gold/25 hover:bg-gold/10 hover:border-gold/40 text-gold'
-                                          : status === 'unmarked'
-                                          ? 'bg-gold/5 border-gold/20 text-gold'
-                                          : 'bg-background/40 border-border text-foreground/ hover:border-border'
-                                      }`}
-                                    >
-                                      <div className="flex items-center justify-between gap-2">
-                                        <div className="min-w-0">
-                                          <div className="text-xs font-bold">Assignment {num}</div>
-                                          <div className="text-[10px] opacity-75 mt-0.5">
-                                            {status === 'completed' 
-                                              ? 'Marked & Completed' 
-                                              : status === 'unmarked' 
-                                              ? 'Submitted (Unmarked)' 
-                                              : 'Not Started'}
-                                          </div>
-                                        </div>
-
-                                        {status === 'not_started' && (
-                                          <Button 
-                                            size="sm" 
-                                            variant="ghost" 
-                                            className="h-7 px-2.5 text-xs text-primary hover:bg-primary/10 hover:text-primary gap-1"
-                                            onClick={() => openSubmitDialog(item.id, item.title, num)}
-                                          >
-                                            Submit Work
-                                          </Button>
-                                        )}
-
-                                        {status === 'unmarked' && (
-                                          <Badge className="bg-gold/40 text-gold border-gold/30 text-[10px] font-semibold">
-                                            Submitted
-                                          </Badge>
-                                        )}
-
-                                        {status === 'completed' && (
-                                          <Button 
-                                            size="sm" 
-                                            variant="ghost" 
-                                            className="h-7 px-2.5 text-xs text-gold hover:bg-gold/20 hover:text-gold gap-1 font-bold border border-gold/20 bg-gold/10"
-                                            onClick={() => openPreviewDialog(item.id, item.title, num, assignment)}
-                                          >
-                                            Feedback
-                                          </Button>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
                     )

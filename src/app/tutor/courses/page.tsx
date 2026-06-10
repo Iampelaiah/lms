@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { BookOpenCheck, PlusCircle, Users, Eye, Settings, Loader2, Image as ImageIcon, BookOpen, Clock, AlertCircle } from "lucide-react";
+import { BookOpenCheck, PlusCircle, Users, Eye, Settings, Loader2, Image as ImageIcon, BookOpen, Clock, AlertCircle, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { SchoolHeader } from "@/components/app/school-header";
@@ -57,7 +57,13 @@ function CourseList({ tutorId }: { tutorId: string }) {
         // Group modules by subject
         const subjectsWithModules = (assignments || []).map((assignment: any) => {
             const subject = assignment.subjects;
-            const subjectModules = (modulesData || []).filter((m: any) => m.subject_id === subject.id);
+            const subjectModules = (modulesData || []).filter((m: any) => 
+                m.subject_id === subject.id && 
+                m.title !== 'Climatology' && 
+                m.title !== '1' &&
+                m.title !== 'Module 1' &&
+                m.title !== 'Module 2'
+            );
             return {
                 ...subject,
                 modules: subjectModules
@@ -213,9 +219,38 @@ function CourseList({ tutorId }: { tutorId: string }) {
                                                                     <span className="text-xs font-bold text-primary uppercase mr-2">Mod {mod.sequence_order}</span>
                                                                     <span className="text-sm font-medium">{mod.title}</span>
                                                                 </div>
-                                                                <Badge className={`text-[10px] whitespace-nowrap ${statusColorMap[mod.approval_status]}`}>
-                                                                    {statusLabelMap[mod.approval_status]}
-                                                                </Badge>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge className={`text-[10px] whitespace-nowrap ${statusColorMap[mod.approval_status]}`}>
+                                                                        {statusLabelMap[mod.approval_status]}
+                                                                    </Badge>
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="icon" 
+                                                                        className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                                        onClick={async (e) => {
+                                                                            e.preventDefault();
+                                                                            if (window.confirm('Are you sure you want to delete this module?')) {
+                                                                                try {
+                                                                                    // 1. Delete items first
+                                                                                    const { error: itemsError } = await supabase.from('curriculum_items').delete().eq('module_id', mod.id);
+                                                                                    if (itemsError) throw new Error("Failed to delete items: " + itemsError.message);
+                                                                                    
+                                                                                    // 2. Delete module
+                                                                                    const { error: modError } = await supabase.from('curriculum_modules').delete().eq('id', mod.id);
+                                                                                    if (modError) throw new Error("Failed to delete module: " + modError.message);
+                                                                                    
+                                                                                    alert("Module deleted successfully!");
+                                                                                    fetchCourses();
+                                                                                } catch (err: any) {
+                                                                                    console.error("Delete error:", err);
+                                                                                    alert(err.message || "Failed to delete");
+                                                                                }
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                                    </Button>
+                                                                </div>
                                                             </div>
                                                             
                                                             {mod.approval_status === 'rejected' && mod.admin_feedback && (

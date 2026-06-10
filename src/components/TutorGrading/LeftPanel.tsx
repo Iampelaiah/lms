@@ -70,8 +70,8 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
   }, [contentMark, contentMax, commMark, commMax, orgMark, orgMax, langMark, langMax, totalMark, totalMax, grade, isReadOnly]);
 
   return (
-    <div className="w-[320px] bg-background border-r border-border h-full flex flex-col flex-shrink-0 overflow-y-auto hide-scrollbar">
-      <div className="p-6 space-y-8">
+    <div className="w-[260px] bg-background border-r border-border h-full flex flex-col flex-shrink-0 overflow-y-auto hide-scrollbar">
+      <div className="p-4 space-y-8">
         
         {/* Marking Overview */}
         <section>
@@ -245,7 +245,7 @@ export default function LeftPanel({ onMarksChange, initialMarks, isReadOnly = fa
 
       </div>
       
-      <div className="mt-auto p-6 bg-background border-t border-border sticky bottom-0">
+      <div className="mt-auto p-4 bg-background border-t border-border sticky bottom-0">
         <Button variant="outline" className="w-full h-10 border-border bg-muted hover:bg-muted text-foreground font-bold transition-all">
           <Download className="w-4 h-4 mr-2 text-gold" />
           Download Mark Sheet

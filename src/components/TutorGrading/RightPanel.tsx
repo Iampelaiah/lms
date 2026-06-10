@@ -25,7 +25,7 @@ export default function RightPanel({ activeAnnotationId, onCommentClick, overall
   const resources = annotations.filter(a => a.type === 'resource');
 
   return (
-    <div className="w-[360px] bg-background border-l border-border h-full flex flex-col flex-shrink-0">
+    <div className="w-[280px] bg-background border-l border-border h-full flex flex-col flex-shrink-0">
       
       <Tabs defaultValue="comments" className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="w-full bg-background border-b border-border rounded-none h-12 justify-start px-2">

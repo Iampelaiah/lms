@@ -41,14 +41,52 @@ export default function TutorAssignmentsPage() {
 
     if (tutorId) {
       const supabase = createClient();
-      const { data: dbData } = await supabase
-        .from('student_assignments')
-        .select('*, profiles(full_name, email, avatar_url), subjects(name, level), module_items(title)')
-        .eq('tutor_id', tutorId)
-        .order('submitted_at', { ascending: false });
-        
-      if (dbData) {
-        dbSubmissions = dbData;
+      
+      const { data: tutorModules } = await supabase.from('curriculum_modules').select('id, subjects(id, name, level)').eq('tutor_id', tutorId);
+      const moduleIds = tutorModules?.map((m: any) => m.id) || [];
+      
+      if (moduleIds.length > 0) {
+          const { data: tutorItems } = await supabase.from('curriculum_items').select('id, title, module_id').in('module_id', moduleIds);
+          const itemIds = tutorItems?.map((i: any) => i.id) || [];
+          
+          if (itemIds.length > 0) {
+              const { data: tutorAssignments } = await supabase.from('curriculum_assignments').select('id, title, module_item_id, assignment_number').in('module_item_id', itemIds);
+              const assignmentIds = tutorAssignments?.map((a: any) => a.id) || [];
+              
+              if (assignmentIds.length > 0) {
+                  const { data: dbData } = await supabase
+                      .from('submissions')
+                      .select('*, profiles(full_name, email, avatar_url)')
+                      .in('assignment_id', assignmentIds)
+                      .order('created_at', { ascending: false });
+                  
+                  if (dbData) {
+                      dbSubmissions = dbData.map((sub: any) => {
+                          const assignment = tutorAssignments.find((a: any) => a.id === sub.assignment_id);
+                          const item = tutorItems.find((i: any) => i.id === assignment?.module_item_id);
+                          const mod = tutorModules?.find((m: any) => m.id === item?.module_id);
+                          
+                          // Handle array mapping issues for relationships
+                          const subject = Array.isArray(mod?.subjects) ? mod?.subjects[0] : mod?.subjects;
+                          
+                          return {
+                              id: sub.id,
+                              status: sub.status === 'submitted' ? 'unmarked' : (sub.status === 'grading' ? 'unmarked' : 'graded'),
+                              submitted_at: sub.created_at,
+                              assignment_number: assignment?.assignment_number,
+                              profiles: sub.profiles,
+                              subjects: subject,
+                              module_items: { title: item?.title },
+                              student_id: sub.student_id,
+                              subject_id: subject?.id,
+                              module_item_id: item?.id,
+                              student_submission: sub.raw_text,
+                              file_url: sub.file_url
+                          }
+                      });
+                  }
+              }
+          }
       }
     }
 

@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/client';
 import GradingHeader from '@/components/TutorGrading/GradingHeader';
 import LeftPanel, { MarkingData } from '@/components/TutorGrading/LeftPanel';
 import RightPanel from '@/components/TutorGrading/RightPanel';
+import ImageAnnotator from '@/components/TutorGrading/ImageAnnotator';
 import GradingEditor from '@/components/TutorGrading/GradingEditor';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
@@ -67,16 +68,20 @@ export default function GradingPage() {
         setOverallFeedback(subData.overall_feedback);
       }
 
-      const { data: annData, error: annError } = await supabase
-        .from('annotations')
-        .select('*')
-        .eq('submission_id', submissionId)
-        .order('start_offset', { ascending: true });
-
-      if (annError) {
-        console.error("Error fetching annotations:", annError);
+      if (subData?.file_url) {
+        setAnnotations(subData.annotations_data || []);
       } else {
-        setAnnotations(annData || []);
+        const { data: annData, error: annError } = await supabase
+          .from('annotations')
+          .select('*')
+          .eq('submission_id', submissionId)
+          .order('start_offset', { ascending: true });
+
+        if (annError) {
+          console.error("Error fetching annotations:", annError);
+        } else {
+          setAnnotations(annData || []);
+        }
       }
 
       setLoading(false);
@@ -86,16 +91,20 @@ export default function GradingPage() {
   }, [submissionId, supabase, toast, router]);
 
   const handleAddAnnotation = async (annotation: any) => {
-    // In a real app we'd save to DB here, but for now we'll just update state
     const newAnnotation = {
       ...annotation,
-      id: crypto.randomUUID(),
+      id: annotation.id || crypto.randomUUID(),
       submission_id: submissionId,
       tutor_id: 'tutor-123', // placeholder
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      marker_number: annotations.length + 1
     };
     
     setAnnotations(prev => [...prev, newAnnotation]);
+  };
+
+  const handleRemoveAnnotation = (id: string) => {
+    setAnnotations(prev => prev.filter(a => a.id !== id));
   };
 
   const handlePublishGrades = async () => {
@@ -104,29 +113,37 @@ export default function GradingPage() {
 
       if (submissionId !== 'mock-assignment-id-1') {
         // 1. Update the submissions table
+        const updatePayload: any = {
+          status: 'graded',
+          overall_feedback: overallFeedback,
+          overall_grade: marksData?.grade || null,
+          component_scores: marksData as any,
+          updated_at: new Date().toISOString()
+        };
+
+        if (submission?.file_url) {
+          updatePayload.annotations_data = annotations;
+        }
+
         const { error: subError } = await supabase
           .from('submissions')
-          .update({
-            status: 'graded',
-            overall_feedback: overallFeedback,
-            overall_grade: marksData?.grade || null,
-            component_scores: marksData as any,
-            updated_at: new Date().toISOString()
-          })
+          .update(updatePayload)
           .eq('id', submissionId);
           
         if (subError) throw subError;
 
-        // 2. Save annotations
-        await supabase.from('annotations').delete().eq('submission_id', submissionId);
-        if (annotations.length > 0) {
-          const { error: annError } = await supabase.from('annotations').insert(
-            annotations.map((a, idx) => ({
-              ...a,
-              marker_number: idx + 1,
-            }))
-          );
-          if (annError) throw annError;
+        // 2. Save annotations for text
+        if (!submission?.file_url) {
+          await supabase.from('annotations').delete().eq('submission_id', submissionId);
+          if (annotations.length > 0) {
+            const { error: annError } = await supabase.from('annotations').insert(
+              annotations.map((a, idx) => ({
+                ...a,
+                marker_number: idx + 1,
+              }))
+            );
+            if (annError) throw annError;
+          }
         }
 
         // 3. update legacy student_assignments
@@ -168,7 +185,7 @@ export default function GradingPage() {
       }
 
       toast({ title: 'Success', description: 'Marks published successfully!' });
-      router.push('/tutor/assignments'); // We'll rename this to grading soon
+      router.push('/tutor/assignments'); 
     } catch (e: any) {
       console.error(e);
       toast({ title: 'Error', description: 'Failed to publish marks.', variant: 'destructive' });
@@ -197,12 +214,25 @@ export default function GradingPage() {
       <div className="flex flex-1 overflow-hidden">
         <LeftPanel onMarksChange={setMarksData} initialMarks={submission?.component_scores} />
         
-        <GradingEditor 
-          initialContent={submission?.raw_text || ''} 
-          activeAnnotationId={activeAnnotationId}
-          onAnnotationClick={(id) => setActiveAnnotationId(id)}
-          onAddAnnotation={handleAddAnnotation}
-        />
+        {submission?.file_url ? (
+          <div className="flex-1 overflow-hidden border-r">
+            <ImageAnnotator
+              fileUrl={submission.file_url}
+              activeAnnotationId={activeAnnotationId}
+              annotations={annotations}
+              onAnnotationClick={(id) => setActiveAnnotationId(id)}
+              onAddAnnotation={handleAddAnnotation}
+              onRemoveAnnotation={handleRemoveAnnotation}
+            />
+          </div>
+        ) : (
+          <GradingEditor 
+            initialContent={submission?.raw_text || ''} 
+            activeAnnotationId={activeAnnotationId}
+            onAnnotationClick={(id) => setActiveAnnotationId(id)}
+            onAddAnnotation={handleAddAnnotation}
+          />
+        )}
         
         <RightPanel 
           activeAnnotationId={activeAnnotationId}

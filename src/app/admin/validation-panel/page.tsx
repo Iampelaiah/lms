@@ -27,25 +27,39 @@ export default function AdminValidationPanel() {
     const [adminFeedback, setAdminFeedback] = useState("");
 
     useEffect(() => {
-        fetchPendingValidations();
+        fetchPendingValidations(true);
 
         const channel = supabase
             .channel('validation-panel-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'curriculum_modules' }, () => {
-                fetchPendingValidations();
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'curriculum_modules' }, (payload) => {
+                toast({
+                    title: "New Curriculum Submission!",
+                    description: "A tutor just submitted a new module for your review.",
+                    duration: 5000,
+                });
+                fetchPendingValidations(false);
+            })
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'curriculum_modules' }, () => {
+                fetchPendingValidations(false);
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'resources' }, () => {
-                fetchPendingValidations();
+                fetchPendingValidations(false);
             })
             .subscribe();
 
+        // Fallback polling every 10 seconds in case Supabase Realtime isn't enabled in the dashboard
+        const pollInterval = setInterval(() => {
+            fetchPendingValidations(false);
+        }, 10000);
+
         return () => {
             supabase.removeChannel(channel);
+            clearInterval(pollInterval);
         };
     }, [supabase]);
 
-    const fetchPendingValidations = async () => {
-        setLoading(true);
+    const fetchPendingValidations = async (showLoading = true) => {
+        if (showLoading) setLoading(true);
         try {
             // Fetch modules with status pending_admin_review
             const { data: modulesData, error } = await supabase

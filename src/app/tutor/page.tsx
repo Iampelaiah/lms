@@ -98,7 +98,22 @@ function TutorStats() {
             
             const subjectIds = assignedSubjects?.map(s => s.subject_id) || [];
 
-            // 2. Run other queries in parallel
+            // 2. Fetch all assignment IDs for this tutor
+            const { data: tutorModules } = await supabase.from('curriculum_modules').select('id').eq('tutor_id', profile.id);
+            const moduleIds = tutorModules?.map((m: any) => m.id) || [];
+            let assignmentIds: string[] = [];
+            
+            if (moduleIds.length > 0) {
+                const { data: tutorItems } = await supabase.from('curriculum_items').select('id').in('module_id', moduleIds);
+                const itemIds = tutorItems?.map((i: any) => i.id) || [];
+                
+                if (itemIds.length > 0) {
+                    const { data: tutorAssignments } = await supabase.from('curriculum_assignments').select('id').in('module_item_id', itemIds);
+                    assignmentIds = tutorAssignments?.map((a: any) => a.id) || [];
+                }
+            }
+
+            // 3. Run other queries in parallel
             const [{ data: upcomingClass }, { count: unmarkedCount }, { data: tutorEnrollments }] = await Promise.all([
                 supabase
                     .from('classes')
@@ -108,11 +123,13 @@ function TutorStats() {
                     .order('schedule', { ascending: true })
                     .limit(1)
                     .single(),
-                supabase
-                    .from('student_assignments')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('tutor_id', profile.id)
-                    .eq('status', 'unmarked'),
+                assignmentIds.length > 0 
+                    ? supabase
+                        .from('submissions')
+                        .select('*', { count: 'exact', head: true })
+                        .in('assignment_id', assignmentIds)
+                        .eq('status', 'submitted')
+                    : Promise.resolve({ count: 0 }),
                 subjectIds.length > 0 
                     ? supabase
                         .from('enrollments')
