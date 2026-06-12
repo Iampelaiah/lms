@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Calendar, CheckCircle2, Clock, PlayCircle, FileText, CheckCircle, Award, Loader2, Maximize2, Minimize2 } from "lucide-react"
 import { format } from "date-fns"
 import { useState, useEffect } from "react"
+import DOMPurify from "dompurify"
 import { useParams } from "next/navigation"
 import { useUser } from "@/components/providers/user-context"
 import { useToast } from "@/hooks/use-toast"
@@ -416,7 +417,7 @@ export function CurriculumTree({ modules, progress, itemCompletions }: {
               <span className="text-xs font-bold text-gold/80 uppercase tracking-wider block">Your Submission:</span>
               <div 
                 className="bg-background/50 border border-border rounded-lg p-4 max-h-[200px] overflow-y-auto text-sm text-foreground/ prose prose-invert prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: selectedAssignment?.submission || '' }}
+                dangerouslySetInnerHTML={{ __html: typeof window !== 'undefined' ? DOMPurify.sanitize(selectedAssignment?.submission || '') : '' }}
               />
             </div>
 
