@@ -18,10 +18,12 @@ interface GradingHeaderProps {
   subjectName?: string;
   onClose: () => void;
   onSubmit: (e: any) => void;
+  onSaveDraft?: () => void;
   isLoading: boolean;
+  isDraftLoading?: boolean;
 }
 
-export default function GradingHeader({ studentName, submissionTitle, assignmentTopic, subjectName, onClose, onSubmit, isLoading }: GradingHeaderProps) {
+export default function GradingHeader({ studentName, submissionTitle, assignmentTopic, subjectName, onClose, onSubmit, onSaveDraft, isLoading, isDraftLoading }: GradingHeaderProps) {
   return (
     <header className="flex items-center justify-between px-6 py-3 border-b border-border bg-background">
       {/* Brand & Context */}
@@ -74,10 +76,16 @@ export default function GradingHeader({ studentName, submissionTitle, assignment
         <Button variant="ghost" className="h-9 px-4 text-sm font-semibold text-foreground/ hover:text-foreground" onClick={onClose}>
           Cancel
         </Button>
-        <Button variant="outline" className="h-9 px-4 text-sm font-semibold text-foreground bg-muted hover:bg-muted border-border">
+        <Button 
+          variant="outline" 
+          className="h-9 px-4 text-sm font-semibold text-foreground bg-muted hover:bg-muted border-border"
+          onClick={onSaveDraft}
+          disabled={isDraftLoading}
+        >
+          {isDraftLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin text-foreground" />}
           Save Draft
         </Button>
-        <Button className="h-9 px-5 text-sm font-bold bg-gold hover:bg-gold/90 text-obsidian" onClick={onSubmit} disabled={isLoading}>
+        <Button className="h-9 px-5 text-sm font-bold bg-gold hover:bg-gold/90 text-obsidian" onClick={onSubmit} disabled={isLoading || isDraftLoading}>
           {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin text-obsidian" />}
           Publish Marks
         </Button>

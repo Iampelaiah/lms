@@ -10,6 +10,8 @@ interface UserProfile {
   role: string;
   avatar_url?: string;
   is_approved?: boolean;
+  curriculum_board?: string;
+  student_level?: string;
 }
 
 interface UserContextType {
@@ -46,7 +48,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (data && !error) {
-        setProfile(data);
+        setProfile({
+          ...data,
+          full_name: data.full_name || userMetadata?.full_name || userMetadata?.name || '',
+          avatar_url: data.avatar_url || userMetadata?.avatar_url || userMetadata?.picture || '',
+        });
         lastFetchedUserIdRef.current = userId;
       } else if (userMetadata) {
         // Fallback to metadata if record is missing
@@ -56,6 +62,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           role: userMetadata.role || 'student',
           avatar_url: userMetadata.avatar_url || userMetadata.picture || '',
           is_approved: userMetadata.is_approved ?? false,
+          curriculum_board: userMetadata.curriculum_board || undefined,
+          student_level: userMetadata.student_level || undefined,
         });
         lastFetchedUserIdRef.current = userId;
       }

@@ -38,6 +38,8 @@ interface StudentProfile {
   full_name: string;
   email: string;
   avatar_url?: string;
+  curriculum_board?: string;
+  student_level?: string;
 }
 
 interface Subject {
@@ -149,7 +151,9 @@ export default function TutorStudentsPage() {
                 id: s.id,
                 full_name: s.full_name,
                 email: s.email,
-                avatar_url: s.avatar_url
+                avatar_url: s.avatar_url,
+                curriculum_board: s.curriculum_board,
+                student_level: s.student_level
               },
               subjects: []
             };
@@ -622,7 +626,8 @@ export default function TutorStudentsPage() {
                   <StudentCard 
                     key={student.id}
                     name={student.full_name} 
-                    level={subjects[0]?.level || "Student"}
+                    level={student.student_level || subjects[0]?.level || "Student"}
+                    board={student.curriculum_board}
                     progress={progressPercent.toString()}
                     path={progressPath}
                     active={isActive}
@@ -666,8 +671,13 @@ export default function TutorStudentsPage() {
                     <p className="text-sm text-muted-foreground mb-3">{selectedGroup.student.email}</p>
                     <div className="flex flex-wrap gap-2 text-xs">
                       <span className="bg-muted text-muted-foreground px-2.5 py-1 rounded-md border border-slate-700 flex items-center gap-1.5">
-                        <BookOpen size={12} /> {selectedGroup.subjects[0]?.level || "Student"}
+                        <BookOpen size={12} /> {selectedGroup.student.student_level || selectedGroup.subjects[0]?.level || "Student"}
                       </span>
+                      {selectedGroup.student.curriculum_board && (
+                        <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-2.5 py-1 rounded-md border border-[#D4AF37]/30 flex items-center gap-1.5 font-medium">
+                          {selectedGroup.student.curriculum_board}
+                        </span>
+                      )}
                       <span className="bg-muted text-muted-foreground px-2.5 py-1 rounded-md border border-slate-700 flex items-center gap-1.5">
                         <Clock size={12} /> Active Enrollment
                       </span>
@@ -952,7 +962,7 @@ export default function TutorStudentsPage() {
 }
 
 // Helper Components
-function StudentCard({ name, level, progress, path, active = false, status = 'online', onClick }: { name: string, level: string, progress: string, path?: string, active?: boolean, status?: 'online' | 'away', onClick: () => void }) {
+function StudentCard({ name, level, board, progress, path, active = false, status = 'online', onClick }: { name: string, level: string, board?: string, progress: string, path?: string, active?: boolean, status?: 'online' | 'away', onClick: () => void }) {
   return (
     <div onClick={onClick} className={`p-4 rounded-xl border transition-all cursor-pointer ${
       active 
@@ -968,7 +978,14 @@ function StudentCard({ name, level, progress, path, active = false, status = 'on
             <h4 className="text-sm font-medium text-foreground truncate pr-2">{name}</h4>
             <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${status === 'online' ? 'bg-green-500' : 'bg-[#D4AF37]'}`}></div>
           </div>
-          <p className="text-xs text-muted-foreground mb-2">{level}</p>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span className="text-xs text-muted-foreground">{level}</span>
+            {board && (
+              <span className="text-[10px] bg-[#D4AF37]/10 text-[#D4AF37] px-1.5 py-0.5 rounded border border-[#D4AF37]/30 font-medium">
+                {board}
+              </span>
+            )}
+          </div>
           <div className="flex items-center justify-between">
             <span className={active ? 'text-green-400 text-xs font-medium' : 'text-muted-foreground text-xs font-medium'}>
               {progress}%

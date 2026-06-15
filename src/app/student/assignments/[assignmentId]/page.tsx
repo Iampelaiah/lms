@@ -22,6 +22,14 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
     .eq('id', assignmentId)
     .single()
 
+  // 3. Fetch the submission status for this user
+  const { data: submission } = await supabase
+    .from('submissions')
+    .select('*')
+    .eq('assignment_id', assignmentId)
+    .eq('student_id', user.id)
+    .single()
+
   if (!assignment) {
     return (
       <div className="min-h-screen p-8 text-center space-y-4">
@@ -60,8 +68,25 @@ export default async function AssignmentPage({ params }: { params: Promise<{ ass
           <p className="text-muted-foreground whitespace-pre-wrap">{assignment.description || "No description provided."}</p>
         </div>
 
+        {submission?.status === 'graded' && (
+          <div className="bg-green-50/50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-bold text-green-800 dark:text-green-300 mb-2">
+              Grade: {submission.overall_grade || 'Not specified'}
+            </h2>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-green-700 dark:text-green-400 uppercase tracking-wider">Tutor Comments</p>
+              <p className="text-sm text-green-900 dark:text-green-200 whitespace-pre-wrap">
+                {submission.overall_feedback || 'No feedback provided.'}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="pt-8 border-t">
-          <AssignmentUploader assignmentId={assignment.id} />
+          <AssignmentUploader 
+            assignmentId={assignment.id} 
+            initialStatus={submission?.status || 'not_submitted'} 
+          />
         </div>
       </div>
     </div>

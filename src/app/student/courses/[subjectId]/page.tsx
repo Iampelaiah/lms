@@ -72,7 +72,20 @@ export default async function CoursePage({ params }: { params: Promise<{ subject
     .eq('approval_status', 'approved')
     .order('sequence_order', { ascending: true })
 
-  // 5. Render protected content
+  // 5. Fetch submissions to track assignment status
+  const { data: submissions } = await supabase
+    .from('submissions')
+    .select('assignment_id, status, overall_grade')
+    .eq('student_id', user.id)
+
+  const submissionMap = new Map();
+  if (submissions) {
+    submissions.forEach(sub => {
+      submissionMap.set(sub.assignment_id, sub);
+    });
+  }
+
+  // 6. Render protected content
   return (
     <div className="space-y-6 font-sans pb-24">
       <Link href="/student/courses" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4">
@@ -178,20 +191,48 @@ export default async function CoursePage({ params }: { params: Promise<{ subject
                           <div className="space-y-2 pt-3">
                             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assignments</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {item.assignments.map((assignment: any) => (
-                                <Link href={`/student/assignments/${assignment.id}`} key={assignment.id} className="group/assign flex items-center justify-between gap-2 p-3 rounded-md bg-background border hover:border-primary/50 transition-colors">
-                                  <div className="flex items-start gap-2">
-                                    <FileText className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                                    <div>
-                                      <p className="text-sm font-medium group-hover/assign:text-primary transition-colors">#{assignment.assignment_number}: {assignment.title}</p>
-                                      {assignment.description && <p className="text-xs text-muted-foreground line-clamp-1">{assignment.description}</p>}
+                              {item.assignments.map((assignment: any) => {
+                                const sub = submissionMap.get(assignment.id);
+                                const status = sub ? (sub.status === 'graded' ? 'marked' : 'pending_review') : 'not_submitted';
+                                const grade = sub?.overall_grade || '';
+
+                                let statusBadge = null;
+                                if (status === 'pending_review') {
+                                  statusBadge = <div className="w-4 h-4 rounded-full bg-amber-500/20 flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-amber-500" title="Pending Review" /></div>;
+                                } else if (status === 'marked') {
+                                  statusBadge = <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-green-500" title="Marked" /></div>;
+                                }
+
+                                let buttonClass = "";
+                                let buttonText = "";
+                                if (status === 'not_submitted') {
+                                  buttonClass = "border-primary text-primary hover:bg-primary/10";
+                                  buttonText = "Submit";
+                                } else if (status === 'pending_review') {
+                                  buttonClass = "border-amber-500/30 text-amber-600 bg-amber-500/10";
+                                  buttonText = "Pending Review";
+                                } else if (status === 'marked') {
+                                  buttonClass = "border-green-500 text-green-600 hover:bg-green-50";
+                                  buttonText = grade ? `View Grade [${grade}]` : "View Grade";
+                                }
+
+                                return (
+                                  <Link href={`/student/assignments/${assignment.id}`} key={assignment.id} className="group/assign flex items-center justify-between gap-2 p-3 rounded-md bg-background border hover:border-primary/50 transition-colors">
+                                    <div className="flex items-start gap-2">
+                                      <div className="mt-0.5 shrink-0">
+                                        {statusBadge || <FileText className="w-4 h-4 text-primary shrink-0" />}
+                                      </div>
+                                      <div>
+                                        <p className="text-sm font-medium group-hover/assign:text-primary transition-colors">#{assignment.assignment_number}: {assignment.title}</p>
+                                        {assignment.description && <p className="text-xs text-muted-foreground line-clamp-1">{assignment.description}</p>}
+                                      </div>
                                     </div>
-                                  </div>
-                                  <div className="shrink-0 flex items-center justify-center h-7 px-2 text-xs font-medium border border-border text-foreground hover:bg-muted rounded-md transition-colors">
-                                    View
-                                  </div>
-                                </Link>
-                              ))}
+                                    <div className={`shrink-0 flex items-center justify-center h-7 px-2 text-xs font-medium border rounded-md transition-colors ${buttonClass}`}>
+                                      {buttonText}
+                                    </div>
+                                  </Link>
+                                );
+                              })}
                             </div>
                           </div>
                         )}

@@ -8,6 +8,7 @@ import { ToastAction } from "@/components/ui/toast";
 import { useRouter } from "next/navigation";
 import { Video } from "lucide-react";
 import { useUser } from "@/components/providers/user-context";
+import { NotificationBell } from "@/components/app/notification-bell";
 
 export function SchoolHeader() {
   const schoolName = "Dr Max online school";
@@ -50,14 +51,19 @@ export function SchoolHeader() {
 
   return (
     <Card className="border-none shadow-none bg-transparent">
-      <CardContent className="flex items-center gap-6 p-0 pb-6">
-        <Avatar className="h-16 w-16 border bg-white p-1">
-          <AvatarImage src="/logo.png" alt="Dr Max online school Logo" className="object-contain" />
-          <AvatarFallback>{avatarFallback}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h2 className="text-2xl font-bold">{schoolName}</h2>
-          <p className="text-muted-foreground italic text-sm">"{schoolMantra}"</p>
+      <CardContent className="flex items-center justify-between p-0 pb-6">
+        <div className="flex items-center gap-6">
+          <Avatar className="h-16 w-16 border bg-white p-1">
+            <AvatarImage src="/logo.png" alt="Dr Max online school Logo" className="object-contain" />
+            <AvatarFallback>{avatarFallback}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="text-2xl font-bold">{schoolName}</h2>
+            <p className="text-muted-foreground italic text-sm">"{schoolMantra}"</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
         </div>
       </CardContent>
     </Card>

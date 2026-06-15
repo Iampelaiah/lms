@@ -23,7 +23,7 @@ import {
   Plus,
   Video,
   HelpCircle,
-  Puzzle,
+  MessageCircle,
   Palette,
   Lock,
   MessageSquare,
@@ -127,7 +127,7 @@ export function TutorSidebar() {
              <SidebarMenu>
                 <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
-                        <GlobalChatDrawer trigger={<Button variant="ghost" size="icon"><Puzzle /></Button>} />
+                        <GlobalChatDrawer trigger={<Button variant="ghost" size="icon"><MessageCircle /></Button>} />
                         <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
                             <Palette />
                         </Button>

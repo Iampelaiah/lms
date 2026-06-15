@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MoreHorizontal, Pin, MessageSquare, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { Post } from '../../../app/student/community/types';
@@ -33,8 +33,48 @@ const getSubjectImage = (subjectName: string) => {
   return '/science.png'; // default fallback
 };
 
-export function GridLayout({ communities, threads, onThreadClick }: { communities: Community[], threads: Post[], onThreadClick?: (thread: Post) => void }) {
+export function GridLayout({ 
+  communities, 
+  threads, 
+  onThreadClick,
+  onVote 
+}: { 
+  communities: Community[], 
+  threads: Post[], 
+  onThreadClick?: (thread: Post) => void,
+  onVote?: (threadId: string, newVotes: number) => void
+}) {
   const [visibleCount, setVisibleCount] = useState(4);
+  const [upvotedThreads, setUpvotedThreads] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('upvoted_threads');
+      if (stored) {
+        setUpvotedThreads(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const handleVote = (threadId: string, currentVotes: number) => {
+    const isUpvoted = !!upvotedThreads[threadId];
+    const newVotes = isUpvoted ? currentVotes - 1 : currentVotes + 1;
+    
+    const newUpvoted = { ...upvotedThreads, [threadId]: !isUpvoted };
+    setUpvotedThreads(newUpvoted);
+    try {
+      localStorage.setItem('upvoted_threads', JSON.stringify(newUpvoted));
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (onVote) {
+      onVote(threadId, newVotes);
+    }
+  };
+
   const visibleThreads = threads.slice(0, visibleCount);
   const hasMore = visibleCount < threads.length;
 
@@ -147,11 +187,25 @@ export function GridLayout({ communities, threads, onThreadClick }: { communitie
                     </div>
 
                     <div className="flex items-center gap-4 text-foreground/50 text-xs font-medium">
-                      <span className="flex items-center gap-1.5 hover:text-accent transition-colors cursor-pointer">
+                      <span 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onThreadClick) onThreadClick(thread);
+                        }}
+                        className="flex items-center gap-1.5 hover:text-accent transition-colors cursor-pointer"
+                      >
                         <MessageSquare className="w-4 h-4" />
                         {thread.comments?.length || 0}
                       </span>
-                      <span className="flex items-center gap-1.5 hover:text-accent transition-colors cursor-pointer">
+                      <span 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleVote(thread.id, thread.votes || 0);
+                        }}
+                        className={`flex items-center gap-1.5 transition-colors cursor-pointer ${
+                          upvotedThreads[thread.id] ? 'text-accent font-bold' : 'hover:text-accent'
+                        }`}
+                      >
                         <Eye className="w-4 h-4" />
                         {thread.votes || 0}
                       </span>

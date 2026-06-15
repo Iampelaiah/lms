@@ -7,7 +7,7 @@ export async function getTutorStudents(tutorId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('enrollments')
-    .select('id, student_id, subject_id, status, tutor_id, profiles!student_id!inner(id, full_name, email, avatar_url), subjects!inner(id, name, level, category)')
+    .select('id, student_id, subject_id, status, tutor_id, profiles!student_id!inner(id, full_name, email, avatar_url, curriculum_board, student_level), subjects!inner(id, name, level, category)')
     .eq('tutor_id', tutorId)
     .eq('status', 'approved')
 

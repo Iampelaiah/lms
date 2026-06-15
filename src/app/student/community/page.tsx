@@ -41,11 +41,7 @@ export default function StudentForum() {
   // Sort communities by members for trending
   const trendingSubjects = [...communities].sort((a, b) => b.memberCount - a.memberCount);
 
-  const displayThreads = currentUserId 
-    ? posts.filter(p => p.user_id === currentUserId || p.comments?.some((c: any) => c.user_id === currentUserId))
-    : posts;
-
-  const finalThreads = displayThreads.length > 0 ? displayThreads : posts;
+  const finalThreads = posts;
 
   // Sync selected thread with posts to update comments in real-time
   const currentSelectedThread = selectedThread ? posts.find(p => p.id === selectedThread.id) || null : null;
@@ -145,8 +141,8 @@ export default function StudentForum() {
           
           <main className="min-w-0">
             {layout === 'grid' 
-              ? <GridLayout communities={communities} threads={finalThreads} onThreadClick={setSelectedThread} /> 
-              : <ListLayout communities={communities} threads={finalThreads} onThreadClick={setSelectedThread} />}
+              ? <GridLayout communities={communities} threads={finalThreads} onThreadClick={setSelectedThread} onVote={broadcastVoteUpdate} /> 
+              : <ListLayout communities={communities} threads={finalThreads} onThreadClick={setSelectedThread} onVote={broadcastVoteUpdate} />}
           </main>
 
           <aside className="sticky top-8">

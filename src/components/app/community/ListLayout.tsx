@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, MessageSquare, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { Post } from '../../../app/student/community/types';
@@ -15,9 +15,48 @@ const getColorForId = (id: string, index: number) => {
   return styles[index % styles.length];
 };
 
-export function ListLayout({ communities, threads, onThreadClick }: { communities: Community[], threads: Post[], onThreadClick?: (thread: Post) => void }) {
+export function ListLayout({ 
+  communities, 
+  threads, 
+  onThreadClick,
+  onVote
+}: { 
+  communities: Community[], 
+  threads: Post[], 
+  onThreadClick?: (thread: Post) => void,
+  onVote?: (threadId: string, newVotes: number) => void
+}) {
   const [activeFilter, setActiveFilter] = useState('all');
   const [visibleCount, setVisibleCount] = useState(6);
+  const [upvotedThreads, setUpvotedThreads] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('upvoted_threads');
+      if (stored) {
+        setUpvotedThreads(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const handleVote = (threadId: string, currentVotes: number) => {
+    const isUpvoted = !!upvotedThreads[threadId];
+    const newVotes = isUpvoted ? currentVotes - 1 : currentVotes + 1;
+    
+    const newUpvoted = { ...upvotedThreads, [threadId]: !isUpvoted };
+    setUpvotedThreads(newUpvoted);
+    try {
+      localStorage.setItem('upvoted_threads', JSON.stringify(newUpvoted));
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (onVote) {
+      onVote(threadId, newVotes);
+    }
+  };
 
   const filteredThreads = threads.filter(t => activeFilter === 'all' || t.subject_id === activeFilter);
   const visibleThreads = filteredThreads.slice(0, visibleCount);
@@ -103,12 +142,26 @@ export function ListLayout({ communities, threads, onThreadClick }: { communitie
                 </div>
 
                 {/* Replies Column */}
-                <div className="hidden md:flex items-center gap-1.5 text-sm font-bold text-foreground/70">
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onThreadClick) onThreadClick(thread);
+                  }}
+                  className="hidden md:flex items-center gap-1.5 text-sm font-bold text-foreground/70 hover:text-accent cursor-pointer transition-colors"
+                >
                   {thread.comments?.length || 0} <span className="md:hidden">Replies</span>
                 </div>
 
                 {/* Views Column */}
-                <div className="hidden md:flex items-center gap-1.5 text-sm font-bold text-foreground/70">
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVote(thread.id, thread.votes || 0);
+                  }}
+                  className={`hidden md:flex items-center gap-1.5 text-sm font-bold cursor-pointer transition-colors ${
+                    upvotedThreads[thread.id] ? 'text-accent font-bold' : 'text-foreground/70 hover:text-accent'
+                  }`}
+                >
                   {thread.votes || 0} <span className="md:hidden">Votes</span>
                 </div>
 

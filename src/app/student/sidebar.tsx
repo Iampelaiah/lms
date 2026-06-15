@@ -23,7 +23,7 @@ import {
   LogOut,
   SlidersHorizontal,
   Palette,
-  Puzzle,
+  MessageCircle,
   HelpCircle,
   Copy,
   Star,
@@ -111,7 +111,7 @@ export function StudentSidebar() {
               <SidebarMenuItem>
                     <div className="flex justify-around items-center group-data-[collapsible=icon]:hidden">
                         <Link href="#"><Button variant="ghost" size="icon"><HelpCircle /></Button></Link>
-                        <Link href="#"><Button variant="ghost" size="icon"><Puzzle /></Button></Link>
+                        <Link href="#"><Button variant="ghost" size="icon"><MessageCircle /></Button></Link>
                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">

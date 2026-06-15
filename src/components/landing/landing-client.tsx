@@ -175,7 +175,7 @@ const Hero = () => {
                     initial={{ height: 0 }}
                     animate={{ height: `${h}%` }}
                     transition={{ delay: 1.2 + i * 0.1, duration: 0.8 }}
-                    className={`flex-1 ${i === 3 ? 'bg-white' : 'bg-muted'} rounded-2xl relative group overflow-hidden`}
+                    className={`flex-1 ${i === 3 ? 'bg-foreground' : 'bg-muted'} rounded-2xl relative group overflow-hidden`}
                   >
                     <div className="absolute inset-0 bg-gold translate-y-full group-hover:translate-y-0 transition-transform" />
                   </motion.div>
@@ -211,13 +211,8 @@ const Marquee = () => {
   const brands = ["EduCore", "ThinkLab", "LearnGrid", "SkillPath", "StudyFlow", "EduNova", "Academiq"];
   
   return (
-    <div className="bg-white pt-24 pb-12 overflow-hidden">
-      <div className="container mx-auto px-6 mb-16 flex flex-col items-center">
-         {/* Contrast bumped from /30 to /70 to meet WCAG AA minimum contrast ratio */}
-         <div className="inline-flex items-center gap-2 px-6 py-2 bg-muted rounded-full border border-background/10 text-[13px] font-semibold text-background/70">
-            <span>Join over 10,000 students already learning with Dr Max.</span>
-         </div>
-      </div>
+    <div className="bg-background pt-24 pb-12 overflow-hidden">
+
 
       <div className="flex whitespace-nowrap">
         <motion.div 
@@ -238,7 +233,7 @@ const Marquee = () => {
 
 const Features = () => {
   return (
-    <section id="methodology" className="py-24 px-6 md:px-12 bg-white relative">
+    <section id="methodology" className="py-24 px-6 md:px-12 bg-[#F8F9FA] relative">
       <div className="container mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-stretch">
         {/* Left Column: Massive Headline & Text */}
         <div className="lg:col-span-5 space-y-12">
@@ -254,7 +249,7 @@ const Features = () => {
                <Button size="lg" className="bg-background text-foreground hover:bg-background/90 font-bold px-8 h-14 rounded-full text-md group">
                   Start learning <ArrowRight className="ml-2 w-4 h-4" />
                </Button>
-               <Button size="lg" variant="outline" className="border-background/10 text-background hover:bg-muted font-bold px-8 h-14 rounded-full text-md">
+               <Button size="lg" variant="outline" className="border-background/10 text-foreground hover:bg-muted font-bold px-8 h-14 rounded-full text-md">
                   Learn more
                </Button>
             </div>
@@ -278,7 +273,7 @@ const Features = () => {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0 }}
-                className="bg-[#E4F0F2] rounded-[2.5rem] p-7 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[224px] absolute bottom-[10px] left-0 w-[57%]"
+                className="bg-[#F1F3F5] border border-border rounded-[2.5rem] p-7 flex flex-col justify-between md:col-span-3 lg:col-span-2 min-h-[224px] absolute bottom-[10px] left-0 w-[57%]"
             >
                 <div className="space-y-6">
                     <h3 className="text-2xl font-headline font-bold text-background tracking-tight leading-tight">
@@ -587,7 +582,7 @@ const Footer = () => {
 
 export const LandingClient = () => {
   return (
-    <div className="min-h-screen bg-muted selection:bg-gold selection:text-background">
+    <div className="dark min-h-screen bg-background text-foreground selection:bg-gold selection:text-background">
       <Navbar />
       <Hero />
       <Marquee />

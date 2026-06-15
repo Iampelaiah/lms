@@ -39,7 +39,8 @@ export async function login(formData: FormData) {
   if (!profile) {
     await supabase.from('profiles').upsert({
       id: data.user.id,
-      full_name: data.user.user_metadata?.full_name || '',
+      full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || '',
+      avatar_url: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || '',
       role: userRole,
       updated_at: new Date().toISOString(),
     })

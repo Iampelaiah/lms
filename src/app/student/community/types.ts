@@ -19,6 +19,7 @@ export interface CommentType {
 export interface Post {
   id: string;
   subject_id: string;
+  community_id?: string;
   user_id: string;
   title: string;
   content: string;
@@ -29,6 +30,7 @@ export interface Post {
   votes: number;
   created_at: string;
   author_name?: string;
+  author_avatar?: string;
   community_name?: string;
   comments?: CommentType[];
 }
@@ -42,7 +44,8 @@ export const mockCommunities: Community[] = [
 export const initialMockPosts: Post[] = [
   {
     id: 'p1',
-    community_id: '1',
+    subject_id: '00000000-0000-0000-0000-000000000001',
+    community_id: '00000000-0000-0000-0000-000000000001',
     user_id: 'u1',
     title: 'Need help understanding Integration by Parts',
     content: 'Can someone explain the LIATE rule in simple terms? I am struggling with choosing u and dv...',
@@ -57,7 +60,8 @@ export const initialMockPosts: Post[] = [
   },
   {
     id: 'p2',
-    community_id: '3',
+    subject_id: '00000000-0000-0000-0000-000000000003',
+    community_id: '00000000-0000-0000-0000-000000000003',
     user_id: 'u2',
     title: 'Study tips for finals week? 📚',
     content: 'What are your best strategies for avoiding burnout while reviewing a semester worth of notes?',

@@ -21,17 +21,28 @@ export default function GradingPage() {
   const supabase = createClient();
 
   const [loading, setLoading] = useState(true);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [submission, setSubmission] = useState<any>(null);
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null);
   const [overallFeedback, setOverallFeedback] = useState<string>('');
   const [marksData, setMarksData] = useState<MarkingData | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!submissionId) return;
 
     const fetchSubmission = async () => {
       setLoading(true);
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setCurrentUserId(user.id);
+        }
+      } catch (err) {
+        console.error("Error getting user session:", err);
+      }
 
       if (submissionId === 'mock-assignment-id-1') {
         setSubmission({
@@ -145,7 +156,7 @@ export default function GradingPage() {
       ...annotation,
       id: annotation.id || crypto.randomUUID(),
       submission_id: submissionId,
-      tutor_id: 'tutor-123', // placeholder
+      tutor_id: currentUserId || 'bb4b0f5b-852b-4cbd-8fc2-fb038643742a', // fallback admin user
       created_at: new Date().toISOString(),
       marker_number: annotations.length + 1
     };
@@ -179,12 +190,32 @@ export default function GradingPage() {
           updatePayload.annotations_data = annotations;
         }
 
-        const { error: subError } = await supabase
+        let { error: subError } = await supabase
           .from('submissions')
           .update(updatePayload)
           .eq('id', submissionId);
           
-        if (subError) throw subError;
+        if (subError) {
+          console.warn("First submissions update attempt failed, retrying with fallback payload:", subError);
+          // Fallback: remove component_scores (if column not created yet) and set overall_grade to numeric totalMark
+          const fallbackPayload: any = {
+            status: 'graded',
+            overall_feedback: overallFeedback,
+            overall_grade: marksData?.totalMark || null,
+            updated_at: new Date().toISOString()
+          };
+
+          if (submission?.file_url) {
+            fallbackPayload.annotations_data = annotations;
+          }
+
+          const { error: retryError } = await supabase
+            .from('submissions')
+            .update(fallbackPayload)
+            .eq('id', submissionId);
+            
+          if (retryError) throw retryError;
+        }
 
         // 2. Save annotations for text
         if (!submission?.file_url) {
@@ -192,7 +223,14 @@ export default function GradingPage() {
           if (annotations.length > 0) {
             const { error: annError } = await supabase.from('annotations').insert(
               annotations.map((a, idx) => ({
-                ...a,
+                id: a.id,
+                submission_id: a.submission_id,
+                tutor_id: currentUserId || a.tutor_id || 'bb4b0f5b-852b-4cbd-8fc2-fb038643742a',
+                type: a.type,
+                start_offset: a.start_offset,
+                end_offset: a.end_offset,
+                selected_text: a.selected_text,
+                content: a.content,
                 marker_number: idx + 1,
               }))
             );
@@ -247,6 +285,116 @@ export default function GradingPage() {
     }
   };
 
+  const handleSaveDraft = async () => {
+    try {
+      setSavingDraft(true);
+
+      if (submissionId !== 'mock-assignment-id-1') {
+        // 1. Update the submissions table
+        const updatePayload: any = {
+          status: 'grading', // Keep in grading status
+          overall_feedback: overallFeedback,
+          overall_grade: marksData?.grade || null,
+          component_scores: marksData as any,
+          updated_at: new Date().toISOString()
+        };
+
+        if (submission?.file_url) {
+          updatePayload.annotations_data = annotations;
+        }
+
+        let { error: subError } = await supabase
+          .from('submissions')
+          .update(updatePayload)
+          .eq('id', submissionId);
+          
+        if (subError) {
+          console.warn("First submissions update attempt failed, retrying with fallback payload:", subError);
+          const fallbackPayload: any = {
+            status: 'grading',
+            overall_feedback: overallFeedback,
+            overall_grade: marksData?.totalMark || null,
+            updated_at: new Date().toISOString()
+          };
+
+          if (submission?.file_url) {
+            fallbackPayload.annotations_data = annotations;
+          }
+
+          const { error: retryError } = await supabase
+            .from('submissions')
+            .update(fallbackPayload)
+            .eq('id', submissionId);
+            
+          if (retryError) throw retryError;
+        }
+
+        // 2. Save annotations for text
+        if (!submission?.file_url) {
+          await supabase.from('annotations').delete().eq('submission_id', submissionId);
+          if (annotations.length > 0) {
+            const { error: annError } = await supabase.from('annotations').insert(
+              annotations.map((a, idx) => ({
+                id: a.id,
+                submission_id: a.submission_id,
+                tutor_id: currentUserId || a.tutor_id || 'bb4b0f5b-852b-4cbd-8fc2-fb038643742a',
+                type: a.type,
+                start_offset: a.start_offset,
+                end_offset: a.end_offset,
+                selected_text: a.selected_text,
+                content: a.content,
+                marker_number: idx + 1,
+              }))
+            );
+            if (annError) throw annError;
+          }
+        }
+
+        // 3. update legacy student_assignments
+        if (submission?.assignment_id) {
+          await supabase
+            .from('student_assignments')
+            .update({
+              status: 'grading',
+              tutor_feedback: overallFeedback,
+              grade: marksData?.grade || null,
+              total_score: marksData?.totalMark || null,
+              component_scores: marksData as any,
+            })
+            .eq('id', submission.assignment_id);
+        }
+      } else {
+        // Mock flow updates local storage
+        const key = `drmax_submissions_mock-student-id_mock-subject-id`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const updated = parsed.map((item: any) => {
+            if (item.id === 'mock-assignment-id-1') {
+              return { 
+                ...item, 
+                status: 'grading', 
+                tutor_feedback: overallFeedback, 
+                grade: marksData?.grade,
+                total_score: marksData?.totalMark,
+                component_scores: marksData,
+              };
+            }
+            return item;
+          });
+          localStorage.setItem(key, JSON.stringify(updated));
+        }
+      }
+
+      toast({ title: 'Success', description: 'Draft saved successfully!' });
+    } catch (e: any) {
+      console.error(e);
+      toast({ title: 'Error', description: 'Failed to save draft.', variant: 'destructive' });
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -264,7 +412,9 @@ export default function GradingPage() {
         subjectName={submission?.subjectNameStr}
         onClose={() => router.push('/tutor/assignments')}
         onSubmit={handlePublishGrades}
-        isLoading={false}
+        onSaveDraft={handleSaveDraft}
+        isLoading={loading}
+        isDraftLoading={savingDraft}
       />
       
       <div className="flex flex-1 overflow-hidden">
