@@ -24,6 +24,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import EmojiPicker from 'emoji-picker-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Search, MessageSquare, Calendar, Trash2, Send, Check, 
@@ -85,6 +87,11 @@ export default function TutorStudentsPage() {
   const [students, setStudents] = useState<StudentGrouped[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  
+  // File upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Detail tab state
   const [activeTab, setActiveTab] = useState('overview');
@@ -323,6 +330,32 @@ export default function TutorStudentsPage() {
 
     const msgText = newMessage.trim();
     setNewMessage('');
+    
+    let fileUrl = '';
+    let fileType = '';
+    
+    if (selectedFile) {
+      setIsUploading(true);
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('chat_media')
+        .upload(fileName, selectedFile);
+        
+      if (uploadError) {
+        toast({ title: 'Upload failed', description: uploadError.message, variant: 'destructive' });
+        setIsUploading(false);
+        return;
+      }
+      
+      const { data: publicUrlData } = supabase.storage.from('chat_media').getPublicUrl(fileName);
+      fileUrl = publicUrlData.publicUrl;
+      fileType = selectedFile.type.startsWith('image/') ? 'image' : 'file';
+      setSelectedFile(null);
+      setIsUploading(false);
+    }
+    
+    if (!msgText && !fileUrl) return;
 
     if (useChatFallback) {
       // Local Storage Fallback
@@ -338,7 +371,7 @@ export default function TutorStudentsPage() {
       localStorage.setItem(`drmax_chat_${tutorId}_${selectedStudentId}`, JSON.stringify(updated));
     } else {
       // Supabase
-      const res = await sendGlobalChatMessage(tutorId, selectedStudentId, msgText);
+      const res = await sendGlobalChatMessage(tutorId, selectedStudentId, msgText, fileUrl, fileType);
       if (res.error) {
         toast({
           title: 'Failed to send message',
@@ -745,6 +778,14 @@ export default function TutorStudentsPage() {
                                       ? 'bg-[#D4AF37]/20 border border-[#D4AF37]/30 text-[#D4AF37] rounded-tr-sm' 
                                       : 'bg-muted text-foreground rounded-tl-sm'
                                   }`}>
+                                    {msg.file_url && msg.file_type === 'image' && (
+                                      <img src={msg.file_url} alt="Attachment" className="max-w-[200px] rounded-lg mb-2 object-contain" />
+                                    )}
+                                    {msg.file_url && msg.file_type === 'file' && (
+                                      <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-background/50 rounded-lg mb-2 text-xs hover:underline">
+                                        <Paperclip size={14} /> View Attachment
+                                      </a>
+                                    )}
                                     {msg.message}
                                   </div>
                                   <div className={`flex items-center gap-1 text-[10px] text-muted-foreground ${isMe ? 'mr-1' : 'ml-1'}`}>
@@ -760,19 +801,50 @@ export default function TutorStudentsPage() {
                       </div>
 
                       <form onSubmit={handleSendMessage} className="p-4 bg-card border-t border-border">
+                        {selectedFile && (
+                          <div className="mb-3 flex items-center justify-between bg-muted/50 p-2 rounded-lg text-sm border border-border">
+                            <span className="truncate max-w-[200px] text-muted-foreground">{selectedFile.name}</span>
+                            <button type="button" onClick={() => setSelectedFile(null)} className="text-red-400 hover:text-red-500 font-bold ml-2">×</button>
+                          </div>
+                        )}
                         <div className="relative flex items-center bg-muted/50 border border-slate-700/50 rounded-xl overflow-hidden focus-within:border-slate-500 transition-colors">
                           <input 
                             type="text" 
                             value={newMessage}
                             onChange={e => setNewMessage(e.target.value)}
                             placeholder="Type a message..." 
-                            className="flex-1 bg-transparent py-3 pl-4 pr-24 text-sm text-foreground focus:outline-none placeholder:text-muted-foreground"
+                            className="flex-1 bg-transparent py-3 pl-4 pr-32 text-sm text-foreground focus:outline-none placeholder:text-muted-foreground"
                           />
                           <div className="absolute right-3 flex items-center gap-3">
-                            <Paperclip size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
-                            <Smile size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
-                            <button type="submit" className="w-8 h-8 bg-[#D4AF37] hover:bg-[#c29f2f] rounded-lg flex items-center justify-center text-black ml-1 transition-colors">
-                              <Send size={14} className="-ml-0.5" />
+                            <input 
+                              type="file" 
+                              ref={fileInputRef}
+                              className="hidden" 
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  setSelectedFile(e.target.files[0]);
+                                }
+                              }}
+                            />
+                            <Paperclip 
+                              onClick={() => fileInputRef.current?.click()}
+                              size={18} 
+                              className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" 
+                            />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Smile size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[40vw] sm:w-[400px] p-0 border-none mb-2" side="top" align="end">
+                                <EmojiPicker 
+                                  onEmojiClick={(emojiData) => setNewMessage(prev => prev + emojiData.emoji)} 
+                                  theme="dark"
+                                  width="100%"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <button type="submit" disabled={isUploading} className="w-8 h-8 bg-[#D4AF37] hover:bg-[#c29f2f] rounded-lg flex items-center justify-center text-black ml-1 transition-colors disabled:opacity-50">
+                              {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} className="-ml-0.5" />}
                             </button>
                           </div>
                         </div>

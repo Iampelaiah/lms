@@ -18,15 +18,20 @@ export async function getGlobalChatMessages(userId: string, partnerId: string) {
   return { data }
 }
 
-export async function sendGlobalChatMessage(senderId: string, receiverId: string, message: string) {
+export async function sendGlobalChatMessage(senderId: string, receiverId: string, message: string, fileUrl?: string, fileType?: string) {
   const supabase = await createClient()
+  const payload: any = {
+    sender_id: senderId,
+    receiver_id: receiverId,
+    message
+  }
+
+  if (fileUrl) payload.file_url = fileUrl;
+  if (fileType) payload.file_type = fileType;
+
   const { data, error } = await supabase
     .from('global_messages')
-    .insert({
-      sender_id: senderId,
-      receiver_id: receiverId,
-      message
-    })
+    .insert(payload)
     .select()
     .single()
 

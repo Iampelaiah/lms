@@ -179,7 +179,7 @@ export function GlobalChatDrawer({ trigger }: { trigger: React.ReactNode }) {
       <SheetTrigger asChild>
         {trigger}
       </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col h-full bg-card">
+      <SheetContent className="w-full sm:max-w-[820px] p-0 flex flex-col h-full bg-card">
         
         {/* --- Contacts List View --- */}
         {!activePartnerId ? (

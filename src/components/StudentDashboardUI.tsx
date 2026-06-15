@@ -4,6 +4,8 @@ import {
   GraduationCap, Plus, Calendar as CalendarIcon, MessageSquare, 
   ClipboardList, Clock, BarChart2, Paperclip, Smile, Send
 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import EmojiPicker from 'emoji-picker-react';
 
 export default function StudentDashboardUI() {
   return (
@@ -233,7 +235,14 @@ export default function StudentDashboardUI() {
                   />
                   <div className="absolute right-3 flex items-center gap-3">
                     <Paperclip size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
-                    <Smile size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Smile size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[40vw] sm:w-[400px] p-0 border-none mb-2" side="top" align="end">
+                        <EmojiPicker theme="dark" width="100%" />
+                      </PopoverContent>
+                    </Popover>
                     <button className="w-8 h-8 bg-[#D4AF37] hover:bg-[#c29f2f] rounded-lg flex items-center justify-center text-black ml-1 transition-colors">
                       <Send size={14} className="-ml-0.5" />
                     </button>
