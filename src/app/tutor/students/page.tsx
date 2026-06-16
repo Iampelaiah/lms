@@ -15,6 +15,7 @@ import {
 } from '@/app/actions/student-tutor';
 import { getGlobalChatMessages, sendGlobalChatMessage } from '@/app/actions/chat';
 import { getSubjectAssignments, getSubjectTopics } from '@/app/actions/student-assignments';
+import { StudentProfileDashboard } from '@/components/StudentProfileDashboard';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -101,6 +102,8 @@ export default function TutorStudentsPage() {
   const [chatLoading, setChatLoading] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [useChatFallback, setUseChatFallback] = useState(false);
+  const [isMessageSearchOpen, setIsMessageSearchOpen] = useState(false);
+  const [messageSearchQuery, setMessageSearchQuery] = useState('');
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // Deadlines state
@@ -604,8 +607,39 @@ export default function TutorStudentsPage() {
     });
   }, [students, searchQuery, subjectFilter]);
 
+  const filteredMessages = useMemo(() => {
+    return messages.filter(msg => 
+      msg.message && msg.message.toLowerCase().includes(messageSearchQuery.toLowerCase())
+    );
+  }, [messages, messageSearchQuery]);
+
+  const handleExportChat = () => {
+    if (!messages || messages.length === 0) {
+      toast({ title: 'Export Failed', description: 'No messages to export.', variant: 'destructive' });
+      return;
+    }
+    const chatText = messages.map(m => {
+      const sender = m.sender_id === tutorId ? 'Me' : (selectedGroup?.student.full_name || 'Student');
+      const date = new Date(m.created_at).toLocaleString();
+      let text = `[${date}] ${sender}: ${m.message}`;
+      if (m.file_url) text += ` (Attachment: ${m.file_url})`;
+      return text;
+    }).join('\n');
+    
+    const blob = new Blob([chatText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat_export_${selectedGroup?.student.full_name.replace(/\s+/g, '_') || 'student'}_${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: 'Chat Exported', description: 'The conversation has been downloaded.' });
+  };
+
   return (
-    <div className="flex flex-col h-full bg-background text-foreground font-sans overflow-hidden min-h-[calc(100vh-3.5rem)]">
+    <div id="students-page-container" className="flex flex-col h-full bg-background text-foreground font-sans overflow-hidden min-h-[calc(100vh-3.5rem)]">
       
       {/* 2. Middle Column ("My Students" List) and 3. Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
@@ -751,10 +785,53 @@ export default function TutorStudentsPage() {
                           Chat with {selectedGroup.student.full_name.split(' ')[0]}
                         </div>
                         <div className="flex items-center gap-3 text-muted-foreground">
-                          <Search size={18} className="cursor-pointer hover:text-foreground" />
-                          <span className="text-xl leading-none mb-1 cursor-pointer hover:text-foreground">⋮</span>
+                          <Search 
+                            size={18} 
+                            className={`cursor-pointer hover:text-foreground ${isMessageSearchOpen ? 'text-[#D4AF37]' : ''}`}
+                            onClick={() => {
+                              setIsMessageSearchOpen(!isMessageSearchOpen);
+                              if (isMessageSearchOpen) setMessageSearchQuery('');
+                            }}
+                          />
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <span className="text-xl leading-none mb-1 cursor-pointer hover:text-foreground">⋮</span>
+                            </PopoverTrigger>
+                            <PopoverContent align="end" className="w-48 p-1 border-border bg-card shadow-lg rounded-xl">
+                              <Button 
+                                variant="ghost" 
+                                className="w-full justify-start text-sm hover:bg-muted/50 rounded-lg px-3 py-2 h-auto font-normal text-foreground" 
+                                onClick={() => setActiveTab('overview')}
+                              >
+                                <User size={16} className="mr-2 text-muted-foreground" /> View Profile
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                className="w-full justify-start text-sm hover:bg-muted/50 rounded-lg px-3 py-2 h-auto font-normal text-foreground" 
+                                onClick={handleExportChat}
+                              >
+                                <FileText size={16} className="mr-2 text-muted-foreground" /> Export Chat
+                              </Button>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                       </div>
+
+                      {isMessageSearchOpen && (
+                        <div className="px-4 py-3 border-b border-border bg-muted/20">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+                            <input 
+                              type="text" 
+                              placeholder="Search in conversation..." 
+                              className="w-full bg-background border border-border rounded-md py-1.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+                              value={messageSearchQuery}
+                              onChange={(e) => setMessageSearchQuery(e.target.value)}
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
                         {chatLoading ? (
@@ -764,8 +841,13 @@ export default function TutorStudentsPage() {
                              <MessageSquare className="h-10 w-10 opacity-20 mb-2" />
                              <p className="text-sm">Start a conversation</p>
                            </div>
+                        ) : filteredMessages.length === 0 ? (
+                           <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+                             <Search className="h-10 w-10 opacity-20 mb-2" />
+                             <p className="text-sm">No messages found for "{messageSearchQuery}"</p>
+                           </div>
                         ) : (
-                          messages.map(msg => {
+                          filteredMessages.map(msg => {
                             const isMe = msg.sender_id === tutorId;
                             return (
                               <div key={msg.id} className={`flex items-start gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
@@ -852,7 +934,15 @@ export default function TutorStudentsPage() {
                     </div>
                   )}
 
-                  {activeTab !== 'messages' && (
+                  {activeTab === 'overview' && (
+                    <StudentProfileDashboard 
+                      student={selectedGroup.student} 
+                      progressData={progressData} 
+                      deadlines={deadlines}
+                    />
+                  )}
+                  
+                  {activeTab !== 'messages' && activeTab !== 'overview' && (
                      <div className="flex-1 flex flex-col bg-card border border-border rounded-2xl p-4 overflow-y-auto custom-scrollbar">
                        <h3 className="text-foreground font-medium mb-4">Dashboard View</h3>
                        <p className="text-muted-foreground text-sm">Navigate to Chat to see messages, or Deadlines for tasks.</p>
@@ -1024,6 +1114,19 @@ export default function TutorStudentsPage() {
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
+        main:has(#students-page-container) {
+          overflow: hidden !important;
+          height: 100vh !important;
+          max-height: 100vh !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+        @media (max-width: 768px) {
+          main:has(#students-page-container) {
+            height: calc(100vh - 3rem) !important;
+            max-height: calc(100vh - 3rem) !important;
+          }
+        }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
