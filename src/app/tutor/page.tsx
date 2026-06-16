@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, FolderPlus, PlusCircle, FilePlus, Users, Activity, FileCheck, CalendarClock, Shield } from "lucide-react";
 import Link from "next/link";
-import { ClassPerformance } from "@/components/app/tutor/dashboard/class-performance";
+import dynamic from 'next/dynamic';
+const ClassPerformance = dynamic(() => import('@/components/app/tutor/dashboard/class-performance').then(mod => mod.ClassPerformance), { ssr: false });
 import * as React from "react";
 import { SchoolHeader } from "@/components/app/school-header";
 import { useUser } from "@/components/providers/user-context";
@@ -48,7 +49,7 @@ type StatCardProps = {
     value: string;
     icon: React.ElementType;
     change?: string;
-    changeType?: 'increase' | 'decrease';
+    changeType?: 'increase' | 'decrease' | 'neutral';
 }
 
 function StatCard({ title, value, icon: Icon, change, changeType }: StatCardProps) {

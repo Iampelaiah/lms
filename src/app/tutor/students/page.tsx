@@ -15,7 +15,8 @@ import {
 } from '@/app/actions/student-tutor';
 import { getGlobalChatMessages, sendGlobalChatMessage } from '@/app/actions/chat';
 import { getSubjectAssignments, getSubjectTopics } from '@/app/actions/student-assignments';
-import { StudentProfileDashboard } from '@/components/StudentProfileDashboard';
+import dynamic from 'next/dynamic';
+const StudentProfileDashboard = dynamic(() => import('@/components/StudentProfileDashboard').then(mod => mod.StudentProfileDashboard), { ssr: false });
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -26,7 +27,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import EmojiPicker from 'emoji-picker-react';
+import { Theme } from 'emoji-picker-react';
+
+
+const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 import AgoraCall from '@/components/video/agora-call';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
@@ -62,6 +66,8 @@ interface Message {
   sender_id: string;
   receiver_id: string;
   message: string;
+  file_url?: string;
+  file_type?: string;
   created_at: string;
 }
 
@@ -821,7 +827,7 @@ export default function TutorStudentsPage() {
               <PopoverContent className="w-[40vw] sm:w-[400px] p-0 border-none mb-2" side="top" align="end">
                 <EmojiPicker 
                   onEmojiClick={(emojiData) => setNewMessage(prev => prev + emojiData.emoji)} 
-                  theme="dark"
+                  theme={Theme.DARK}
                   width="100%"
                 />
               </PopoverContent>

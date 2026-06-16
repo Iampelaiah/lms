@@ -47,7 +47,7 @@ export function GlobalChatDrawer({ trigger }: { trigger: React.ReactNode }) {
     if (!profile?.id) return;
     setLoadingContacts(true);
     
-    let assignedContactsFetch = Promise.resolve({ data: [] });
+    let assignedContactsFetch: Promise<{ data: any[] }> = Promise.resolve({ data: [] });
     if (profile.role === 'student') {
       assignedContactsFetch = getStudentChatContacts(profile.id);
     } else if (profile.role === 'tutor') {
