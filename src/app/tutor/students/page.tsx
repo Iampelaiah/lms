@@ -639,7 +639,7 @@ export default function TutorStudentsPage() {
             className="rounded-full gap-2 text-[#D4AF37] border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 mr-2" 
             onClick={async () => {
               setIsVideoCallActive(true);
-              const callChannel = `DrMax_LMS_TutorClass_${tutorId}_${selectedStudentId}`;
+              const callChannel = `class_${selectedStudentId?.replace(/-/g, '').substring(0, 16)}_${tutorId?.replace(/-/g, '').substring(0, 16)}`;
               await supabase.channel(`calls:${selectedStudentId}`).send({
                 type: 'broadcast',
                 event: 'incoming-call',
@@ -899,7 +899,7 @@ return (
                     </div>
                     {selectedStudentId && profile?.id && (
                        <AgoraCall 
-                         channelName={`DrMax_LMS_TutorClass_${tutorId}_${selectedStudentId}`} 
+                         channelName={`class_${selectedStudentId?.replace(/-/g, '').substring(0, 16)}_${tutorId?.replace(/-/g, '').substring(0, 16)}`} 
                          onEndCall={() => setIsVideoCallActive(false)} 
                        />
                     )}
