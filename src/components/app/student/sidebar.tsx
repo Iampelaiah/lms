@@ -48,6 +48,7 @@ const navItems = [
   { href: '/student', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/student/study-panel', icon: BrainCircuit, label: 'Study Panel' },
   { href: '/student/live-classes', icon: Video, label: 'Live Classes' },
+  { href: '/student/chat', icon: MessageCircle, label: 'Chat' },
   { href: '/student/community', icon: MessageSquare, label: 'Forums' },
   { href: '/student/resources', icon: Library, label: 'Resources' },
   { href: '/student/progress', icon: BarChart, label: 'Progress' },

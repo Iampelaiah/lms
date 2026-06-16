@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { 
   BrainCircuit, Lightbulb, Video, Calendar, Clock, Shield, Search, Bell, Sparkles, 
-  ChevronRight, BookOpen, ShieldAlert, X, MoreVertical
+  ChevronRight, BookOpen, ShieldAlert, X, MoreVertical, Check
 } from 'lucide-react';
 import Link from 'next/link';
 import { DetailedProgressCard } from "@/components/app/student/dashboard/subject-progress-card";
@@ -78,7 +78,50 @@ function AiTutorAssistant({ courses }: { courses: any[] }) {
   );
 }
 
-function UpcomingLiveClass({ upcomingClasses, loading }: { upcomingClasses: any[]; loading: boolean }) {
+function StudentUpcomingDeadlines({ deadlines, loading }: { deadlines: any[]; loading: boolean }) {
+  return (
+    <div className="bg-card border border-border rounded-2xl p-4 flex flex-col min-h-[200px]">
+      <div className="flex justify-between items-center mb-3 shrink-0">
+        <div className="flex items-center gap-2 font-medium text-foreground">
+          <Calendar className="w-4 h-4 text-purple-400" />
+          Upcoming Deadlines
+        </div>
+      </div>
+      
+      <div className="space-y-3 flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="animate-pulse flex flex-col gap-3">
+            {[1, 2].map(i => (
+              <div key={i} className="h-10 bg-muted rounded-lg w-full"></div>
+            ))}
+          </div>
+        ) : deadlines.length === 0 ? (
+          <div className="rounded-[1.25rem] bg-muted border border-border text-foreground/ p-4 relative flex flex-col items-center justify-center h-[104px]">
+             <p className="text-xs">No upcoming deadlines</p>
+          </div>
+        ) : (
+          deadlines.map((d, i) => {
+             const daysLeft = Math.max(0, Math.ceil((new Date(d.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+             return (
+               <div key={d.id} className="flex items-start gap-3 group">
+                 <button className="w-3 h-3 rounded-full mt-1.5 bg-red-500 hover:scale-110 transition-transform flex items-center justify-center cursor-default">
+                   <Check className="w-2 h-2 text-black opacity-0 group-hover:opacity-100" />
+                 </button>
+                 <div className="flex-1 min-w-0">
+                   <h4 className="text-sm font-medium text-foreground mb-0.5 truncate">{d.title}</h4>
+                   <p className="text-xs text-muted-foreground">{new Date(d.due_date).toLocaleDateString()}</p>
+                 </div>
+                 <div className="text-xs font-medium text-red-400 mt-0.5 shrink-0">{daysLeft} days left</div>
+               </div>
+             )
+          })
+        )}
+      </div>
+    </div>
+  )
+}
+
+function UpcomingLiveClass({ upcomingClasses, deadlines, loading }: { upcomingClasses: any[]; deadlines: any[]; loading: boolean }) {
   const [selectedOffset, setSelectedOffset] = useState(0);
 
   if (loading) {
@@ -96,6 +139,13 @@ function UpcomingLiveClass({ upcomingClasses, loading }: { upcomingClasses: any[
     const cDate = new Date(c.start_date);
     cDate.setHours(0, 0, 0, 0);
     return cDate.getTime() === selectedDate.getTime();
+  });
+
+  const upcomingDeadline = deadlines?.find(d => {
+    if (!d.due_date) return false;
+    const dDate = new Date(d.due_date);
+    dDate.setHours(0, 0, 0, 0);
+    return dDate.getTime() === selectedDate.getTime();
   });
 
   return (
@@ -158,6 +208,25 @@ function UpcomingLiveClass({ upcomingClasses, loading }: { upcomingClasses: any[
             </div>
           )
         })()
+      ) : upcomingDeadline ? (
+        <div className="rounded-[1.25rem] bg-red-500/10 border border-red-500/20 text-red-500 p-4 relative overflow-hidden transition-transform duration-300 hover:-translate-y-1 shadow-sm cursor-pointer">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-background text-foreground rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-border">
+              <Calendar className="w-5 h-5 text-red-500" />
+            </div>
+            <div className="pr-2 flex-1">
+              <h4 className="font-extrabold text-[15px] leading-tight mb-0.5 text-red-500 truncate">{upcomingDeadline.title}</h4>
+              <p className="text-[10px] font-bold opacity-70 text-red-500 uppercase tracking-wide">Assignment Due</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 flex items-center justify-between pt-3 border-t border-red-500/10 text-xs font-bold text-red-500">
+            <span className="opacity-80 uppercase tracking-wider text-[10px]">
+              {new Date(upcomingDeadline.due_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            </span>
+            <span className="bg-red-500/10 px-2 py-1 rounded-md">11:59 pm</span>
+          </div>
+        </div>
       ) : (
         <div className="rounded-[1.25rem] bg-muted border border-border text-foreground/ p-4 relative flex flex-col items-center justify-center h-[104px]">
            <p className="text-xs">No lessons scheduled</p>
@@ -174,6 +243,7 @@ export default function StudentDashboardPage() {
   const [loadingCourses, setLoadingCourses] = React.useState(true);
   const [upcomingClasses, setUpcomingClasses] = useState<any[]>([]);
   const [loadingUpcoming, setLoadingUpcoming] = useState(true);
+  const [deadlines, setDeadlines] = useState<any[]>([]);
   const supabase = React.useMemo(() => createClient(), []);
   const userName = profile?.full_name || 'Student';
 
@@ -185,7 +255,7 @@ export default function StudentDashboardPage() {
       }
 
       try {
-        const [enrollmentsResult, upcomingClassResult] = await Promise.all([
+        const [enrollmentsResult, upcomingClassResult, deadlinesResult] = await Promise.all([
           supabase
             .from('enrollments')
             .select(`
@@ -214,7 +284,14 @@ export default function StudentDashboardPage() {
             `)
             .gte('start_date', new Date(new Date().setDate(new Date().getDate() - 2)).toISOString())
             .order('start_date', { ascending: true })
-            .lte('start_date', new Date(new Date().setDate(new Date().getDate() + 3)).toISOString())
+            .lte('start_date', new Date(new Date().setDate(new Date().getDate() + 3)).toISOString()),
+          supabase
+            .from('student_deadlines')
+            .select('*, subjects(name)')
+            .eq('student_id', profile.id)
+            .eq('status', 'pending')
+            .order('due_date', { ascending: true })
+            .limit(10)
         ]);
 
         const enrollments = enrollmentsResult.data;
@@ -256,6 +333,10 @@ export default function StudentDashboardPage() {
           setUpcomingClasses(upcomingClassResult.data as any[]);
         } else {
           setUpcomingClasses([]);
+        }
+
+        if (deadlinesResult.data) {
+          setDeadlines(deadlinesResult.data as any[]);
         }
       } catch (err) {
         console.error('Error fetching student dashboard data:', err);
@@ -375,7 +456,8 @@ export default function StudentDashboardPage() {
             ========================================= */}
         <aside className="flex flex-col gap-4 h-full pb-6">
           <AiTutorAssistant courses={courses} />
-          <UpcomingLiveClass upcomingClasses={upcomingClasses} loading={loadingUpcoming} />
+          <UpcomingLiveClass upcomingClasses={upcomingClasses} deadlines={deadlines} loading={loadingUpcoming} />
+          <StudentUpcomingDeadlines deadlines={deadlines} loading={loadingUpcoming} />
         </aside>
       </div>
     </div>

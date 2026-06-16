@@ -625,138 +625,7 @@ export default function TutorStudentsPage() {
     });
   }, [students, searchQuery, subjectFilter]);
 
-    const chatUI = selectedGroup && selectedStudentId ? (
-  <div className="flex-1 flex flex-col bg-card border border-border rounded-2xl overflow-hidden min-h-0">
-    <div className="p-4 border-b border-border flex justify-between items-center bg-card">
-        <div className="flex items-center gap-2 font-medium text-foreground">
-          <MessageSquare size={18} className="text-muted-foreground" />
-          Chat with {selectedGroup.student.full_name.split(' ')[0]}
-        </div>
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="rounded-full gap-2 text-[#D4AF37] border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 mr-2" 
-            onClick={async () => {
-              setIsVideoCallActive(true);
-              const callChannel = `DrMax_LMS_TutorClass_${tutorId}_${selectedStudentId}`;
-              await supabase.channel(`calls:${selectedStudentId}`).send({
-                type: 'broadcast',
-                event: 'incoming-call',
-                payload: {
-                  tutorId: tutorId,
-                  tutorName: profile?.full_name || 'Your Tutor',
-                  channelName: callChannel,
-                  avatarUrl: profile?.avatar_url
-                }
-              });
-            }}
-          >
-            <Video className="w-4 h-4" />
-            <span className="hidden sm:inline">Virtual Class</span>
-          </Button>
-          <Search size={18} className="cursor-pointer hover:text-foreground" />
-          <span className="text-xl leading-none mb-1 cursor-pointer hover:text-foreground">⋮</span>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-        {chatLoading ? (
-           <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-[#D4AF37]" /></div>
-        ) : messages.length === 0 ? (
-           <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-             <MessageSquare className="h-10 w-10 opacity-20 mb-2" />
-             <p className="text-sm">Start a conversation</p>
-           </div>
-        ) : (
-          messages.map(msg => {
-            const isMe = msg.sender_id === tutorId;
-            return (
-              <div key={msg.id} className={`flex items-start gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
-                {!isMe && (
-                  <img src={selectedGroup.student.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedGroup.student.full_name}`} alt="Student" className="w-8 h-8 rounded-full bg-muted object-cover" />
-                )}
-                <div className={`flex flex-col gap-1 max-w-[80%] ${isMe ? 'items-end' : ''}`}>
-                  <div className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                    isMe 
-                      ? 'bg-[#D4AF37]/20 border border-[#D4AF37]/30 text-[#D4AF37] rounded-tr-sm' 
-                      : 'bg-muted text-foreground rounded-tl-sm'
-                  }`}>
-                    {msg.file_url && msg.file_type === 'image' && (
-                      <img src={msg.file_url} alt="Attachment" className="max-w-[200px] rounded-lg mb-2 object-contain" />
-                    )}
-                    {msg.file_url && msg.file_type === 'file' && (
-                      <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-background/50 rounded-lg mb-2 text-xs hover:underline">
-                        <Paperclip size={14} /> View Attachment
-                      </a>
-                    )}
-                    {msg.message}
-                  </div>
-                  <div className={`flex items-center gap-1 text-[10px] text-muted-foreground ${isMe ? 'mr-1' : 'ml-1'}`}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    {isMe && <span className="text-[#D4AF37]">✓✓</span>}
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-        <div ref={chatBottomRef} />
-      </div>
-
-      <form onSubmit={handleSendMessage} className="p-4 bg-card border-t border-border">
-        {selectedFile && (
-          <div className="mb-3 flex items-center justify-between bg-muted/50 p-2 rounded-lg text-sm border border-border">
-            <span className="truncate max-w-[200px] text-muted-foreground">{selectedFile.name}</span>
-            <button type="button" onClick={() => setSelectedFile(null)} className="text-red-400 hover:text-red-500 font-bold ml-2">×</button>
-          </div>
-        )}
-        <div className="relative flex items-center bg-muted/50 border border-slate-700/50 rounded-xl overflow-hidden focus-within:border-slate-500 transition-colors">
-          <input 
-            type="text" 
-            value={newMessage}
-            onChange={e => setNewMessage(e.target.value)}
-            placeholder="Type a message..." 
-            className="flex-1 bg-transparent py-3 pl-4 pr-32 text-sm text-foreground focus:outline-none placeholder:text-muted-foreground"
-          />
-          <div className="absolute right-3 flex items-center gap-3">
-            <input 
-              type="file" 
-              ref={fileInputRef}
-              className="hidden" 
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setSelectedFile(e.target.files[0]);
-                }
-              }}
-            />
-            <Paperclip 
-              onClick={() => fileInputRef.current?.click()}
-              size={18} 
-              className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" 
-            />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Smile size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
-              </PopoverTrigger>
-              <PopoverContent className="w-[40vw] sm:w-[400px] p-0 border-none mb-2" side="top" align="end">
-                <EmojiPicker 
-                  onEmojiClick={(emojiData) => setNewMessage(prev => prev + emojiData.emoji)} 
-                  theme="dark"
-                  width="100%"
-                />
-              </PopoverContent>
-            </Popover>
-            <button type="submit" disabled={isUploading} className="w-8 h-8 bg-[#D4AF37] hover:bg-[#c29f2f] rounded-lg flex items-center justify-center text-black ml-1 transition-colors disabled:opacity-50">
-              {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} className="-ml-0.5" />}
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-  ) : null;
-
-return (
+  return (
     <div className="flex flex-col h-full bg-background text-foreground font-sans overflow-hidden min-h-[calc(100vh-3.5rem)]">
       
       {/* 2. Middle Column ("My Students" List) and 3. Main Content Area */}
@@ -889,35 +758,166 @@ return (
               </div>
 
 
-{/* Lower Split Grid */}
-              {isVideoCallActive ? (
-                <div className="flex-1 flex gap-4 min-h-0 overflow-hidden mt-4">
-                  <div className="flex-[2] bg-black rounded-2xl relative flex flex-col overflow-hidden shadow-2xl">
-                    <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                       <h2 className="text-white text-lg font-bold drop-shadow-md">Virtual Class with {selectedGroup.student.full_name}</h2>
-                       <p className="text-white/70 text-sm drop-shadow-md">Live Session</p>
+              {/* Chat UI Extracted for reuse in Video mode */}
+              {(() => {
+                const chatUI = (
+                  <div className="flex-1 flex flex-col bg-card border border-border rounded-2xl overflow-hidden min-h-0">
+                    <div className="p-4 border-b border-border flex justify-between items-center bg-card">
+                        <div className="flex items-center gap-2 font-medium text-foreground">
+                          <MessageSquare size={18} className="text-muted-foreground" />
+                          Chat with {selectedGroup.student.full_name.split(' ')[0]}
+                        </div>
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="rounded-full gap-2 text-[#D4AF37] border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 mr-2" 
+                            onClick={async () => {
+                              setIsVideoCallActive(true);
+                              const callChannel = `DrMax_LMS_TutorClass_${tutorId}_${selectedStudentId}`;
+                              await supabase.channel(`calls:${selectedStudentId}`).send({
+                                type: 'broadcast',
+                                event: 'incoming-call',
+                                payload: {
+                                  tutorId: tutorId,
+                                  tutorName: profile?.full_name || 'Your Tutor',
+                                  channelName: callChannel,
+                                  avatarUrl: profile?.avatar_url
+                                }
+                              });
+                            }}
+                          >
+                            <Video className="w-4 h-4" />
+                            <span className="hidden sm:inline">Virtual Class</span>
+                          </Button>
+                          <Search size={18} className="cursor-pointer hover:text-foreground" />
+                          <span className="text-xl leading-none mb-1 cursor-pointer hover:text-foreground">⋮</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                        {chatLoading ? (
+                           <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin text-[#D4AF37]" /></div>
+                        ) : messages.length === 0 ? (
+                           <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
+                             <MessageSquare className="h-10 w-10 opacity-20 mb-2" />
+                             <p className="text-sm">Start a conversation</p>
+                           </div>
+                        ) : (
+                          messages.map(msg => {
+                            const isMe = msg.sender_id === tutorId;
+                            return (
+                              <div key={msg.id} className={`flex items-start gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                {!isMe && (
+                                  <img src={selectedGroup.student.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedGroup.student.full_name}`} alt="Student" className="w-8 h-8 rounded-full bg-muted object-cover" />
+                                )}
+                                <div className={`flex flex-col gap-1 max-w-[80%] ${isMe ? 'items-end' : ''}`}>
+                                  <div className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                                    isMe 
+                                      ? 'bg-[#D4AF37]/20 border border-[#D4AF37]/30 text-[#D4AF37] rounded-tr-sm' 
+                                      : 'bg-muted text-foreground rounded-tl-sm'
+                                  }`}>
+                                    {msg.file_url && msg.file_type === 'image' && (
+                                      <img src={msg.file_url} alt="Attachment" className="max-w-[200px] rounded-lg mb-2 object-contain" />
+                                    )}
+                                    {msg.file_url && msg.file_type === 'file' && (
+                                      <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-background/50 rounded-lg mb-2 text-xs hover:underline">
+                                        <Paperclip size={14} /> View Attachment
+                                      </a>
+                                    )}
+                                    {msg.message}
+                                  </div>
+                                  <div className={`flex items-center gap-1 text-[10px] text-muted-foreground ${isMe ? 'mr-1' : 'ml-1'}`}>
+                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {isMe && <span className="text-[#D4AF37]">✓✓</span>}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                        <div ref={chatBottomRef} />
+                      </div>
+
+                      <form onSubmit={handleSendMessage} className="p-4 bg-card border-t border-border">
+                        {selectedFile && (
+                          <div className="mb-3 flex items-center justify-between bg-muted/50 p-2 rounded-lg text-sm border border-border">
+                            <span className="truncate max-w-[200px] text-muted-foreground">{selectedFile.name}</span>
+                            <button type="button" onClick={() => setSelectedFile(null)} className="text-red-400 hover:text-red-500 font-bold ml-2">×</button>
+                          </div>
+                        )}
+                        <div className="relative flex items-center bg-muted/50 border border-slate-700/50 rounded-xl overflow-hidden focus-within:border-slate-500 transition-colors">
+                          <input 
+                            type="text" 
+                            value={newMessage}
+                            onChange={e => setNewMessage(e.target.value)}
+                            placeholder="Type a message..." 
+                            className="flex-1 bg-transparent py-3 pl-4 pr-32 text-sm text-foreground focus:outline-none placeholder:text-muted-foreground"
+                          />
+                          <div className="absolute right-3 flex items-center gap-3">
+                            <input 
+                              type="file" 
+                              ref={fileInputRef}
+                              className="hidden" 
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  setSelectedFile(e.target.files[0]);
+                                }
+                              }}
+                            />
+                            <Paperclip 
+                              onClick={() => fileInputRef.current?.click()}
+                              size={18} 
+                              className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" 
+                            />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Smile size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[40vw] sm:w-[400px] p-0 border-none mb-2" side="top" align="end">
+                                <EmojiPicker 
+                                  onEmojiClick={(emojiData) => setNewMessage(prev => prev + emojiData.emoji)} 
+                                  theme="dark"
+                                  width="100%"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <button type="submit" disabled={isUploading} className="w-8 h-8 bg-[#D4AF37] hover:bg-[#c29f2f] rounded-lg flex items-center justify-center text-black ml-1 transition-colors disabled:opacity-50">
+                              {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} className="-ml-0.5" />}
+                            </button>
+                          </div>
+                        </div>
+                      </form>
                     </div>
-                    {selectedStudentId && profile?.id && (
-                       <AgoraCall 
-                         channelName={`DrMax_LMS_TutorClass_${tutorId}_${selectedStudentId}`} 
-                         onEndCall={() => setIsVideoCallActive(false)} 
-                       />
-                    )}
+                );
+
+                return isVideoCallActive ? (
+                  <div className="flex-1 flex gap-4 min-h-0 overflow-hidden mt-4">
+                     <div className="flex-[2] bg-black rounded-2xl relative flex flex-col overflow-hidden shadow-2xl">
+                        <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                           <h2 className="text-white text-lg font-bold drop-shadow-md">Virtual Class with {selectedGroup.student.full_name}</h2>
+                           <p className="text-white/70 text-sm drop-shadow-md">Live Session</p>
+                        </div>
+                        {selectedStudentId && profile?.id && (
+                           <AgoraCall 
+                             channelName={`DrMax_LMS_TutorClass_${tutorId}_${selectedStudentId}`} 
+                             onEndCall={() => setIsVideoCallActive(false)} 
+                           />
+                        )}
+                     </div>
+                     <div className="flex-[1] flex flex-col min-h-0">
+                        {chatUI}
+                     </div>
                   </div>
-                  <div className="flex-[1] flex flex-col min-h-0">
-                     {chatUI}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 grid grid-cols-1 xl:grid-cols-5 gap-4 min-h-0 overflow-hidden">
-                  
-                  {/* Left Side (Chat & Progress) */}
-                  <div className="xl:col-span-3 flex flex-col gap-4 min-h-0">
+                ) : (
+                  <div className="flex-1 grid grid-cols-1 xl:grid-cols-5 gap-4 min-h-0 overflow-hidden">
                     
-                    {activeTab === 'messages' && chatUI}
+                    {/* Left Side (Chat & Progress) */}
+                    <div className="xl:col-span-3 flex flex-col gap-4 min-h-0">
+                      
+                      {activeTab === 'messages' && chatUI}
 
                   {/* Subject Progress Overview */}
-
                   <div className="bg-card border border-border rounded-2xl p-4 shrink-0">
                     <div className="flex items-center gap-2 font-medium text-foreground mb-3">
                       <BookOpen size={18} className="text-[#D4AF37]" />
@@ -1069,6 +1069,8 @@ return (
 
                 </div>
               </div>
+              );
+            })()}
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">

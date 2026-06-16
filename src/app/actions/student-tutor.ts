@@ -152,7 +152,7 @@ export async function getStudentProgress(tutorId: string, studentId: string) {
   // Get all deadlines for this student from this tutor
   const { data: allDeadlines, error: dlError } = await supabase
     .from('student_deadlines')
-    .select('id, status, created_at, updated_at, subject_id, subjects(name)')
+    .select('id, status, due_date, created_at, updated_at, subject_id, subjects(name)')
     .eq('tutor_id', tutorId)
     .eq('student_id', studentId)
 
@@ -164,7 +164,12 @@ export async function getStudentProgress(tutorId: string, studentId: string) {
   const total = allDeadlines?.length || 0
   const completedDeadlines = allDeadlines?.filter(d => d.status === 'completed') || []
   const completed = completedDeadlines.length
-  const percent = total > 0 ? Math.round((completed / total) * 100) : 0
+  let percent = total > 0 ? Math.round((completed / total) * 100) : 0
+  
+  const overdueCount = allDeadlines?.filter(d => d.status !== 'completed' && new Date(d.due_date).getTime() < Date.now()).length || 0;
+  if (overdueCount > 0) {
+    percent = Math.max(0, percent - (overdueCount * 2));
+  }
 
   // Generate real-time SVG sparkline path
   // SVG box is 100x30. Y goes from 28 (0%) to 5 (100%).
@@ -219,7 +224,7 @@ export async function getAllStudentsProgress(tutorId: string) {
   
   const { data: deadlines, error } = await supabase
     .from('student_deadlines')
-    .select('id, student_id, status, created_at, updated_at')
+    .select('id, student_id, status, due_date, created_at, updated_at')
     .eq('tutor_id', tutorId)
 
   if (error) {
@@ -240,7 +245,12 @@ export async function getAllStudentsProgress(tutorId: string) {
     const total = studentDeadlines.length
     const completedDeadlines = studentDeadlines.filter(d => d.status === 'completed')
     const completed = completedDeadlines.length
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0
+    let percent = total > 0 ? Math.round((completed / total) * 100) : 0
+    
+    const overdueCount = studentDeadlines.filter(d => d.status !== 'completed' && new Date(d.due_date).getTime() < Date.now()).length;
+    if (overdueCount > 0) {
+      percent = Math.max(0, percent - (overdueCount * 2));
+    }
 
     let trendPath = "M0,28 L100,28"
     if (total > 0 && completed > 0) {

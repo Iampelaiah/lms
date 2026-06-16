@@ -89,7 +89,20 @@ async function StudentDashboard({ student }: { student: any }) {
         grade: "A-", // Mocked grade
     }));
     
-    const overallScore = Math.floor(Math.random() * 15) + 80;
+    // Fetch deadlines to calculate penalty
+    const { data: deadlinesData } = await supabase
+        .from('student_deadlines')
+        .select('due_date, status')
+        .eq('student_id', student.id);
+
+    let overdueCount = 0;
+    if (deadlinesData) {
+        overdueCount = deadlinesData.filter(d => d.status !== 'completed' && new Date(d.due_date).getTime() < Date.now()).length;
+    }
+
+    const penalty = overdueCount * 2;
+    const baseScore = Math.floor(Math.random() * 15) + 80;
+    const overallScore = Math.max(0, baseScore - penalty);
     const attendance = Math.floor(Math.random() * 10) + 90;
 
     const recentAchievements = [
@@ -173,6 +186,28 @@ async function StudentDashboard({ student }: { student: any }) {
                                 </li>
                             )})}
                         </ul>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Narrative Report</CardTitle>
+                        <CardDescription>Automated Progress Summary</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col h-[calc(100%-5rem)]">
+                        <div className="flex-1">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                {overdueCount > 0 
+                                    ? `The student has ${overdueCount} overdue assignment(s). A penalty of -${penalty}% has been applied to the overall subject score. We encourage submitting tasks on time to maintain steady progress.`
+                                    : "The student is up to date with all assignments. Excellent consistency and time management!"}
+                            </p>
+                        </div>
+                        <div className="mt-6 pt-4 border-t border-border flex justify-between items-center text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1.5">
+                                <div className={`w-2 h-2 rounded-full ${overdueCount > 0 ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                                System Generated
+                            </span>
+                            <span>{new Date().toLocaleDateString()}</span>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
