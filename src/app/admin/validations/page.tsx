@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Loader2, BookOpen, FileText, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, BookOpen, FileText, ChevronDown, ChevronUp, Calendar, Tag, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -19,9 +19,11 @@ export default function AdminValidationPanel() {
     // State for pending modules and their nested data
     const [pendingModules, setPendingModules] = useState<any[]>([]);
     const [pendingResources, setPendingResources] = useState<any[]>([]);
+    const [pendingStudentDeadlines, setPendingStudentDeadlines] = useState<any[]>([]);
     
     // Expanded states for UI
     const [expandedModule, setExpandedModule] = useState<string | null>(null);
+    const [expandedDeadline, setExpandedDeadline] = useState<string | null>(null);
     const [rejectingModule, setRejectingModule] = useState<string | null>(null);
     const [rejectingResource, setRejectingResource] = useState<string | null>(null);
     const [adminFeedback, setAdminFeedback] = useState("");
@@ -90,6 +92,114 @@ export default function AdminValidationPanel() {
 
             if (resourcesError) console.error("Error fetching resources:", resourcesError);
             else setPendingResources(resourcesData || []);
+
+            // Fetch pending student deadlines
+            const { data: deadlinesData, error: deadlinesError } = await supabase
+                .from('student_deadlines')
+                .select(`
+                    id, title, description, due_date, created_at, status, tutor_id, student_id, subject_id,
+                    tutor:profiles!tutor_id(id, full_name),
+                    student:profiles!student_id(id, full_name),
+                    subject:subjects!subject_id(name)
+                `)
+                .eq('status', 'pending_admin_review');
+
+            let parsedDbDeadlines: any[] = [];
+            if (deadlinesError) {
+                console.error("Error fetching student deadlines:", deadlinesError);
+            } else {
+                parsedDbDeadlines = (deadlinesData || []).map((dl: any) => {
+                    let description = dl.description;
+                    let imageUrl = dl.image_url;
+                    let pastPaperTag = dl.past_paper_tag;
+                    let topicTag = dl.topic_tag;
+                    let totalPoints = dl.total_points;
+                    let questions = dl.questions || [];
+
+                    if (dl.description && dl.description.trim().startsWith('{') && dl.description.includes('"_richAssignment":true')) {
+                        try {
+                            const parsed = JSON.parse(dl.description);
+                            description = parsed.originalDescription;
+                            imageUrl = parsed.imageUrl;
+                            pastPaperTag = parsed.pastPaperTag;
+                            topicTag = parsed.topicTag;
+                            totalPoints = parsed.totalPoints;
+                            questions = parsed.questions || [];
+                        } catch (err) {
+                            console.error("Error parsing JSON fallback description:", err);
+                        }
+                    }
+                    return {
+                        ...dl,
+                        description,
+                        image_url: imageUrl,
+                        past_paper_tag: pastPaperTag,
+                        topic_tag: topicTag,
+                        total_points: totalPoints,
+                        questions
+                    };
+                });
+            }
+
+            // Fetch local deadlines from localStorage
+            const localDeadlines: any[] = [];
+            if (typeof window !== 'undefined') {
+                try {
+                    // Fetch profiles and subjects maps to resolve references for local storage items
+                    const { data: profilesData } = await supabase
+                        .from('profiles')
+                        .select('id, full_name');
+                    const profilesMap = new Map(profilesData?.map(p => [p.id, p.full_name]) || []);
+
+                    const { data: subjectsData } = await supabase
+                        .from('subjects')
+                        .select('id, name');
+                    const subjectsMap = new Map(subjectsData?.map(s => [s.id, s.name]) || []);
+
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && key.startsWith('drmax_deadlines_')) {
+                            const stored = localStorage.getItem(key);
+                            if (stored) {
+                                try {
+                                    const list = JSON.parse(stored);
+                                    if (Array.isArray(list)) {
+                                        list.forEach((dl: any) => {
+                                            if (dl.status === 'pending_admin_review') {
+                                                localDeadlines.push({
+                                                    ...dl,
+                                                    tutor: {
+                                                        id: dl.tutor_id,
+                                                        full_name: profilesMap.get(dl.tutor_id) || 'Unknown Tutor'
+                                                    },
+                                                    student: {
+                                                        id: dl.student_id,
+                                                        full_name: profilesMap.get(dl.student_id) || 'Unknown Student'
+                                                    },
+                                                    subject: {
+                                                        name: dl.subjects?.name || subjectsMap.get(dl.subject_id) || 'Unknown Subject'
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                } catch (e) {
+                                    console.error("Error parsing localStorage list:", e);
+                                }
+                            }
+                        }
+                    }
+                } catch (localErr) {
+                    console.error("Error fetching local storage helpers:", localErr);
+                }
+            }
+
+            // Merge database and local storage deadlines by ID to avoid duplicates
+            const combinedDeadlinesMap = new Map();
+            parsedDbDeadlines.forEach((dl: any) => combinedDeadlinesMap.set(dl.id, dl));
+            localDeadlines.forEach((dl: any) => combinedDeadlinesMap.set(dl.id, dl));
+
+            setPendingStudentDeadlines(Array.from(combinedDeadlinesMap.values()));
 
         } catch (error: any) {
             console.error("Error fetching validations:", error);
@@ -225,6 +335,110 @@ export default function AdminValidationPanel() {
         }
     };
 
+    const handleApproveDeadline = async (deadlineId: string) => {
+        try {
+            // Update in Supabase
+            const { error } = await supabase
+                .from('student_deadlines')
+                .update({ status: 'pending' })
+                .eq('id', deadlineId);
+
+            if (error) {
+                console.warn("Database update failed, might be local-only deadline:", error.message);
+            }
+
+            // Update in localStorage
+            if (typeof window !== 'undefined') {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('drmax_deadlines_')) {
+                        const stored = localStorage.getItem(key);
+                        if (stored) {
+                            try {
+                                const list = JSON.parse(stored);
+                                if (Array.isArray(list)) {
+                                    const index = list.findIndex((dl: any) => dl.id === deadlineId);
+                                    if (index !== -1) {
+                                        list[index].status = 'pending';
+                                        localStorage.setItem(key, JSON.stringify(list));
+                                        console.log("Updated local deadline to pending:", key);
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("Error updating local storage deadline:", e);
+                            }
+                        }
+                    }
+                }
+            }
+
+            toast({
+                title: "Deadline Approved",
+                description: "The assignment is now visible to the student.",
+            });
+            
+            setPendingStudentDeadlines(prev => prev.filter(d => d.id !== deadlineId));
+        } catch (error: any) {
+            toast({
+                title: "Approval Failed",
+                description: error.message,
+                variant: "destructive"
+            });
+        }
+    };
+
+    const handleRejectDeadline = async (deadlineId: string) => {
+        try {
+            // Update in Supabase
+            const { error } = await supabase
+                .from('student_deadlines')
+                .update({ status: 'rejected' })
+                .eq('id', deadlineId);
+
+            if (error) {
+                console.warn("Database update failed, might be local-only deadline:", error.message);
+            }
+
+            // Update in localStorage
+            if (typeof window !== 'undefined') {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('drmax_deadlines_')) {
+                        const stored = localStorage.getItem(key);
+                        if (stored) {
+                            try {
+                                const list = JSON.parse(stored);
+                                if (Array.isArray(list)) {
+                                    const index = list.findIndex((dl: any) => dl.id === deadlineId);
+                                    if (index !== -1) {
+                                        list[index].status = 'rejected';
+                                        localStorage.setItem(key, JSON.stringify(list));
+                                        console.log("Updated local deadline to rejected:", key);
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("Error updating local storage deadline:", e);
+                            }
+                        }
+                    }
+                }
+            }
+
+            toast({
+                title: "Deadline Rejected",
+                description: "The assignment was rejected.",
+            });
+            
+            setPendingStudentDeadlines(prev => prev.filter(d => d.id !== deadlineId));
+        } catch (error: any) {
+            toast({
+                title: "Rejection Failed",
+                description: error.message,
+                variant: "destructive"
+            });
+        }
+    };
+
     // Calculate all pending assignments from the pending modules
     const pendingAssignments = pendingModules.flatMap(module => 
         module.items?.flatMap((item: any) => 
@@ -262,7 +476,7 @@ export default function AdminValidationPanel() {
                     <TabsTrigger value="assignments" className="flex gap-2">
                         <FileText className="h-4 w-4" />
                         Assignments & Tests
-                        <Badge variant="secondary" className="ml-1 bg-gold/10 text-gold">{pendingAssignments.length}</Badge>
+                        <Badge variant="secondary" className="ml-1 bg-gold/10 text-gold">{pendingAssignments.length + pendingStudentDeadlines.length}</Badge>
                     </TabsTrigger>
                     <TabsTrigger value="resources" className="flex gap-2">
                         <FileText className="h-4 w-4" />
@@ -423,7 +637,7 @@ export default function AdminValidationPanel() {
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                         </div>
-                    ) : pendingAssignments.length === 0 ? (
+                    ) : (pendingAssignments.length === 0 && pendingStudentDeadlines.length === 0) ? (
                         <Card className="border-dashed">
                             <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                                 <CheckCircle className="h-12 w-12 text-gold/50 mb-4" />
@@ -473,6 +687,118 @@ export default function AdminValidationPanel() {
                                                 }}
                                             >
                                                 View Module to Approve
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+
+                            {/* Standalone Student Deadlines */}
+                            {pendingStudentDeadlines.map((deadline) => (
+                                <Card key={deadline.id} className="flex flex-col border-primary/20 shadow-sm overflow-hidden">
+                                    {deadline.image_url && (
+                                        <div className="relative w-full aspect-video border-b border-border/80 overflow-hidden">
+                                            <img src={deadline.image_url} alt="Assignment Banner" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                    <CardHeader className="pb-3 border-b bg-muted/5">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                                                Direct Assignment
+                                            </Badge>
+                                        </div>
+                                        <CardTitle className="text-base line-clamp-1" title={deadline.title}>{deadline.title}</CardTitle>
+                                        <CardDescription className="text-xs">
+                                            Tutor: <strong>{deadline.tutor?.full_name}</strong>
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="pt-3 flex-1 flex flex-col justify-between space-y-4">
+                                        <div className="space-y-3">
+                                            <div>
+                                                <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Context</p>
+                                                <p className="text-sm font-medium">Student: {deadline.student?.full_name}</p>
+                                                <p className="text-sm text-muted-foreground">Subject: {deadline.subject?.name}</p>
+                                                <p className="text-sm text-red-400 mt-1 flex items-center gap-1">
+                                                    <Calendar className="h-3.5 w-3.5" /> Due: {new Date(deadline.due_date).toLocaleDateString()}
+                                                </p>
+                                            </div>
+
+                                            {/* Tags & Total Points */}
+                                            {(deadline.topic_tag || deadline.past_paper_tag || (deadline.total_points > 0)) && (
+                                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                                    {deadline.topic_tag && (
+                                                        <Badge variant="secondary" className="text-[10px] py-0.5 px-2 bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                                                            <Tag className="w-2.5 h-2.5 mr-1" /> {deadline.topic_tag}
+                                                        </Badge>
+                                                    )}
+                                                    {deadline.past_paper_tag && (
+                                                        <Badge variant="secondary" className="text-[10px] py-0.5 px-2 bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20">
+                                                            <FileText className="w-2.5 h-2.5 mr-1" /> {deadline.past_paper_tag}
+                                                        </Badge>
+                                                    )}
+                                                    {deadline.total_points > 0 && (
+                                                        <Badge variant="secondary" className="text-[10px] py-0.5 px-2 bg-gold/10 text-gold border border-gold/20">
+                                                            Score: {deadline.total_points} pts
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {deadline.description && (
+                                                <div>
+                                                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Description</p>
+                                                    <p className="text-sm line-clamp-3 text-foreground/80">{deadline.description}</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Collapsible Questions List */}
+                                        {deadline.questions && deadline.questions.length > 0 && (
+                                            <div className="border border-border/60 rounded-lg overflow-hidden bg-muted/10">
+                                                <button
+                                                    className="w-full flex items-center justify-between p-2 text-xs font-semibold hover:bg-muted/30 transition-colors text-muted-foreground"
+                                                    onClick={() => setExpandedDeadline(expandedDeadline === deadline.id ? null : deadline.id)}
+                                                >
+                                                    <span className="flex items-center gap-1.5">
+                                                        <HelpCircle className="h-3.5 w-3.5" />
+                                                        View Questions ({deadline.questions.length})
+                                                    </span>
+                                                    {expandedDeadline === deadline.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                                </button>
+
+                                                {expandedDeadline === deadline.id && (
+                                                    <div className="p-3 pt-0 border-t border-border/40 space-y-2 bg-background max-h-[200px] overflow-y-auto custom-scrollbar">
+                                                        {deadline.questions.map((q: any, idx: number) => (
+                                                            <div key={q.id || idx} className="p-2 border rounded text-xs space-y-1">
+                                                                <div className="flex justify-between font-semibold">
+                                                                    <span>Q{idx + 1} ({q.points} pts)</span>
+                                                                </div>
+                                                                <p className="text-foreground/80 line-clamp-2">{q.question_text}</p>
+                                                                {q.image_url && (
+                                                                    <div className="w-16 h-10 relative border rounded overflow-hidden bg-muted/20">
+                                                                        <img src={q.image_url} alt="Question Diagram" className="w-full h-full object-contain" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        
+                                        <div className="mt-4 pt-4 border-t w-full flex gap-2">
+                                            <Button 
+                                                variant="outline" 
+                                                className="w-full text-xs text-burgundy hover:bg-burgundy/10 hover:text-burgundy" 
+                                                onClick={() => handleRejectDeadline(deadline.id)}
+                                            >
+                                                <XCircle className="h-4 w-4 mr-1" /> Reject
+                                            </Button>
+                                            <Button 
+                                                className="w-full text-xs bg-gold hover:bg-gold/90 text-foreground" 
+                                                onClick={() => handleApproveDeadline(deadline.id)}
+                                            >
+                                                <CheckCircle className="h-4 w-4 mr-1" /> Approve
                                             </Button>
                                         </div>
                                     </CardContent>

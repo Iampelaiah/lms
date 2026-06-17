@@ -345,7 +345,7 @@ export default function StudentDashboardPage() {
                 ) : courses.length > 0 ? (
                   courses.map((course, index) => (
                       <DetailedProgressCard 
-                          key={course.name} 
+                          key={`${course.name}-${index}`} 
                           subject={course.name}
                           overallProgress={course.overallProgress}
                           topics={course.topics}

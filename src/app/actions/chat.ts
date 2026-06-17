@@ -81,7 +81,7 @@ export async function getRecentChatContacts(userId: string) {
   const partnerIds = partners.map(p => p.partnerId);
   const { data: profiles, error: profileError } = await supabase
     .from('profiles')
-    .select('id, full_name, role, avatar_url')
+    .select('id, full_name, role, avatar_url, tutor_subjects(subjects(name))')
     .in('id', partnerIds)
 
   if (profileError) {
@@ -119,13 +119,17 @@ export async function markMessagesAsRead(userId: string, partnerId: string) {
 
 export async function searchProfilesForChat(query: string) {
   const supabase = await createClient()
-  if (!query.trim()) return { data: [] }
   
-  const { data, error } = await supabase
+  let q = supabase
     .from('profiles')
-    .select('id, full_name, role, avatar_url')
-    .ilike('full_name', `%${query}%`)
-    .limit(10)
+    .select('id, full_name, role, avatar_url, tutor_subjects(subjects(name))')
+    .limit(20)
+
+  if (query.trim()) {
+    q = q.ilike('full_name', `%${query}%`)
+  }
+  
+  const { data, error } = await q
 
   if (error) {
     console.error('Error searching profiles:', error)

@@ -74,7 +74,27 @@ export async function getStudentDeadlines(tutorId: string, studentId: string) {
     return { error: error.message }
   }
 
-  return { data }
+  const parsed = (data || []).map((dl: any) => {
+    if (dl.description && dl.description.trim().startsWith('{') && dl.description.includes('"_richAssignment":true')) {
+      try {
+        const parsedData = JSON.parse(dl.description);
+        return {
+          ...dl,
+          description: parsedData.originalDescription,
+          image_url: parsedData.imageUrl,
+          past_paper_tag: parsedData.pastPaperTag,
+          topic_tag: parsedData.topicTag,
+          total_points: parsedData.totalPoints,
+          questions: parsedData.questions
+        };
+      } catch (err) {
+        console.error("Error parsing JSON fallback description:", err);
+      }
+    }
+    return dl;
+  });
+
+  return { data: parsed }
 }
 
 export async function createStudentDeadline(
@@ -83,7 +103,12 @@ export async function createStudentDeadline(
   subjectId: string,
   title: string,
   description: string,
-  dueDate: string
+  dueDate: string,
+  imageUrl?: string,
+  pastPaperTag?: string,
+  topicTag?: string,
+  totalPoints?: number,
+  questions?: any[]
 ) {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -95,17 +120,91 @@ export async function createStudentDeadline(
       title,
       description,
       due_date: dueDate,
-      status: 'pending'
+      status: 'pending_admin_review',
+      image_url: imageUrl || null,
+      past_paper_tag: pastPaperTag || null,
+      topic_tag: topicTag || null,
+      total_points: totalPoints || 0,
+      questions: questions || []
     })
     .select('*, subjects(name, level)')
     .single()
 
   if (error) {
+    if (error.message.includes('column') && error.message.includes('student_deadlines')) {
+      console.warn("Table student_deadlines missing columns, using JSON description fallback.");
+      const fallbackDesc = JSON.stringify({
+        _richAssignment: true,
+        originalDescription: description,
+        imageUrl,
+        pastPaperTag,
+        topicTag,
+        totalPoints,
+        questions
+      });
+
+      const { data: retryData, error: retryError } = await supabase
+        .from('student_deadlines')
+        .insert({
+          tutor_id: tutorId,
+          student_id: studentId,
+          subject_id: subjectId,
+          title,
+          description: fallbackDesc,
+          due_date: dueDate,
+          status: 'pending_admin_review'
+        })
+        .select('*, subjects(name, level)')
+        .single()
+
+      if (retryError) {
+        console.error('Retry error creating student deadline fallback:', retryError)
+        return { error: retryError.message }
+      }
+      
+      revalidatePath('/tutor/students')
+      return { data: retryData }
+    }
+
     console.error('Error creating student deadline:', error)
     return { error: error.message }
   }
 
   revalidatePath('/tutor/students')
+  return { data }
+}
+
+export async function approveStudentDeadline(deadlineId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('student_deadlines')
+    .update({ status: 'pending' })
+    .eq('id', deadlineId)
+    .select()
+
+  if (error) {
+    console.error('Error approving student deadline:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/validations')
+  return { data }
+}
+
+export async function rejectStudentDeadline(deadlineId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('student_deadlines')
+    .update({ status: 'rejected' })
+    .eq('id', deadlineId)
+    .select()
+
+  if (error) {
+    console.error('Error rejecting student deadline:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/validations')
   return { data }
 }
 

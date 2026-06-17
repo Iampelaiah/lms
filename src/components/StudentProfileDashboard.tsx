@@ -13,9 +13,10 @@ interface StudentProfileDashboardProps {
   student: any;
   progressData: any;
   deadlines: any[];
+  onAddAssignment?: () => void;
 }
 
-export function StudentProfileDashboard({ student, progressData, deadlines }: StudentProfileDashboardProps) {
+export function StudentProfileDashboard({ student, progressData, deadlines, onAddAssignment }: StudentProfileDashboardProps) {
   // Generate mock data for performance over the last 6 months
   const performanceData = useMemo(() => {
     return [
@@ -193,8 +194,12 @@ export function StudentProfileDashboard({ student, progressData, deadlines }: St
                   </div>
                 </div>
                 <div className="text-right">
-                  <Badge variant={d.status === 'completed' ? 'default' : 'secondary'} className={d.status === 'completed' ? 'bg-green-600' : ''}>
-                    {d.status === 'completed' ? 'Completed' : 'Pending'}
+                  <Badge variant={d.status === 'completed' ? 'default' : 'secondary'} className={
+                    d.status === 'completed' ? 'bg-green-600' : 
+                    d.status === 'pending_admin_review' ? 'bg-purple-500 text-white' : ''
+                  }>
+                    {d.status === 'completed' ? 'Completed' : 
+                     d.status === 'pending_admin_review' ? 'Awaiting Approval' : 'Pending'}
                   </Badge>
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(d.due_date).toLocaleDateString()}
@@ -203,8 +208,17 @@ export function StudentProfileDashboard({ student, progressData, deadlines }: St
               </div>
             ))}
             {deadlines.length === 0 && (
-              <div className="text-center py-6 text-muted-foreground text-sm">
-                No recent assignments found.
+              <div className="text-center py-8 flex flex-col items-center justify-center border border-dashed border-border rounded-lg bg-background/50">
+                <Target size={32} className="text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground text-sm mb-4">No recent assignments found.</p>
+                {onAddAssignment && (
+                  <button 
+                    onClick={onAddAssignment}
+                    className="flex items-center gap-2 bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 transition-colors px-4 py-2 rounded-lg text-sm font-medium border border-[#D4AF37]/30"
+                  >
+                    <Target size={16} /> Create Assignment
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -23,6 +23,7 @@ export default function StudentSubmissionPreviewPage() {
   const [submission, setSubmission] = useState<any>(null);
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [activeAnnotationId, setActiveAnnotationId] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<any[]>([]);
 
   useEffect(() => {
     if (!submissionId) return;
@@ -36,12 +37,28 @@ export default function StudentSubmissionPreviewPage() {
         let status = 'completed';
         let feedback = 'A well-structured response with clear ideas. Focus on developing examples and formalising your language.';
         
+        let customScores = {
+          contentMark: 8, contentMax: 10,
+          commMark: 6, commMax: 7,
+          orgMark: 6, orgMax: 7,
+          langMark: 5, langMax: 6,
+          totalMark: 25, totalMax: 30,
+          grade: 'A',
+          questionScores: {
+            'q-1': { score: 12, feedback: 'Very good detail about the American war.' },
+            'q-2': { score: 13, feedback: 'Clear explanation of the Third Estate.' }
+          }
+        };
+
         if (stored) {
           const parsed = JSON.parse(stored);
           const found = parsed.find((item: any) => item.id === submissionId);
           if (found) {
             status = found.status;
             feedback = found.tutor_feedback || feedback;
+            if (found.component_scores) {
+              customScores = found.component_scores;
+            }
           }
         }
 
@@ -51,16 +68,13 @@ export default function StudentSubmissionPreviewPage() {
           raw_text: `France was on the brink of bankruptcy in 1789 due to its involvement in the American Revolutionary War and the extravagant spending of the royal court at Versailles. The tax system was regressive, exempting the nobility and clergy while placing the burden entirely on the Third Estate (peasants and bourgeoisie). This, coupled with poor harvests leading to high bread prices, triggered widespread famine and discontent, forcing King Louis XVI to summon the Estates-General.`,
           overall_feedback: feedback,
           status,
-          component_scores: {
-            contentMark: 8, contentMax: 10,
-            commMark: 6, commMax: 7,
-            orgMark: 6, orgMax: 7,
-            langMark: 5, langMax: 6,
-            totalMark: 25, totalMax: 30,
-            grade: 'A'
-          },
+          component_scores: customScores,
           profiles: { full_name: 'Pelaiah Tadiwanashe Tapera Ngarande' }
         });
+        setQuestions([
+          { id: 'q-1', question_text: 'Explain the cause of bankruptcy in 1789.', points: 15 },
+          { id: 'q-2', question_text: 'Discuss the impact of tax exemptions for nobility and clergy.', points: 15 }
+        ]);
         setAnnotations([
           { id: 'ann-1', marker_number: 1, type: 'comment', content: 'Good historical context', selected_text: 'involvement in the American Revolutionary War' }
         ]);
@@ -76,6 +90,64 @@ export default function StudentSubmissionPreviewPage() {
 
       if (subData) {
         setSubmission(subData);
+        
+        if (subData.assignment_id) {
+          // Fetch assignment questions
+          let { data: qData, error: qError } = await supabase
+            .from('assignment_questions')
+            .select('*')
+            .eq('assignment_id', subData.assignment_id)
+            .order('sequence_order', { ascending: true });
+          
+          if (qError || !qData || qData.length === 0) {
+            const { data: dlData } = await supabase
+              .from('student_deadlines')
+              .select('questions, description')
+              .eq('id', subData.assignment_id)
+              .single();
+            if (dlData) {
+              if (dlData.description && dlData.description.trim().startsWith('{') && dlData.description.includes('"_richAssignment":true')) {
+                try {
+                  const parsed = JSON.parse(dlData.description);
+                  qData = parsed.questions || [];
+                  qError = null;
+                } catch (err) {
+                  console.error("Error parsing fallback description questions:", err);
+                }
+              } else if (dlData.questions) {
+                qData = dlData.questions;
+                qError = null;
+              }
+            }
+          }
+          
+          if (!qError && qData && qData.length > 0) {
+            setQuestions(qData);
+            
+            // Fetch student question scores for this submission
+            const { data: qsData } = await supabase
+              .from('student_question_scores')
+              .select('*')
+              .eq('submission_id', submissionId);
+              
+            const questionScoresMap: Record<string, any> = {};
+            qData.forEach(q => {
+              const dbScore = qsData?.find(qs => qs.question_id === q.id);
+              questionScoresMap[q.id] = {
+                score: dbScore ? Number(dbScore.score) : q.points,
+                feedback: dbScore?.feedback || ''
+              };
+            });
+            
+            if (!subData.component_scores) {
+              subData.component_scores = {};
+            }
+            subData.component_scores.questionScores = {
+              ...questionScoresMap,
+              ...(subData.component_scores.questionScores || {})
+            };
+          }
+        }
       }
 
       const { data: annData } = await supabase
@@ -92,7 +164,7 @@ export default function StudentSubmissionPreviewPage() {
     };
 
     fetchSubmission();
-  }, [submissionId]);
+  }, [submissionId, supabase]);
 
   const editor = useEditor({
     extensions: [StarterKit, Underline, TutorAnnotation],
@@ -159,7 +231,7 @@ export default function StudentSubmissionPreviewPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {submission?.component_scores && (
-          <LeftPanel initialMarks={submission.component_scores} isReadOnly={true} />
+          <LeftPanel initialMarks={submission.component_scores} isReadOnly={true} questions={questions} />
         )}
 
         {/* Editor Center Panel */}

@@ -28,6 +28,7 @@ export default function GradingPage() {
   const [overallFeedback, setOverallFeedback] = useState<string>('');
   const [marksData, setMarksData] = useState<MarkingData | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<any[]>([]);
 
   useEffect(() => {
     if (!submissionId) return;
@@ -45,7 +46,7 @@ export default function GradingPage() {
       }
 
       if (submissionId === 'mock-assignment-id-1') {
-        setSubmission({
+        const mockSub = {
           id: 'mock-assignment-id-1',
           student_id: 'mock-student-id',
           assignment_id: 'mock-assignment-id-1',
@@ -53,8 +54,44 @@ export default function GradingPage() {
           overall_grade: null,
           overall_feedback: null,
           status: 'grading',
+          component_scores: {
+            contentMark: 8, contentMax: 10,
+            commMark: 6, commMax: 7,
+            orgMark: 6, orgMax: 7,
+            langMark: 5, langMax: 6,
+            totalMark: 25, totalMax: 30,
+            grade: 'A',
+            questionScores: {
+              'q-1': { score: 12, feedback: 'Very good detail about the American war.' },
+              'q-2': { score: 13, feedback: 'Clear explanation of the Third Estate.' }
+            }
+          },
           profiles: { full_name: 'Pelaiah Tadiwanashe Tapera Ngarande' }
-        });
+        };
+
+        const key = `drmax_submissions_mock-student-id_mock-subject-id`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const found = parsed.find((item: any) => item.id === 'mock-assignment-id-1');
+          if (found) {
+            mockSub.status = found.status || mockSub.status;
+            mockSub.overall_feedback = found.tutor_feedback || mockSub.overall_feedback;
+            mockSub.overall_grade = found.grade || mockSub.overall_grade;
+            if (found.component_scores) {
+              mockSub.component_scores = found.component_scores;
+            }
+          }
+        }
+
+        setSubmission(mockSub);
+        if (mockSub.overall_feedback) {
+          setOverallFeedback(mockSub.overall_feedback);
+        }
+        setQuestions([
+          { id: 'q-1', question_text: 'Explain the cause of bankruptcy in 1789.', points: 15 },
+          { id: 'q-2', question_text: 'Discuss the impact of tax exemptions for nobility and clergy.', points: 15 }
+        ]);
         setAnnotations([]);
         setLoading(false);
         return;
@@ -142,6 +179,62 @@ export default function GradingPage() {
         subData.topicTitle = topicTitle;
         subData.subjectNameStr = subjectNameStr;
         subData.assignmentNumber = assignData?.assignment_number;
+
+        // Fetch assignment questions
+        let { data: qData, error: qError } = await supabase
+          .from('assignment_questions')
+          .select('*')
+          .eq('assignment_id', subData.assignment_id)
+          .order('sequence_order', { ascending: true });
+        
+        if (qError || !qData || qData.length === 0) {
+          const { data: dlData } = await supabase
+            .from('student_deadlines')
+            .select('questions, description')
+            .eq('id', subData.assignment_id)
+            .single();
+          if (dlData) {
+            if (dlData.description && dlData.description.trim().startsWith('{') && dlData.description.includes('"_richAssignment":true')) {
+              try {
+                const parsed = JSON.parse(dlData.description);
+                qData = parsed.questions || [];
+                qError = null;
+              } catch (err) {
+                console.error("Error parsing fallback description questions:", err);
+              }
+            } else if (dlData.questions) {
+              qData = dlData.questions;
+              qError = null;
+            }
+          }
+        }
+        
+        if (!qError && qData && qData.length > 0) {
+          setQuestions(qData);
+          
+          // Fetch student question scores for this submission
+          const { data: qsData } = await supabase
+            .from('student_question_scores')
+            .select('*')
+            .eq('submission_id', submissionId);
+            
+          const questionScoresMap: Record<string, any> = {};
+          qData.forEach(q => {
+            const dbScore = qsData?.find(qs => qs.question_id === q.id);
+            questionScoresMap[q.id] = {
+              score: dbScore ? Number(dbScore.score) : q.points,
+              feedback: dbScore?.feedback || ''
+            };
+          });
+          
+          if (!subData.component_scores) {
+            subData.component_scores = {};
+          }
+          subData.component_scores.questionScores = {
+            ...questionScoresMap,
+            ...(subData.component_scores.questionScores || {})
+          };
+        }
       }
 
       setSubmission(subData);
@@ -217,6 +310,24 @@ export default function GradingPage() {
           if (retryError) throw retryError;
         }
 
+        // Save structured question scores to database
+        if (marksData?.questionScores) {
+          const upsertRows = Object.entries(marksData.questionScores).map(([qId, val]: [string, any]) => ({
+            submission_id: submissionId,
+            question_id: qId,
+            score: val.score,
+            feedback: val.feedback
+          }));
+          if (upsertRows.length > 0) {
+            const { error: qsError } = await supabase
+              .from('student_question_scores')
+              .upsert(upsertRows, { onConflict: 'submission_id,question_id' });
+            if (qsError) {
+              console.error("Error saving student question scores during publish:", qsError);
+            }
+          }
+        }
+
         // 2. Save annotations for text
         if (!submission?.file_url) {
           await supabase.from('annotations').delete().eq('submission_id', submissionId);
@@ -238,19 +349,35 @@ export default function GradingPage() {
           }
         }
 
-        // 3. update legacy student_assignments
+        // 3. update legacy student_assignments or student_deadlines
         if (submission?.assignment_id) {
-          await supabase
-            .from('student_assignments')
-            .update({
-              status: 'completed',
-              tutor_feedback: overallFeedback,
-              grade: marksData?.grade || null,
-              total_score: marksData?.totalMark || null,
-              component_scores: marksData as any,
-              marked_at: new Date().toISOString()
-            })
-            .eq('id', submission.assignment_id);
+          const { data: isDeadline } = await supabase
+            .from('student_deadlines')
+            .select('id')
+            .eq('id', submission.assignment_id)
+            .maybeSingle();
+
+          if (isDeadline) {
+            await supabase
+              .from('student_deadlines')
+              .update({
+                status: 'completed',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', submission.assignment_id);
+          } else {
+            await supabase
+              .from('student_assignments')
+              .update({
+                status: 'completed',
+                tutor_feedback: overallFeedback,
+                grade: marksData?.grade || null,
+                total_score: marksData?.totalMark || null,
+                component_scores: marksData as any,
+                marked_at: new Date().toISOString()
+              })
+              .eq('id', submission.assignment_id);
+          }
         }
       } else {
         // Mock flow updates local storage
@@ -329,6 +456,24 @@ export default function GradingPage() {
           if (retryError) throw retryError;
         }
 
+        // Save structured question scores to database
+        if (marksData?.questionScores) {
+          const upsertRows = Object.entries(marksData.questionScores).map(([qId, val]: [string, any]) => ({
+            submission_id: submissionId,
+            question_id: qId,
+            score: val.score,
+            feedback: val.feedback
+          }));
+          if (upsertRows.length > 0) {
+            const { error: qsError } = await supabase
+              .from('student_question_scores')
+              .upsert(upsertRows, { onConflict: 'submission_id,question_id' });
+            if (qsError) {
+              console.error("Error saving student question scores during save draft:", qsError);
+            }
+          }
+        }
+
         // 2. Save annotations for text
         if (!submission?.file_url) {
           await supabase.from('annotations').delete().eq('submission_id', submissionId);
@@ -350,18 +495,26 @@ export default function GradingPage() {
           }
         }
 
-        // 3. update legacy student_assignments
+        // 3. update legacy student_assignments or student_deadlines
         if (submission?.assignment_id) {
-          await supabase
-            .from('student_assignments')
-            .update({
-              status: 'grading',
-              tutor_feedback: overallFeedback,
-              grade: marksData?.grade || null,
-              total_score: marksData?.totalMark || null,
-              component_scores: marksData as any,
-            })
-            .eq('id', submission.assignment_id);
+          const { data: isDeadline } = await supabase
+            .from('student_deadlines')
+            .select('id')
+            .eq('id', submission.assignment_id)
+            .maybeSingle();
+
+          if (!isDeadline) {
+            await supabase
+              .from('student_assignments')
+              .update({
+                status: 'grading',
+                tutor_feedback: overallFeedback,
+                grade: marksData?.grade || null,
+                total_score: marksData?.totalMark || null,
+                component_scores: marksData as any,
+              })
+              .eq('id', submission.assignment_id);
+          }
         }
       } else {
         // Mock flow updates local storage
@@ -418,7 +571,7 @@ export default function GradingPage() {
       />
       
       <div className="flex flex-1 overflow-hidden">
-        <LeftPanel onMarksChange={setMarksData} initialMarks={submission?.component_scores} />
+        <LeftPanel onMarksChange={setMarksData} initialMarks={submission?.component_scores} questions={questions} />
         
         {submission?.file_url ? (
           <div className="flex-1 overflow-hidden border-r">

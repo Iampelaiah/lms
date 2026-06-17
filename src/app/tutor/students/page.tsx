@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Search, MessageSquare, Calendar, Trash2, Send, Check, 
   User, Plus, Loader2, CalendarClock, AlertCircle, FileText, CheckCircle2, Users
-, ChevronDown, BookOpen, Clock, BarChart2, Paperclip, Smile, ClipboardList } from 'lucide-react';
+, ChevronDown, BookOpen, Clock, BarChart2, Paperclip, Smile, ClipboardList, Image, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 
@@ -125,6 +125,58 @@ export default function TutorStudentsPage() {
   const [newDeadlineSubjectId, setNewDeadlineSubjectId] = useState('');
   const [newDeadlineDate, setNewDeadlineDate] = useState('');
   const [submittingDeadline, setSubmittingDeadline] = useState(false);
+
+  // Rich direct assignment states
+  const [newDeadlineImageUrl, setNewDeadlineImageUrl] = useState('');
+  const [newDeadlinePastPaperTag, setNewDeadlinePastPaperTag] = useState('');
+  const [newDeadlineTopicTag, setNewDeadlineTopicTag] = useState('');
+  const [newDeadlineQuestions, setNewDeadlineQuestions] = useState<{ id: string; question_text: string; points: number; image_url?: string }[]>([]);
+  const [uploadingDeadlineImage, setUploadingDeadlineImage] = useState(false);
+  const [uploadingQuestionImage, setUploadingQuestionImage] = useState<Record<string, boolean>>({});
+
+  const handleUploadBannerImage = async (file: File) => {
+    setUploadingDeadlineImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `deadlines/banners/${crypto.randomUUID()}.${fileExt}`;
+      const { error } = await supabase.storage
+        .from('course-banners')
+        .upload(fileName, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('course-banners').getPublicUrl(fileName);
+      if (data?.publicUrl) {
+        setNewDeadlineImageUrl(data.publicUrl);
+        toast({ title: 'Success', description: 'Banner uploaded successfully.' });
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploadingDeadlineImage(false);
+    }
+  };
+
+  const handleUploadQuestionImage = async (file: File, qId: string) => {
+    setUploadingQuestionImage(prev => ({ ...prev, [qId]: true }));
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `deadlines/questions/${crypto.randomUUID()}.${fileExt}`;
+      const { error } = await supabase.storage
+        .from('course-banners')
+        .upload(fileName, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('course-banners').getPublicUrl(fileName);
+      if (data?.publicUrl) {
+        setNewDeadlineQuestions(prev => prev.map(q => q.id === qId ? { ...q, image_url: data.publicUrl } : q));
+        toast({ title: 'Success', description: 'Question diagram uploaded.' });
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploadingQuestionImage(prev => ({ ...prev, [qId]: false }));
+    }
+  };
 
   // Pending assignments state
   const [isPendingAssignmentsOpen, setIsPendingAssignmentsOpen] = useState(false);
@@ -404,6 +456,8 @@ export default function TutorStudentsPage() {
     const subjectName = subject?.name || 'Unknown';
     const subjectLevel = subject?.level || 'O-Level';
 
+    const computedTotalPoints = newDeadlineQuestions.reduce((sum, q) => sum + q.points, 0);
+
     if (useDeadlineFallback) {
       const newDl: Deadline = {
         id: crypto.randomUUID(),
@@ -417,8 +471,13 @@ export default function TutorStudentsPage() {
         subjects: {
           name: subjectName,
           level: subjectLevel
-        }
-      };
+        },
+        image_url: newDeadlineImageUrl || undefined,
+        past_paper_tag: newDeadlinePastPaperTag || undefined,
+        topic_tag: newDeadlineTopicTag || undefined,
+        total_points: computedTotalPoints,
+        questions: newDeadlineQuestions
+      } as any;
       const updated = [...deadlines, newDl];
       setDeadlines(updated);
       localStorage.setItem(`drmax_deadlines_${tutorId}_${selectedStudentId}`, JSON.stringify(updated));
@@ -431,7 +490,12 @@ export default function TutorStudentsPage() {
         newDeadlineSubjectId,
         newDeadlineTitle,
         newDeadlineDesc,
-        new Date(newDeadlineDate).toISOString()
+        new Date(newDeadlineDate).toISOString(),
+        newDeadlineImageUrl || undefined,
+        newDeadlinePastPaperTag || undefined,
+        newDeadlineTopicTag || undefined,
+        computedTotalPoints,
+        newDeadlineQuestions
       );
 
       if (res.error) {
@@ -454,6 +518,10 @@ export default function TutorStudentsPage() {
     setNewDeadlineDesc('');
     setNewDeadlineSubjectId('');
     setNewDeadlineDate('');
+    setNewDeadlineImageUrl('');
+    setNewDeadlinePastPaperTag('');
+    setNewDeadlineTopicTag('');
+    setNewDeadlineQuestions([]);
     setIsDeadlineDialogOpen(false);
   };
 
@@ -939,6 +1007,11 @@ export default function TutorStudentsPage() {
                       student={selectedGroup.student} 
                       progressData={progressData} 
                       deadlines={deadlines}
+                      onAddAssignment={() => {
+                        setNewDeadlineTitle('');
+                        setNewDeadlineSubjectId(selectedGroup.subjects[0]?.id || '');
+                        setIsDeadlineDialogOpen(true);
+                      }}
                     />
                   )}
                   
@@ -983,33 +1056,175 @@ export default function TutorStudentsPage() {
                              <Plus size={12} /> Add
                            </button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px] border-border bg-background text-foreground">
+                        <DialogContent className="sm:max-w-[550px] border-border bg-background text-foreground">
                            <form onSubmit={handleCreateDeadline}>
                              <DialogHeader>
                                <DialogTitle className="text-[#D4AF37]">Assign Task</DialogTitle>
                                <DialogDescription className="text-muted-foreground">Assign a task with a due date.</DialogDescription>
                              </DialogHeader>
-                             <div className="space-y-4 py-4">
+                             <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-1">
                                <div className="space-y-2">
                                  <label className="text-xs font-semibold">Task Title</label>
                                  <Input className="bg-card border-border text-foreground" value={newDeadlineTitle} onChange={e => setNewDeadlineTitle(e.target.value)} required />
                                </div>
                                <div className="space-y-2">
-                                 <label className="text-xs font-semibold">Subject</label>
-                                 <Select value={newDeadlineSubjectId} onValueChange={setNewDeadlineSubjectId} required>
-                                   <SelectTrigger className="bg-card border-border text-foreground">
-                                     <SelectValue placeholder="Select a subject" />
-                                   </SelectTrigger>
-                                   <SelectContent className="bg-background border-border text-foreground">
-                                     {selectedGroup.subjects.map(s => (
-                                       <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                                     ))}
-                                   </SelectContent>
-                                 </Select>
+                                 <label className="text-xs font-semibold">Description</label>
+                                 <Textarea className="bg-card border-border text-foreground min-h-[80px]" value={newDeadlineDesc} onChange={e => setNewDeadlineDesc(e.target.value)} placeholder="Enter details about this task..." />
                                </div>
+                               <div className="grid grid-cols-2 gap-4">
+                                 <div className="space-y-2">
+                                   <label className="text-xs font-semibold">Subject</label>
+                                   <Select value={newDeadlineSubjectId} onValueChange={setNewDeadlineSubjectId} required>
+                                     <SelectTrigger className="bg-card border-border text-foreground">
+                                       <SelectValue placeholder="Select a subject" />
+                                     </SelectTrigger>
+                                     <SelectContent className="bg-background border-border text-foreground">
+                                       {selectedGroup.subjects.map(s => (
+                                         <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                       ))}
+                                     </SelectContent>
+                                   </Select>
+                                 </div>
+                                 <div className="space-y-2">
+                                   <label className="text-xs font-semibold">Due Date</label>
+                                   <Input type="datetime-local" className="bg-card border-border text-foreground" value={newDeadlineDate} onChange={e => setNewDeadlineDate(e.target.value)} required />
+                                 </div>
+                               </div>
+
+                               <div className="grid grid-cols-2 gap-4">
+                                 <div className="space-y-2">
+                                   <label className="text-xs font-semibold">Topic Tag</label>
+                                   <Input className="bg-card border-border text-foreground" value={newDeadlineTopicTag} onChange={e => setNewDeadlineTopicTag(e.target.value)} placeholder="e.g. French Revolution" />
+                                 </div>
+                                 <div className="space-y-2">
+                                   <label className="text-xs font-semibold">Past Exam Paper Tag</label>
+                                   <Input className="bg-card border-border text-foreground" value={newDeadlinePastPaperTag} onChange={e => setNewDeadlinePastPaperTag(e.target.value)} placeholder="e.g. Jun 2026 Paper 11" />
+                                 </div>
+                               </div>
+
                                <div className="space-y-2">
-                                 <label className="text-xs font-semibold">Due Date</label>
-                                 <Input type="datetime-local" className="bg-card border-border text-foreground" value={newDeadlineDate} onChange={e => setNewDeadlineDate(e.target.value)} required />
+                                 <label className="text-xs font-semibold block">Assignment Banner Image</label>
+                                 {newDeadlineImageUrl ? (
+                                   <div className="relative aspect-[21/9] rounded-lg overflow-hidden border border-border">
+                                     <img src={newDeadlineImageUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                                     <Button 
+                                       type="button" 
+                                       variant="destructive" 
+                                       size="icon" 
+                                       onClick={() => setNewDeadlineImageUrl('')} 
+                                       className="absolute top-2 right-2 h-7 w-7 rounded-full"
+                                     >
+                                       <Trash2 className="w-3.5 h-3.5" />
+                                     </Button>
+                                   </div>
+                                 ) : (
+                                   <div className="flex items-center justify-center border-2 border-dashed border-border rounded-lg p-6 bg-card">
+                                     <label className="cursor-pointer flex flex-col items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+                                       <Plus className="w-6 h-6 text-primary" />
+                                       <span>{uploadingDeadlineImage ? "Uploading..." : "Upload Banner Image"}</span>
+                                       <input 
+                                         type="file" 
+                                         accept="image/*" 
+                                         className="hidden" 
+                                         disabled={uploadingDeadlineImage}
+                                         onChange={async (e) => {
+                                           const file = e.target.files?.[0];
+                                           if (file) await handleUploadBannerImage(file);
+                                         }} 
+                                       />
+                                     </label>
+                                   </div>
+                                 )}
+                               </div>
+
+                               {/* Questions Section */}
+                               <div className="space-y-4 pt-4 border-t border-border">
+                                 <div className="flex justify-between items-center">
+                                   <h4 className="text-sm font-bold text-[#D4AF37]">Questions ({newDeadlineQuestions.length})</h4>
+                                   <Button 
+                                     type="button" 
+                                     variant="outline" 
+                                     size="sm" 
+                                     onClick={() => setNewDeadlineQuestions(prev => [...prev, { id: crypto.randomUUID(), question_text: '', points: 10 }])}
+                                     className="border-border text-[#D4AF37] hover:bg-[#D4AF37]/10"
+                                   >
+                                     <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Question
+                                   </Button>
+                                 </div>
+
+                                 <div className="space-y-4">
+                                   {newDeadlineQuestions.map((q, qIdx) => (
+                                     <div key={q.id} className="bg-card border border-border/80 rounded-lg p-4 space-y-3 relative">
+                                       <div className="flex justify-between items-start gap-4">
+                                          <div className="flex-1 space-y-2">
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Question {qIdx + 1}</label>
+                                            <Textarea 
+                                              value={q.question_text} 
+                                              onChange={e => setNewDeadlineQuestions(prev => prev.map(item => item.id === q.id ? { ...item, question_text: e.target.value } : item))} 
+                                              placeholder="Enter question content..." 
+                                              className="bg-background border-border text-foreground min-h-[60px]"
+                                              required
+                                            />
+                                          </div>
+                                          <div className="w-20 space-y-2 shrink-0">
+                                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Points</label>
+                                            <Input 
+                                              type="number" 
+                                              value={q.points} 
+                                              onChange={e => setNewDeadlineQuestions(prev => prev.map(item => item.id === q.id ? { ...item, points: Math.max(0, Number(e.target.value)) } : item))} 
+                                              className="bg-background border-border text-foreground font-bold" 
+                                              min={0}
+                                              required
+                                            />
+                                          </div>
+                                       </div>
+
+                                       <div className="flex items-center gap-4 justify-between pt-2">
+                                         <div className="flex-1">
+                                           {q.image_url ? (
+                                             <div className="relative w-32 aspect-video rounded overflow-hidden border border-border">
+                                               <img src={q.image_url} alt="Question Diagram" className="w-full h-full object-contain bg-background/50" />
+                                               <Button 
+                                                 type="button" 
+                                                 variant="destructive" 
+                                                 size="icon" 
+                                                 onClick={() => setNewDeadlineQuestions(prev => prev.map(item => item.id === q.id ? { ...item, image_url: undefined } : item))} 
+                                                 className="absolute top-1 right-1 h-5 w-5 rounded-full"
+                                               >
+                                                 <Trash2 className="w-2.5 h-2.5" />
+                                               </Button>
+                                             </div>
+                                           ) : (
+                                             <label className="cursor-pointer inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+                                               <Plus className="w-3.5 h-3.5" />
+                                               <span>{uploadingQuestionImage[q.id] ? "Uploading..." : "Attach Diagram"}</span>
+                                               <input 
+                                                 type="file" 
+                                                 accept="image/*" 
+                                                 className="hidden" 
+                                                 disabled={uploadingQuestionImage[q.id]}
+                                                 onChange={async (e) => {
+                                                   const file = e.target.files?.[0];
+                                                   if (file) await handleUploadQuestionImage(file, q.id);
+                                                 }} 
+                                               />
+                                             </label>
+                                           )}
+                                         </div>
+                                         
+                                         <Button 
+                                           type="button" 
+                                           variant="ghost" 
+                                           size="sm" 
+                                           onClick={() => setNewDeadlineQuestions(prev => prev.filter(item => item.id !== q.id))}
+                                           className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0"
+                                         >
+                                           <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
+                                         </Button>
+                                       </div>
+                                     </div>
+                                   ))}
+                                 </div>
                                </div>
                              </div>
                              <DialogFooter>
@@ -1035,17 +1250,18 @@ export default function TutorStudentsPage() {
                            const timeColors = ["text-red-400", "text-[#D4AF37]", "text-green-400", "text-purple-400"];
                            const colorIdx = i % colors.length;
                            const daysLeft = Math.max(0, Math.ceil((new Date(d.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-                           return (
-                             <DeadlineItem 
-                               key={d.id}
-                               dotColor={colors[colorIdx]} 
-                               title={d.title} 
-                               date={new Date(d.due_date).toLocaleDateString()} 
-                               timeLeft={`${daysLeft} days left`} 
-                               timeColor={timeColors[colorIdx]} 
-                               onComplete={() => handleToggleDeadline(d)}
-                             />
-                           );
+                             return (
+                               <DeadlineItem 
+                                 key={d.id}
+                                 dotColor={colors[colorIdx]} 
+                                 title={d.title} 
+                                 date={new Date(d.due_date).toLocaleDateString()} 
+                                 timeLeft={`${daysLeft} days left`} 
+                                 timeColor={timeColors[colorIdx]} 
+                                 status={d.status}
+                                 onComplete={() => handleToggleDeadline(d)}
+                               />
+                             );
                         })
                       )}
                     </div>
@@ -1202,17 +1418,23 @@ function ProgressBar({ label, percent, color }: { label: string, percent: number
   );
 }
 
-function DeadlineItem({ dotColor, title, date, timeLeft, timeColor, onComplete }: { dotColor: string, title: string, date: string, timeLeft: string, timeColor: string, onComplete: () => void }) {
+function DeadlineItem({ dotColor, title, date, timeLeft, timeColor, status, onComplete }: { dotColor: string, title: string, date: string, timeLeft: string, timeColor: string, status?: string, onComplete: () => void }) {
+  const isPendingReview = status === 'pending_admin_review';
   return (
     <div className="flex items-start gap-3 group">
-      <button onClick={onComplete} className={`w-3 h-3 rounded-full mt-1.5 ${dotColor} hover:scale-110 transition-transform flex items-center justify-center`}>
-         <Check size={8} className="text-black opacity-0 group-hover:opacity-100" />
+      <button onClick={onComplete} disabled={isPendingReview} className={`w-3 h-3 rounded-full mt-1.5 ${isPendingReview ? 'bg-purple-500 cursor-not-allowed' : dotColor} hover:scale-110 transition-transform flex items-center justify-center`}>
+         {!isPendingReview && <Check size={8} className="text-black opacity-0 group-hover:opacity-100" />}
       </button>
       <div className="flex-1 min-w-0">
         <h4 className="text-sm font-medium text-foreground mb-0.5 truncate">{title}</h4>
-        <p className="text-xs text-muted-foreground">{date}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-muted-foreground">{date}</p>
+          {isPendingReview && <span className="text-[10px] bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/20">Awaiting Admin Approval</span>}
+        </div>
       </div>
-      <div className={`text-xs font-medium ${timeColor} mt-0.5 shrink-0`}>{timeLeft}</div>
+      <div className={`text-xs font-medium ${isPendingReview ? 'text-purple-400' : timeColor} mt-0.5 shrink-0`}>
+        {isPendingReview ? 'Pending' : timeLeft}
+      </div>
     </div>
   );
 }

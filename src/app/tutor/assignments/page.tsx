@@ -38,10 +38,12 @@ export default function TutorAssignmentsPage() {
   const loadSubmissions = async () => {
     setLoading(true);
     let dbSubmissions: any[] = [];
+    let deadlineSubmissions: any[] = [];
 
     if (tutorId) {
       const supabase = createClient();
       
+      // 1. Fetch standard curriculum assignments and their submissions
       const { data: tutorModules } = await supabase.from('curriculum_modules').select('id, subjects(id, name, level)').eq('tutor_id', tutorId);
       const moduleIds = tutorModules?.map((m: any) => m.id) || [];
       
@@ -87,6 +89,44 @@ export default function TutorAssignmentsPage() {
                   }
               }
           }
+      }
+
+      // 2. Fetch direct student deadlines set by this tutor and their submissions
+      const { data: tutorDeadlines } = await supabase
+        .from('student_deadlines')
+        .select('*, subjects(id, name, level)')
+        .eq('tutor_id', tutorId);
+      
+      const deadlineIds = tutorDeadlines?.map((d: any) => d.id) || [];
+
+      if (deadlineIds.length > 0) {
+        const { data: dlSubData } = await supabase
+          .from('submissions')
+          .select('*, profiles(full_name, email, avatar_url)')
+          .in('assignment_id', deadlineIds)
+          .order('created_at', { ascending: false });
+
+        if (dlSubData) {
+          deadlineSubmissions = dlSubData.map((sub: any) => {
+            const deadline = tutorDeadlines.find((d: any) => d.id === sub.assignment_id);
+            const subject = Array.isArray(deadline?.subjects) ? deadline?.subjects[0] : deadline?.subjects;
+            
+            return {
+              id: sub.id,
+              status: sub.status === 'submitted' ? 'unmarked' : (sub.status === 'grading' ? 'unmarked' : 'graded'),
+              submitted_at: sub.created_at,
+              assignment_number: 1, // Direct student deadline assignments default to assignment number 1
+              profiles: sub.profiles,
+              subjects: subject,
+              module_items: { title: deadline?.title },
+              student_id: sub.student_id,
+              subject_id: subject?.id,
+              module_item_id: null,
+              student_submission: sub.raw_text,
+              file_url: sub.file_url
+            };
+          });
+        }
       }
     }
 
@@ -135,13 +175,12 @@ export default function TutorAssignmentsPage() {
       console.error("Failed to parse local storage submissions:", e);
     }
 
-    const merged = [...dbSubmissions, ...localSubmissions];
+    const merged = [...dbSubmissions, ...deadlineSubmissions, ...localSubmissions];
     
-
 
     const seen = new Set();
     const uniqueSubmissions = merged.filter((sub: any) => {
-      const key = `${sub.student_id}_${sub.module_item_id}_${sub.assignment_number}`;
+      const key = `${sub.student_id}_${sub.module_item_id || sub.id}_${sub.assignment_number}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;

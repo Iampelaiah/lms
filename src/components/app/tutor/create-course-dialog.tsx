@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { PlusCircle, Loader2, Upload, Trash2, Calendar, Clock, BookOpen, Video, FileQuestion, FileText, Layers, Tag } from "lucide-react";
+import { PlusCircle, Loader2, Upload, Trash2, Calendar, Clock, BookOpen, Video, FileQuestion, FileText, Layers, Tag, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -29,7 +29,21 @@ type ModuleItem = {
     duration_minutes: number;
     exam_allocation_2026: string;
     key_questions: string[];
-    assignments: { assignment_number: number; title: string; description: string }[];
+    assignments: { 
+        assignment_number: number; 
+        title: string; 
+        description: string;
+        image_url?: string;
+        past_paper_tag?: string;
+        topic_tag?: string;
+        total_points?: number;
+        questions?: {
+            question_text: string;
+            image_url?: string;
+            points: number;
+            sequence_order: number;
+        }[];
+    }[];
 };
 
 type ModuleBlock = {
@@ -57,6 +71,9 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
     const [imageUrl, setImageUrl] = useState("");
     const [modules, setModules] = useState<ModuleBlock[]>([]);
     const [uploading, setUploading] = useState(false);
+    const [expandedAssignmentKey, setExpandedAssignmentKey] = useState<string | null>(null);
+    const [uploadingAssignmentImage, setUploadingAssignmentImage] = useState<string | null>(null);
+    const [uploadingQuestionImage, setUploadingQuestionImage] = useState<string | null>(null);
     
     const supabase = createClient();
 
@@ -126,13 +143,37 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
         setModules(modules.filter((_, i) => i !== mIndex).map((m, i) => ({ ...m, sequence_order: i + 1 })));
     };
 
+    const uploadImage = async (file: File, pathPrefix: string): Promise<string> => {
+        if (!file || !tutorId) return "";
+        try {
+            const fileExt = file.name.split('.').pop() || 'jpg';
+            const fileName = `${tutorId}/${pathPrefix}_${Date.now()}.${fileExt}`;
+            const { error } = await supabase.storage
+                .from('course-banners')
+                .upload(fileName, file, { upsert: false });
+            
+            if (error) throw error;
+
+            const { data } = supabase.storage.from('course-banners').getPublicUrl(fileName);
+            return data?.publicUrl || "";
+        } catch (err) {
+            console.error("Image upload failed:", err);
+            toast({
+                title: "Upload failed",
+                description: "Could not upload image to server.",
+                variant: "destructive"
+            });
+            return "";
+        }
+    };
+
     const addItem = (mIndex: number, type: 'topic' | 'live_class' | 'test') => {
         const newMods = [...modules];
         const defaultAssignments = type === 'topic' ? [
-            { assignment_number: 1, title: 'Assignment 1', description: 'Interactive assignment' },
-            { assignment_number: 2, title: 'Assignment 2', description: 'Interactive assignment' },
-            { assignment_number: 3, title: 'Assignment 3', description: 'Interactive assignment' },
-            { assignment_number: 4, title: 'Assignment 4', description: 'Interactive assignment' }
+            { assignment_number: 1, title: 'Assignment 1', description: 'Interactive assignment', image_url: '', past_paper_tag: '', topic_tag: '', total_points: 10, questions: [] },
+            { assignment_number: 2, title: 'Assignment 2', description: 'Interactive assignment', image_url: '', past_paper_tag: '', topic_tag: '', total_points: 10, questions: [] },
+            { assignment_number: 3, title: 'Assignment 3', description: 'Interactive assignment', image_url: '', past_paper_tag: '', topic_tag: '', total_points: 10, questions: [] },
+            { assignment_number: 4, title: 'Assignment 4', description: 'Interactive assignment', image_url: '', past_paper_tag: '', topic_tag: '', total_points: 10, questions: [] }
         ] : [];
 
         newMods[mIndex].items.push({
@@ -197,7 +238,18 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                         exam_allocation_2026: i.exam_allocation_2026,
                         key_questions: i.key_questions.filter(q => q.trim() !== '')
                     },
-                    assignments: i.assignments
+                    assignments: i.assignments.map(a => ({
+                        assignment_number: a.assignment_number,
+                        title: a.title,
+                        description: a.description,
+                        image_url: a.image_url || '',
+                        past_paper_tag: a.past_paper_tag || '',
+                        topic_tag: a.topic_tag || '',
+                        total_points: a.questions && a.questions.length > 0 
+                            ? a.questions.reduce((sum, q) => sum + q.points, 0)
+                            : (a.total_points || 10),
+                        questions: a.questions || []
+                    }))
                 }))
             }));
 
@@ -219,6 +271,7 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
             setModules([]);
             setSelectedSubjectId("");
             setImageUrl("");
+            setExpandedAssignmentKey(null);
             if (onCourseCreated) onCourseCreated();
         } catch (err: any) {
             console.error("Failed to create curriculum:", err);
@@ -445,35 +498,273 @@ export function CreateCourseDialog({ tutorId, onCourseCreated, trigger }: {
                                                     </div>
 
                                                     {/* Assignments Section */}
+                                                    {/* Assignments Section */}
                                                     {item.item_type === 'topic' && item.assignments && item.assignments.length > 0 && (
-                                                        <div className="space-y-2 border-t pt-3">
-                                                            <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1"><FileText className="w-3 h-3" /> Interactive Assignments</Label>
-                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                                {item.assignments.map((assignment, aIdx) => (
-                                                                    <div key={aIdx} className="bg-muted/30 p-2 rounded border text-sm">
-                                                                        <div className="font-medium text-xs mb-1">Assignment {assignment.assignment_number}</div>
-                                                                        <Input 
-                                                                            value={assignment.title} 
-                                                                            onChange={(e) => {
-                                                                                const newMods = [...modules];
-                                                                                newMods[mIdx].items[iIdx].assignments[aIdx].title = e.target.value;
-                                                                                setModules(newMods);
-                                                                            }}
-                                                                            placeholder="Title"
-                                                                            className="h-7 text-xs bg-background mb-1"
-                                                                        />
-                                                                        <Input 
-                                                                            value={assignment.description} 
-                                                                            onChange={(e) => {
-                                                                                const newMods = [...modules];
-                                                                                newMods[mIdx].items[iIdx].assignments[aIdx].description = e.target.value;
-                                                                                setModules(newMods);
-                                                                            }}
-                                                                            placeholder="Description (Optional)"
-                                                                            className="h-7 text-xs bg-background"
-                                                                        />
-                                                                    </div>
-                                                                ))}
+                                                        <div className="space-y-4 border-t pt-3">
+                                                            <Label className="text-xs font-bold text-muted-foreground uppercase flex items-center gap-1"><FileText className="w-3.5 h-3.5 text-primary" /> Interactive Assignments</Label>
+                                                            <div className="space-y-3">
+                                                                {item.assignments.map((assignment, aIdx) => {
+                                                                    const key = `${mIdx}-${iIdx}-${aIdx}`;
+                                                                    const isExpanded = expandedAssignmentKey === key;
+                                                                    const qCount = assignment.questions?.length || 0;
+                                                                    const totalPts = assignment.questions && qCount > 0 
+                                                                        ? assignment.questions.reduce((sum, q) => sum + q.points, 0)
+                                                                        : (assignment.total_points || 10);
+                                                                    
+                                                                    return (
+                                                                        <div key={aIdx} className="border border-border/80 rounded-xl bg-background overflow-hidden shadow-sm">
+                                                                            {/* Header Bar */}
+                                                                            <div className="flex items-center justify-between p-3.5 bg-muted/20 border-b border-border/40">
+                                                                                <div className="flex items-center gap-2.5">
+                                                                                    <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 text-xs">Assignment {assignment.assignment_number}</Badge>
+                                                                                    <span className="font-semibold text-sm truncate max-w-[200px]">{assignment.title || "Untitled Assignment"}</span>
+                                                                                    {qCount > 0 && (
+                                                                                        <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-emerald-500/20">{qCount} Questions ({totalPts} pts)</Badge>
+                                                                                    )}
+                                                                                </div>
+                                                                                <Button 
+                                                                                    type="button" 
+                                                                                    variant="ghost" 
+                                                                                    size="sm" 
+                                                                                    className="text-xs h-8 text-primary hover:text-primary-foreground hover:bg-primary"
+                                                                                    onClick={() => setExpandedAssignmentKey(isExpanded ? null : key)}
+                                                                                >
+                                                                                    {isExpanded ? "Collapse" : "Edit Details"}
+                                                                                </Button>
+                                                                            </div>
+
+                                                                            {/* Expandable Editor Body */}
+                                                                            {isExpanded && (
+                                                                                <div className="p-4 space-y-4 bg-muted/5 border-t border-border/20">
+                                                                                    {/* Title & Desc */}
+                                                                                    <div className="grid gap-3 sm:grid-cols-2">
+                                                                                        <div className="space-y-1.5">
+                                                                                            <Label className="text-xs">Assignment Title</Label>
+                                                                                            <Input 
+                                                                                                value={assignment.title} 
+                                                                                                onChange={(e) => {
+                                                                                                    const newMods = [...modules];
+                                                                                                    newMods[mIdx].items[iIdx].assignments[aIdx].title = e.target.value;
+                                                                                                    setModules(newMods);
+                                                                                                }}
+                                                                                                placeholder="Assignment Title"
+                                                                                            />
+                                                                                        </div>
+                                                                                        <div className="space-y-1.5">
+                                                                                            <Label className="text-xs">Description / Guidelines</Label>
+                                                                                            <Input 
+                                                                                                value={assignment.description} 
+                                                                                                onChange={(e) => {
+                                                                                                    const newMods = [...modules];
+                                                                                                    newMods[mIdx].items[iIdx].assignments[aIdx].description = e.target.value;
+                                                                                                    setModules(newMods);
+                                                                                                }}
+                                                                                                placeholder="Guidelines or assignment overview"
+                                                                                            />
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    {/* Tags & Banner */}
+                                                                                    <div className="grid gap-4 sm:grid-cols-3">
+                                                                                        <div className="space-y-1.5">
+                                                                                            <Label className="text-xs flex items-center gap-1"><Tag className="w-3 h-3" /> Past Exam Paper Tag</Label>
+                                                                                            <Input 
+                                                                                                value={assignment.past_paper_tag || ''} 
+                                                                                                onChange={(e) => {
+                                                                                                    const newMods = [...modules];
+                                                                                                    newMods[mIdx].items[iIdx].assignments[aIdx].past_paper_tag = e.target.value;
+                                                                                                    setModules(newMods);
+                                                                                                }}
+                                                                                                placeholder="e.g. June 2026 P11"
+                                                                                            />
+                                                                                        </div>
+                                                                                        <div className="space-y-1.5">
+                                                                                            <Label className="text-xs flex items-center gap-1"><Tag className="w-3 h-3" /> Topic Tag</Label>
+                                                                                            <Input 
+                                                                                                value={assignment.topic_tag || ''} 
+                                                                                                onChange={(e) => {
+                                                                                                    const newMods = [...modules];
+                                                                                                    newMods[mIdx].items[iIdx].assignments[aIdx].topic_tag = e.target.value;
+                                                                                                    setModules(newMods);
+                                                                                                }}
+                                                                                                placeholder="e.g. Napoleon Bonaparte"
+                                                                                            />
+                                                                                        </div>
+                                                                                        <div className="space-y-1.5">
+                                                                                            <Label className="text-xs flex items-center gap-1"><ImageIcon className="w-3 h-3" /> Assignment Image</Label>
+                                                                                            <div className="flex gap-2">
+                                                                                                <Input 
+                                                                                                    value={assignment.image_url || ''} 
+                                                                                                    onChange={(e) => {
+                                                                                                        const newMods = [...modules];
+                                                                                                        newMods[mIdx].items[iIdx].assignments[aIdx].image_url = e.target.value;
+                                                                                                        setModules(newMods);
+                                                                                                    }}
+                                                                                                    placeholder="Image URL"
+                                                                                                    className="flex-1"
+                                                                                                />
+                                                                                                <div className="relative">
+                                                                                                    <input 
+                                                                                                        type="file" 
+                                                                                                        accept="image/*" 
+                                                                                                        className="hidden" 
+                                                                                                        id={`assign-img-${key}`} 
+                                                                                                        onChange={async (e) => {
+                                                                                                            const file = e.target.files?.[0];
+                                                                                                            if (!file) return;
+                                                                                                            setUploadingAssignmentImage(key);
+                                                                                                            const url = await uploadImage(file, `assign_banner_${key}`);
+                                                                                                            if (url) {
+                                                                                                                const newMods = [...modules];
+                                                                                                                newMods[mIdx].items[iIdx].assignments[aIdx].image_url = url;
+                                                                                                                setModules(newMods);
+                                                                                                            }
+                                                                                                            setUploadingAssignmentImage(null);
+                                                                                                        }}
+                                                                                                    />
+                                                                                                    <Label 
+                                                                                                        htmlFor={`assign-img-${key}`} 
+                                                                                                        className={`inline-flex items-center justify-center rounded-md text-xs font-semibold h-9 px-3 cursor-pointer ${uploadingAssignmentImage === key ? 'bg-muted text-muted-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                                                                                                    >
+                                                                                                        {uploadingAssignmentImage === key ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                                                                                                    </Label>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            {assignment.image_url && (
+                                                                                                <div className="mt-1 relative w-full h-12 rounded overflow-hidden border border-border">
+                                                                                                    <img src={assignment.image_url} alt="Assignment Banner Preview" className="w-full h-full object-cover" />
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    {/* Questions Section */}
+                                                                                    <div className="space-y-3 pt-3 border-t border-border/20">
+                                                                                        <Label className="text-xs font-semibold flex items-center gap-1.5"><FileQuestion className="w-3.5 h-3.5 text-primary" /> Questions inside Assignment</Label>
+                                                                                        <div className="space-y-3.5">
+                                                                                            {(assignment.questions || []).map((q, qIdx) => (
+                                                                                                <div key={qIdx} className="p-3 bg-muted/30 border border-border/50 rounded-lg space-y-3">
+                                                                                                    <div className="flex items-center justify-between">
+                                                                                                        <span className="text-xs font-bold text-muted-foreground uppercase">Question {qIdx + 1}</span>
+                                                                                                        <Button 
+                                                                                                            type="button"
+                                                                                                            variant="ghost" 
+                                                                                                            size="icon" 
+                                                                                                            className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10" 
+                                                                                                            onClick={() => {
+                                                                                                                const newMods = [...modules];
+                                                                                                                newMods[mIdx].items[iIdx].assignments[aIdx].questions = 
+                                                                                                                    (assignment.questions || []).filter((_, qi) => qi !== qIdx);
+                                                                                                                setModules(newMods);
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                                                                        </Button>
+                                                                                                    </div>
+                                                                                                    <div className="grid gap-3 sm:grid-cols-12">
+                                                                                                        <div className="sm:col-span-12">
+                                                                                                            <Textarea 
+                                                                                                                value={q.question_text} 
+                                                                                                                onChange={(e) => {
+                                                                                                                    const newMods = [...modules];
+                                                                                                                    newMods[mIdx].items[iIdx].assignments[aIdx].questions![qIdx].question_text = e.target.value;
+                                                                                                                    setModules(newMods);
+                                                                                                                }}
+                                                                                                                placeholder="Question text (e.g. Explain Napoleon's rise to power...)"
+                                                                                                                className="min-h-[60px] bg-background text-sm"
+                                                                                                            />
+                                                                                                        </div>
+                                                                                                        <div className="sm:col-span-4 space-y-1">
+                                                                                                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Points</Label>
+                                                                                                            <Input 
+                                                                                                                type="number" 
+                                                                                                                value={q.points} 
+                                                                                                                onChange={(e) => {
+                                                                                                                    const newMods = [...modules];
+                                                                                                                    newMods[mIdx].items[iIdx].assignments[aIdx].questions![qIdx].points = Math.max(1, parseInt(e.target.value) || 0);
+                                                                                                                    setModules(newMods);
+                                                                                                                }}
+                                                                                                                placeholder="Points"
+                                                                                                                min={1}
+                                                                                                            />
+                                                                                                        </div>
+                                                                                                        <div className="sm:col-span-8 space-y-1">
+                                                                                                            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Attach Picture / Diagram</Label>
+                                                                                                            <div className="flex gap-2">
+                                                                                                                <Input 
+                                                                                                                    value={q.image_url || ''} 
+                                                                                                                    onChange={(e) => {
+                                                                                                                        const newMods = [...modules];
+                                                                                                                        newMods[mIdx].items[iIdx].assignments[aIdx].questions![qIdx].image_url = e.target.value;
+                                                                                                                        setModules(newMods);
+                                                                                                                    }}
+                                                                                                                    placeholder="Image URL"
+                                                                                                                    className="flex-1"
+                                                                                                                />
+                                                                                                                <div className="relative">
+                                                                                                                    <input 
+                                                                                                                        type="file" 
+                                                                                                                        accept="image/*" 
+                                                                                                                        className="hidden" 
+                                                                                                                        id={`q-img-${key}-${qIdx}`} 
+                                                                                                                        onChange={async (e) => {
+                                                                                                                            const file = e.target.files?.[0];
+                                                                                                                            if (!file) return;
+                                                                                                                            const qKey = `${key}-${qIdx}`;
+                                                                                                                            setUploadingQuestionImage(qKey);
+                                                                                                                            const url = await uploadImage(file, `question_diagram_${qKey}`);
+                                                                                                                            if (url) {
+                                                                                                                                const newMods = [...modules];
+                                                                                                                                newMods[mIdx].items[iIdx].assignments[aIdx].questions![qIdx].image_url = url;
+                                                                                                                                setModules(newMods);
+                                                                                                                            }
+                                                                                                                            setUploadingQuestionImage(null);
+                                                                                                                        }}
+                                                                                                                    />
+                                                                                                                    <Label 
+                                                                                                                        htmlFor={`q-img-${key}-${qIdx}`} 
+                                                                                                                        className={`inline-flex items-center justify-center rounded-md text-xs font-semibold h-9 px-3 cursor-pointer ${uploadingQuestionImage === `${key}-${qIdx}` ? 'bg-muted text-muted-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                                                                                                                    >
+                                                                                                                        {uploadingQuestionImage === `${key}-${qIdx}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                                                                                                                    </Label>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            {q.image_url && (
+                                                                                                                <div className="mt-1 relative w-full h-12 rounded overflow-hidden border border-border">
+                                                                                                                    <img src={q.image_url} alt="Question Diagram Preview" className="w-full h-full object-cover" />
+                                                                                                                </div>
+                                                                                                            )}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                        <Button 
+                                                                                            type="button" 
+                                                                                            variant="outline" 
+                                                                                            size="sm" 
+                                                                                            className="w-full h-9 text-xs border-dashed text-primary border-primary/40 hover:bg-primary/5 mt-1"
+                                                                                            onClick={() => {
+                                                                                                const newMods = [...modules];
+                                                                                                const questionsList = assignment.questions || [];
+                                                                                                questionsList.push({
+                                                                                                    question_text: '',
+                                                                                                    image_url: '',
+                                                                                                    points: 10,
+                                                                                                    sequence_order: questionsList.length + 1
+                                                                                                });
+                                                                                                newMods[mIdx].items[iIdx].assignments[aIdx].questions = questionsList;
+                                                                                                setModules(newMods);
+                                                                                            }}
+                                                                                        >
+                                                                                            + Add Question
+                                                                                        </Button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })}
                                                             </div>
                                                         </div>
                                                     )}
