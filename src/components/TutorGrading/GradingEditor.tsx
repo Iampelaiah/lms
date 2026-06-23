@@ -177,6 +177,7 @@ export default function GradingEditor({ initialContent, activeAnnotationId, anno
       <TextToolSelector onAction={handleTextToolAction} />
 
       {editor && bubbleMode !== 'menu' && (
+        // @ts-expect-error TipTap BubbleMenu type definitions sometimes miss tippyOptions
         <BubbleMenu editor={editor} tippyOptions={{ duration: 100, placement: 'top' }} className="flex flex-col bg-background shadow-xl border border-border rounded-xl overflow-hidden min-w-[200px] text-foreground">
             <div className="w-[300px] p-3 flex flex-col gap-2 relative">
               <div className="flex items-center justify-between">

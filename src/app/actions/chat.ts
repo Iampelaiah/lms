@@ -137,3 +137,77 @@ export async function searchProfilesForChat(query: string) {
   }
   return { data }
 }
+
+export async function getStudentChatContacts(studentId: string) {
+  const supabase = await createClient();
+  
+  // Fetch linked parents
+  const { data: parentLinks, error: parentError } = await supabase
+    .from('parent_student_links')
+    .select('parent_id, profiles!parent_id(id, full_name, role, avatar_url)')
+    .eq('student_id', studentId);
+
+  // Fetch assigned tutors from enrollments
+  const { data: tutorLinks, error: tutorError } = await supabase
+    .from('enrollments')
+    .select('tutor_id, profiles!tutor_id(id, full_name, role, avatar_url)')
+    .eq('student_id', studentId)
+    .eq('status', 'approved');
+
+  if (parentError) console.error('Error fetching parent contacts:', parentError);
+  if (tutorError) console.error('Error fetching tutor contacts:', tutorError);
+
+  const contactsMap = new Map<string, any>();
+
+  if (parentLinks) {
+    for (const link of parentLinks) {
+      if (link.profiles) {
+        contactsMap.set(link.parent_id, {
+           partnerId: link.parent_id,
+           profile: link.profiles
+        });
+      }
+    }
+  }
+
+  if (tutorLinks) {
+    for (const link of tutorLinks) {
+      if (link.profiles && link.tutor_id) {
+        contactsMap.set(link.tutor_id, {
+           partnerId: link.tutor_id,
+           profile: link.profiles
+        });
+      }
+    }
+  }
+
+  return { data: Array.from(contactsMap.values()) };
+}
+
+export async function getTutorChatContacts(tutorId: string) {
+  const supabase = await createClient();
+  
+  // Fetch assigned students from enrollments
+  const { data: studentLinks, error: studentError } = await supabase
+    .from('enrollments')
+    .select('student_id, profiles!student_id(id, full_name, role, avatar_url)')
+    .eq('tutor_id', tutorId)
+    .eq('status', 'approved');
+
+  if (studentError) console.error('Error fetching student contacts:', studentError);
+
+  const contactsMap = new Map<string, any>();
+
+  if (studentLinks) {
+    for (const link of studentLinks) {
+      if (link.profiles && link.student_id) {
+        contactsMap.set(link.student_id, {
+           partnerId: link.student_id,
+           profile: link.profiles
+        });
+      }
+    }
+  }
+
+  return { data: Array.from(contactsMap.values()) };
+}

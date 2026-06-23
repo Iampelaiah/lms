@@ -4,12 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useUser } from '@/components/providers/user-context';
 import { createClient } from '@/utils/supabase/client';
-import { searchProfilesForChat, getRecentChatContacts, getGlobalChatMessages, sendGlobalChatMessage, markMessagesAsRead } from '@/app/actions/chat';
+import { searchProfilesForChat, getRecentChatContacts, getGlobalChatMessages, sendGlobalChatMessage, markMessagesAsRead, getStudentChatContacts, getTutorChatContacts } from '@/app/actions/chat';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, Send, ArrowLeft, Loader2, User, Plus, MessageSquare, Sparkles } from 'lucide-react';
+import { Search, Send, ArrowLeft, Loader2, User, Plus, MessageSquare, Sparkles, Paperclip, Smile } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -51,8 +51,48 @@ export function GlobalChatDrawer({ trigger }: { trigger: React.ReactNode }) {
   async function loadContacts() {
     if (!profile?.id) return;
     setLoadingContacts(true);
-    const { data } = await getRecentChatContacts(profile.id);
-    if (data) setContacts(data);
+    
+    let assignedContactsFetch: Promise<{ data: any[] }> = Promise.resolve({ data: [] });
+    if (profile.role === 'student') {
+      assignedContactsFetch = getStudentChatContacts(profile.id);
+    } else if (profile.role === 'tutor') {
+      assignedContactsFetch = getTutorChatContacts(profile.id);
+    }
+
+    const [{ data: assignedContacts }, { data: recentContacts }] = await Promise.all([
+      assignedContactsFetch,
+      getRecentChatContacts(profile.id)
+    ]);
+
+    const mergedContactsMap = new Map<string, any>();
+
+    // Add recent contacts first (these have message previews and timestamps)
+    if (recentContacts) {
+      for (const rc of recentContacts) {
+        mergedContactsMap.set(rc.partnerId, rc);
+      }
+    }
+
+    // Add assigned contacts if they aren't already in the list
+    if (assignedContacts) {
+      for (const ac of assignedContacts as any[]) {
+        if (!mergedContactsMap.has(ac.partnerId)) {
+           mergedContactsMap.set(ac.partnerId, ac);
+        }
+      }
+    }
+
+    // Sort: Contacts with recent messages first (descending time), then others
+    const finalContacts = Array.from(mergedContactsMap.values()).sort((a, b) => {
+      if (a.lastMessageTime && b.lastMessageTime) {
+        return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
+      }
+      if (a.lastMessageTime) return -1;
+      if (b.lastMessageTime) return 1;
+      return 0;
+    });
+
+    setContacts(finalContacts);
     setLoadingContacts(false);
   }
 
@@ -536,18 +576,26 @@ export function GlobalChatDrawer({ trigger }: { trigger: React.ReactNode }) {
 
                 {/* Input Text Form */}
                 <form onSubmit={handleSend} className="p-3 border-t border-border bg-card/30">
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="Type a message..." 
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="bg-muted border-border/80 focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-muted/40 transition-all h-9.5 text-sm"
-                    />
+                  <div className="flex gap-2 items-center">
+                    <Button type="button" variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground">
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    <div className="relative flex-1">
+                      <Input 
+                        placeholder="Type a message..." 
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        className="bg-muted border-border/80 focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-muted/40 transition-all h-9.5 text-sm pr-10 rounded-full"
+                      />
+                      <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground">
+                        <Smile className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <Button 
                       type="submit" 
                       size="icon" 
                       disabled={!newMessage.trim() || sending} 
-                      className="shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground h-9.5 w-9.5 rounded-lg shadow-sm"
+                      className="shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground h-9.5 w-9.5 rounded-full shadow-sm"
                     >
                       {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     </Button>

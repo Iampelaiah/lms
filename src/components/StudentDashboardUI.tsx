@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { 
   Search, ChevronDown, LayoutDashboard, BookOpen, Users, 
@@ -5,7 +6,10 @@ import {
   ClipboardList, Clock, BarChart2, Paperclip, Smile, Send
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import EmojiPicker from 'emoji-picker-react';
+import { Theme } from 'emoji-picker-react';
+import dynamic from 'next/dynamic';
+
+const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
 export default function StudentDashboardUI() {
   return (
@@ -240,7 +244,7 @@ export default function StudentDashboardUI() {
                         <Smile size={18} className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
                       </PopoverTrigger>
                       <PopoverContent className="w-[40vw] sm:w-[400px] p-0 border-none mb-2" side="top" align="end">
-                        <EmojiPicker theme="dark" width="100%" />
+                        <EmojiPicker theme={Theme.DARK} width="100%" />
                       </PopoverContent>
                     </Popover>
                     <button className="w-8 h-8 bg-[#D4AF37] hover:bg-[#c29f2f] rounded-lg flex items-center justify-center text-black ml-1 transition-colors">

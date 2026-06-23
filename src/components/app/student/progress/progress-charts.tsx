@@ -125,20 +125,35 @@ export function ProgressCharts() {
     }
 
     if (deadlinesResult.data && deadlinesResult.data.length > 0) {
+      let overdueCount = 0;
       const formattedDeadlines = deadlinesResult.data.map((d: any, index) => {
         const colors = ['bg-gold', 'bg-gold', 'bg-gold', 'bg-gold'];
+        
+        let status = 'Pending';
+        if (d.status === 'completed') {
+          status = 'Completed';
+        } else if (new Date(d.due_date).getTime() < Date.now()) {
+          status = 'Overdue';
+          overdueCount++;
+        }
+
         return {
           id: d.id,
           subject_id: d.subject_id,
           course: d.subject?.name || 'Unknown Subject',
           date: new Date(d.due_date).toISOString().split('T')[0],
           type: d.title,
-          status: d.status === 'completed' ? 'Completed' : d.status === 'pending' ? 'Pending' : 'Overdue',
+          status,
           priority: 'High',
           color: colors[index % colors.length]
         };
       });
       setDeadlines(formattedDeadlines);
+
+      // Apply penalty to average score
+      if (overdueCount > 0) {
+        setAverageScore(prev => Math.max(0, prev - (2 * overdueCount)));
+      }
     } else {
       // Use fallback if no real deadlines exist yet
       setDeadlines(initialDeadlinesData);
@@ -472,6 +487,39 @@ export function ProgressCharts() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Narrative Report */}
+        <Card className="rounded-[1.5rem] border-border/60 shadow-sm overflow-hidden flex flex-col">
+          <CardContent className="p-0 flex flex-col h-full">
+            <div className="p-6 border-b border-border dark:border-border/50 bg-neutral-50/50 dark:bg-background/50">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                 </svg>
+                 Narrative Report
+              </h3>
+            </div>
+            <div className="p-6 flex-1 flex flex-col gap-4">
+              <p className="text-sm text-foreground/ leading-relaxed">
+                {deadlines.filter(d => d.status === 'Overdue').length > 0 
+                  ? `The student has ${deadlines.filter(d => d.status === 'Overdue').length} overdue assignment(s). A penalty of -${deadlines.filter(d => d.status === 'Overdue').length * 2}% has been applied to the overall subject score. We encourage submitting tasks on time to maintain steady progress.` 
+                  : "The student is up to date with all assignments. Excellent consistency and time management!"}
+              </p>
+              
+              <div className="mt-auto pt-4 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full ${deadlines.filter(d => d.status === 'Overdue').length > 0 ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                  System Generated
+                </span>
+                <span>{new Date().toLocaleDateString()}</span>
+              </div>
             </div>
           </CardContent>
         </Card>

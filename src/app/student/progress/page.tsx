@@ -1,6 +1,7 @@
 'use client';
 
-import { ProgressCharts } from "@/components/app/student/progress/progress-charts";
+import dynamic from 'next/dynamic';
+const ProgressCharts = dynamic(() => import('@/components/app/student/progress/progress-charts').then(mod => mod.ProgressCharts), { ssr: false });
 import { Search, Bell, MoreHorizontal, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

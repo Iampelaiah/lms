@@ -478,7 +478,7 @@ const ParallaxTestimonial = () => {
     <section ref={ref} className="relative h-screen overflow-hidden">
       <motion.div style={{ y }} className="absolute -inset-y-40 inset-x-0">
         <Image 
-          src="https://picsum.photos/seed/edu-parallax-exact/1600/900"
+          src="/testimonial-bg.jpg"
           alt="Student Success"
           fill
           className="object-cover brightness-50"

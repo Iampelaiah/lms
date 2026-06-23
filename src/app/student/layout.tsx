@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Suspense } from 'react';
 import { PreviewBanner } from '@/components/app/preview-banner';
 import { BottomNav } from '@/components/app/student/bottom-nav';
+import { IncomingCallListener } from '@/components/chat/incoming-call-listener';
 
 export default function StudentLayout({
   children,
@@ -20,6 +21,7 @@ export default function StudentLayout({
           </main>
           {/* Mobile Bottom Navigation */}
           <BottomNav />
+          <IncomingCallListener />
         </SidebarInset>
       </SidebarProvider>
   );
