@@ -108,7 +108,7 @@ export default function TutorAssignmentsPage() {
 
         if (dlSubData) {
           deadlineSubmissions = dlSubData.map((sub: any) => {
-            const deadline = tutorDeadlines.find((d: any) => d.id === sub.assignment_id);
+            const deadline = tutorDeadlines?.find((d: any) => d.id === sub.assignment_id);
             const subject = Array.isArray(deadline?.subjects) ? deadline?.subjects[0] : deadline?.subjects;
             
             return {
