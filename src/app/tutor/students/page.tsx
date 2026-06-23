@@ -910,7 +910,7 @@ export default function TutorStudentsPage() {
   ) : null;
 
 return (
-    <div className="flex flex-col h-full bg-background text-foreground font-sans overflow-hidden min-h-[calc(100vh-3.5rem)]">
+    <div className="flex flex-col h-[calc(100vh-3rem)] md:h-screen bg-background text-foreground font-sans overflow-hidden">
       
       {/* 2. Middle Column ("My Students" List) and 3. Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
@@ -994,7 +994,7 @@ return (
           {selectedGroup ? (
             <>
               {/* Top Header Card */}
-              <div className="bg-card border border-border rounded-2xl p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4 shrink-0">
+              <div className="sticky top-0 z-20 bg-card border border-border rounded-2xl p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4 shrink-0 shadow-sm">
                 <div className="flex items-center gap-5">
                   <div className="relative">
                     <img 
