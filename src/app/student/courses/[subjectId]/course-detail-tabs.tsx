@@ -196,7 +196,7 @@ export function CourseDetailTabs({
       if (assign) {
         if (sub.status === 'graded') {
           acts.push({
-            id: `grade-${sub.id}`,
+            id: `grade-${sub.id || sub.assignment_id}`,
             type: 'grade',
             title: `Assignment Graded: #${assign.assignment_number} "${assign.title}"`,
             subtext: `Result: ${sub.overall_grade}`,
@@ -204,7 +204,7 @@ export function CourseDetailTabs({
           });
         } else {
           acts.push({
-            id: `submit-${sub.id}`,
+            id: `submit-${sub.id || sub.assignment_id}`,
             type: 'submit',
             title: `Assignment Submitted: #${assign.assignment_number} "${assign.title}"`,
             subtext: `Submitted for review`,

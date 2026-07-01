@@ -69,7 +69,7 @@ export default async function CoursePage({ params }: { params: Promise<{ subject
   // 5. Fetch submissions to track assignment status
   const { data: submissions } = await supabase
     .from('submissions')
-    .select('assignment_id, status, overall_grade, created_at, updated_at')
+    .select('id, assignment_id, status, overall_grade, created_at, updated_at')
     .eq('student_id', user.id)
 
   // 6. Fetch resources linked to this subject
