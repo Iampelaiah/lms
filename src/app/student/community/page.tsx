@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, LayoutGrid, List, Plus } from 'lucide-react';
 import { GridLayout } from '@/components/app/community/GridLayout';
 import { ListLayout } from '@/components/app/community/ListLayout';
@@ -12,7 +13,7 @@ import { CreateThreadModal } from '@/components/app/community/CreateThreadModal'
 import { ThreadDetailModal } from '@/components/app/community/ThreadDetailModal';
 import { Post } from './types';
 
-export default function StudentForum() {
+function StudentForumContent() {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedThread, setSelectedThread] = useState<Post | null>(null);
@@ -28,6 +29,11 @@ export default function StudentForum() {
   } = useForumRealtime();
   
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  // Read search parameters for automatic creation and locking to a subject
+  const searchParams = useSearchParams();
+  const querySubjectId = searchParams.get('subjectId') || '';
+  const autoCreate = searchParams.get('create') === 'true';
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -37,6 +43,13 @@ export default function StudentForum() {
     };
     fetchUser();
   }, []);
+
+  // Trigger modal open automatically if requested via query params
+  useEffect(() => {
+    if (isLoaded && autoCreate && querySubjectId) {
+      setIsCreateOpen(true);
+    }
+  }, [isLoaded, autoCreate, querySubjectId]);
 
   // Sort communities by members for trending
   const trendingSubjects = [...communities].sort((a, b) => b.memberCount - a.memberCount);
@@ -157,6 +170,7 @@ export default function StudentForum() {
         onClose={() => setIsCreateOpen(false)}
         communities={communities}
         onSubmit={handleCreateThread}
+        defaultSubjectId={querySubjectId || undefined}
       />
 
       <ThreadDetailModal
@@ -169,5 +183,17 @@ export default function StudentForum() {
         onVoteThread={broadcastVoteUpdate}
       />
     </div>
+  );
+}
+
+export default function StudentForum() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+      </div>
+    }>
+      <StudentForumContent />
+    </Suspense>
   );
 }

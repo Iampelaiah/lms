@@ -12,6 +12,7 @@ import { useUser } from "@/components/providers/user-context";
 import { createClient } from "@/utils/supabase/client";
 import { CreateCourseDialog } from "@/components/app/tutor/create-course-dialog";
 import { ScheduleClassDialog } from "@/components/app/tutor/schedule-class-dialog";
+import { CreateAssignmentDialog } from "@/components/app/tutor/create-assignment-dialog";
 import { motion } from "framer-motion";
 import { RecentActivity } from "@/components/app/tutor/dashboard/recent-activity";
 import { UpcomingClasses } from "@/components/app/tutor/dashboard/upcoming-classes";
@@ -285,6 +286,11 @@ function TutorTools({ profileId }: { profileId?: string }) {
                                     />
                                 ) : tool.title === "Schedule Class" && profileId ? (
                                     <ScheduleClassDialog 
+                                        tutorId={profileId} 
+                                        trigger={<Button variant="ghost" size="sm" className="w-full text-xs">Execute Action</Button>} 
+                                    />
+                                ) : tool.title === "Create Assignment" && profileId ? (
+                                    <CreateAssignmentDialog 
                                         tutorId={profileId} 
                                         trigger={<Button variant="ghost" size="sm" className="w-full text-xs">Execute Action</Button>} 
                                     />

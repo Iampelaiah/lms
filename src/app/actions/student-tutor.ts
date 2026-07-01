@@ -372,3 +372,103 @@ export async function getAllStudentsProgress(tutorId: string) {
 
   return { data: results }
 }
+
+export async function createBulkStudentAssignments(
+  tutorId: string,
+  subjectId: string,
+  title: string,
+  description: string,
+  dueDate: string,
+  imageUrl?: string,
+  pastPaperTag?: string,
+  topicTag?: string,
+  totalPoints?: number,
+  questions?: any[]
+) {
+  const supabase = await createClient()
+
+  // 1. Get all students enrolled in this subject under this tutor
+  const { data: enrollments, error: enrolError } = await supabase
+    .from('enrollments')
+    .select('student_id')
+    .eq('subject_id', subjectId)
+    .eq('tutor_id', tutorId)
+    .eq('status', 'approved')
+
+  if (enrolError) {
+    console.error('Error fetching enrolled students for bulk assignment:', enrolError)
+    return { error: enrolError.message }
+  }
+
+  if (!enrollments || enrollments.length === 0) {
+    return { error: "No students are currently enrolled in this subject under your instruction." }
+  }
+
+  // 2. Prepare inserts for every student
+  const inserts = enrollments.map((enrol: any) => ({
+    tutor_id: tutorId,
+    student_id: enrol.student_id,
+    subject_id: subjectId,
+    title,
+    description,
+    due_date: dueDate,
+    status: 'pending_admin_review',
+    image_url: imageUrl || null,
+    past_paper_tag: pastPaperTag || null,
+    topic_tag: topicTag || null,
+    total_points: totalPoints || 0,
+    questions: questions || []
+  }))
+
+  const { data, error } = await supabase
+    .from('student_deadlines')
+    .insert(inserts)
+    .select('*, subjects(name, level)')
+
+  if (error) {
+    if (error.message.includes('column') && error.message.includes('student_deadlines')) {
+      console.warn("Table student_deadlines missing columns, using JSON description fallback for bulk.");
+      const fallbackDesc = JSON.stringify({
+        _richAssignment: true,
+        originalDescription: description,
+        imageUrl,
+        pastPaperTag,
+        topicTag,
+        totalPoints,
+        questions
+      });
+
+      const fallbackInserts = enrollments.map((enrol: any) => ({
+        tutor_id: tutorId,
+        student_id: enrol.student_id,
+        subject_id: subjectId,
+        title,
+        description: fallbackDesc,
+        due_date: dueDate,
+        status: 'pending_admin_review'
+      }));
+
+      const { data: retryData, error: retryError } = await supabase
+        .from('student_deadlines')
+        .insert(fallbackInserts)
+        .select('*, subjects(name, level)')
+
+      if (retryError) {
+        console.error('Retry error creating bulk student deadlines fallback:', retryError)
+        return { error: retryError.message }
+      }
+      
+      revalidatePath('/tutor/students')
+      revalidatePath('/tutor/assignments')
+      return { data: retryData }
+    }
+
+    console.error('Error inserting bulk student deadlines:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/tutor/students')
+  revalidatePath('/tutor/assignments')
+  return { data }
+}
+

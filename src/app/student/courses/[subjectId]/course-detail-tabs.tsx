@@ -827,7 +827,7 @@ export function CourseDetailTabs({
                   <p className="text-xs text-muted-foreground max-w-xs mx-auto">Be the first to create a forum topic under the student community channel!</p>
                 </div>
                 <Link 
-                  href="/student/community"
+                  href={`/student/community?create=true&subjectId=${subjectId}`}
                   className="inline-flex items-center justify-center h-9 px-4 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors"
                 >
                   Create Discussion Post

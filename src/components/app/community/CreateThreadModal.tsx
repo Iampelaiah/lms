@@ -23,12 +23,20 @@ interface CreateThreadModalProps {
   onClose: () => void;
   communities: Community[];
   onSubmit: (thread: { title: string; content: string; subject_id: string }) => void;
+  defaultSubjectId?: string;
 }
 
-export function CreateThreadModal({ isOpen, onClose, communities, onSubmit }: CreateThreadModalProps) {
+export function CreateThreadModal({ isOpen, onClose, communities, onSubmit, defaultSubjectId }: CreateThreadModalProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [subjectId, setSubjectId] = useState('');
+
+  // Automatically set subjectId if defaultSubjectId is supplied
+  React.useEffect(() => {
+    if (defaultSubjectId) {
+      setSubjectId(defaultSubjectId);
+    }
+  }, [defaultSubjectId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +44,9 @@ export function CreateThreadModal({ isOpen, onClose, communities, onSubmit }: Cr
     onSubmit({ title, content, subject_id: subjectId });
     setTitle('');
     setContent('');
-    setSubjectId('');
+    if (!defaultSubjectId) {
+      setSubjectId('');
+    }
     onClose();
   };
 
@@ -49,7 +59,7 @@ export function CreateThreadModal({ isOpen, onClose, communities, onSubmit }: Cr
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Category / Subject</label>
-            <Select value={subjectId} onValueChange={setSubjectId} required>
+            <Select value={subjectId} onValueChange={setSubjectId} required disabled={!!defaultSubjectId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a subject..." />
               </SelectTrigger>
